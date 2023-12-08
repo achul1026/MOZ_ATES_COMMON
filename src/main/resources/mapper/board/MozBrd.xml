@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.board.MozBrdRepository">
+	
+	<sql id="noticeList-where">
+        <if test="searchType == 'all' and searchTxt != '' and searchTxt != null">
+            AND (OPRTR_ID LIKE '%' ||  #{searchTxt} || '%' OR BOARD_TITLE LIKE '%' ||  #{searchTxt} || '%')
+        </if>
+        <if test="searchType == 'oprtrId' and searchTxt != '' and searchTxt != null">
+            AND OPRTR_ID LIKE '%' ||  #{searchTxt} || '%'
+        </if>
+        <if test="searchType == 'boardTitle' and searchTxt != '' and searchTxt != null">
+            AND BOARD_TITLE LIKE '%' ||  #{searchTxt} || '%'
+        </if>
+        <if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
+            <![CDATA[
+                AND TO_CHAR(CR_DT, 'YYYY-MM-DD') >= #{sDate}
+            ]]>
+        </if>
+        <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
+            <![CDATA[
+                AND TO_CHAR(CR_DT, 'YYYY-MM-DD') <= #{eDate}
+            ]]>
+        </if>
+        <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
+            <![CDATA[
+             	AND TO_CHAR(CR_DT, 'YYYY-MM-DD') >= #{sDate}
+                AND TO_CHAR(CR_DT, 'YYYY-MM-DD') <= #{eDate}
+            ]]>
+        </if>
+
+    </sql>
+	
+	<resultMap type="com.moz.ates.traffic.common.entity.common.MozCmCd" id="cmCdForSelectNoticeList">
+		<result column="CD_NM" property="cdNm"/>
+	</resultMap>
+	
+	<resultMap type="com.moz.ates.traffic.common.entity.board.MozBrd" id="faqForSelectNoticeList">
+		<result column="BOARD_IDX" property="boardIdx"/>
+		<result column="BOARD_CD_ID" property="boardCdId"/>
+		<result column="OPRTR_ID" property="oprtrId"/>
+		<result column="WRTR_NM" property="wrtrNm"/>
+		<result column="BOARD_TITLE" property="boardTitle"/>
+		<result column="BOARD_CONTENTS" property="boardContents"/>
+		<result column="VIEW_CNT" property="viewCnt"/>
+		<result column="CR_DT" property="crDt"/>
+		<collection property="cmCd" resultMap="cmCdForSelectNoticeList"/>
+	</resultMap>
+	
+	<resultMap type="com.moz.ates.traffic.common.entity.common.MozCmCd" id="cmCdForSelectNoticeDetail">
+		<result column="CD_NM" property="cdNm"/>
+	</resultMap>
+	
+	<resultMap type="com.moz.ates.traffic.common.entity.board.MozBrd" id="faqForSelectNoticeDetail">
+		<result column="BOARD_IDX" property="boardIdx"/>
+		<result column="BOARD_CD_ID" property="boardCdId"/>
+		<result column="OPRTR_ID" property="oprtrId"/>
+		<result column="WRTR_NM" property="wrtrNm"/>
+		<result column="BOARD_TITLE" property="boardTitle"/>
+		<result column="BOARD_CONTENTS" property="boardContents"/>
+		<result column="VIEW_CNT" property="viewCnt"/>
+		<result column="CR_DT" property="crDt"/>
+		<collection property="cmCd" resultMap="cmCdForSelectNoticeDetail"/>
+	</resultMap>
+	
+    <select id="selectNoticeList" parameterType="com.moz.ates.traffic.common.entity.board.MozBrd" resultMap="faqForSelectNoticeList">
+        SELECT  BOARD_IDX
+                , BOARD_CD_ID
+                , OPRTR_ID
+                , WRTR_NM
+                , BOARD_TITLE
+                , BOARD_CONTENTS
+                , VIEW_CNT
+                , bt.CR_DT
+                , cct.CD_NM
+        FROM    MOZ_BRD bt,
+        		 MOZ_CM_CD cct
+        WHERE   1=1
+        		AND bt.BOARD_CD_ID = cct.CD_ID
+                <include refid="noticeList-where"/>
+                ORDER BY CR_DT DESC
+                LIMIT #{length} OFFSET #{start}
+    </select>
+    
+    <select id="selectNoticeListCnt" parameterType="com.moz.ates.traffic.common.entity.board.MozBrd" resultType="int">
+        SELECT  COUNT(*) AS "cnt"
+        FROM    MOZ_BRD
+        WHERE   1=1
+        <include refid="noticeList-where"/>
+    </select>
+    
+    <select id="findAllMozBrd" parameterType="com.moz.ates.traffic.common.entity.board.MozBrd" resultMap="faqForSelectNoticeList">
+        SELECT  ROW_NUMBER() OVER(ORDER BY CR_DT) AS rnum
+        		, BOARD_IDX
+                , BOARD_CD_ID
+                , OPRTR_ID
+                , WRTR_NM
+                , BOARD_TITLE
+                , BOARD_CONTENTS
+                , VIEW_CNT
+                , bt.CR_DT
+                , cct.CD_NM
+        FROM    MOZ_BRD bt,
+        		 MOZ_CM_CD cct
+        WHERE   1=1
+        		AND bt.BOARD_CD_ID = cct.CD_ID
+                <include refid="noticeList-where"/>
+                ORDER BY rnum DESC
+                LIMIT #{length} OFFSET #{start}
+    </select>
+    
+    <select id="countMozBrd" parameterType="com.moz.ates.traffic.common.entity.board.MozBrd" resultType="int">
+        SELECT  COUNT(*) AS "cnt"
+        FROM    MOZ_BRD
+        WHERE   1=1
+        <include refid="noticeList-where"/>
+    </select>
+    
+    <select id="selectNoticeDetail" parameterType="String" resultMap="faqForSelectNoticeDetail">
+        SELECT  bt.BOARD_IDX
+                , bt.BOARD_CD_ID
+                , bt.OPRTR_ID
+                , bt.WRTR_NM
+                , bt.BOARD_TITLE
+                , bt.BOARD_CONTENTS
+                , bt.VIEW_CNT
+                , bt.CR_DT
+                , cct.CD_NM
+        FROM    MOZ_BRD bt,
+                MOZ_CM_CD cct
+        WHERE   bt.BOARD_CD_ID = cct.CD_ID
+                AND bt.BOARD_IDX = #{boardIdx}
+    </select>
+		
+	<!--  공지사항 등록  -->
+    <insert id="insertNotice" parameterType="com.moz.ates.traffic.common.entity.board.MozBrd">
+        INSERT INTO MOZ_BRD
+            (
+                BOARD_IDX
+                , BOARD_CD_ID
+                , BOARD_TITLE
+                , BOARD_CONTENTS
+                , VIEW_CNT
+                , CR_DT
+                , UPD_DT
+            )
+        VALUES
+            (
+                BRD_SEQ.NEXTVAL
+                , #{boardCdId}
+                , #{boardTitle}
+                , #{boardContents}
+                , '0'
+                , NOW()
+                , NOW()
+            )
+    </insert>
+    
+    <insert id="saveMozBrd" parameterType="com.moz.ates.traffic.common.entity.board.MozBrd">
+        INSERT INTO MOZ_BRD
+            (
+                BOARD_IDX
+                , BOARD_CD_ID
+                , BOARD_TITLE
+                , BOARD_CONTENTS
+                , VIEW_CNT
+                , CR_DT
+                , UPD_DT
+            )
+        VALUES
+            (
+                BRD_SEQ.NEXTVAL
+                , #{boardCdId}
+                , #{boardTitle}
+                , #{boardContents}
+                , '0'
+                , NOW()
+                , NOW()
+            )
+    </insert>
+    
+    <update id="updateNotice" parameterType="com.moz.ates.traffic.common.entity.board.MozBrd">
+      	UPDATE  MOZ_BRD
+        SET     BOARD_CD_ID=#{boardCdId}
+                , BOARD_TITLE=#{boardTitle}
+                , BOARD_CONTENTS=#{boardContents}
+                , UPD_DT=NOW()
+        WHERE   BOARD_IDX=#{boardIdx}
+
+    </update>
+    
+   	<delete id="deleteNotice" parameterType="String">
+        DELETE FROM MOZ_BRD
+        WHERE       BOARD_IDX=#{boardIdx}
+
+    </delete>
+</mapper>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.moz.ates.traffic.common.repository.common.GisRepository">
+	<select id="selectAccidentList" resultType="com.moz.ates.traffic.common.entity.common.AccidentDomain">
+		SELECT
+			ROAD_ADDR
+			, LAT
+			, LNG
+		FROM MOZ_TFC_ACDNT_MASTER
+		WHERE TFC_ACDNT_ID = #{tfcAcdntId}
+	</select>
+	<select id="findOneEnforcementDomainBytfcEnfId" resultType="com.moz.ates.traffic.common.entity.common.EnforcementDomain">
+		SELECT
+			ROAD_ADDR
+			, LAT
+			, LNG
+		FROM MOZ_TFC_ENF_MASTER
+		WHERE TFC_ENF_ID = #{tfcEnfId}
+	</select>
+	
+	<select id="selectAccidentListForMonitoring" resultType="com.moz.ates.traffic.common.entity.common.AccidentDomain">
+		SELECT
+			ROAD_ADDR
+			, LAT
+			, LNG
+		FROM MOZ_TFC_ACDNT_MASTER
+		ORDER BY CR_DT DESC
+	</select>
+	<select id="selectEnforcementListForMonitoring" resultType="com.moz.ates.traffic.common.entity.common.EnforcementDomain">
+		SELECT
+			ROAD_ADDR
+			, LAT
+			, LNG
+		FROM MOZ_TFC_ENF_MASTER
+		ORDER BY CR_DT DESC
+	</select>
+
+	
+</mapper>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.accident.MozTfcAcdntPnrInfoRepository">
+	
+	<!-- 탑승자 정보 등록 -->
+	<insert id="insertPnrAcdntInfo" parameterType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntPnrInfo">
+		INSERT INTO MOZ_TFC_ACDNT_PNR_INFO
+			(
+				DVR_ID,
+				TFC_ACDNT_ID,
+				DVR_LCEN_ID,
+				PNR_NM,
+				PNR_BRTH,
+				PNR_ADDR,
+				PNR_PNO,
+				PNR_EMAIL,
+				DV_YN,
+				DVR_LCEN_TY,
+				CR_DT,
+				CRTR
+			)VALUES(
+				#{dvrId},
+				#{tfcAcdntId},
+				#{dvrLcenId},
+				#{pnrNm},
+				#{pnrBrth},
+				#{pnrAddr},
+				#{pnrPno},
+				#{pnrEmail},
+				#{dvYn},
+				#{dvrLcenTy},
+				NOW(),
+				#{crtr}
+			)
+	</insert>
+</mapper>

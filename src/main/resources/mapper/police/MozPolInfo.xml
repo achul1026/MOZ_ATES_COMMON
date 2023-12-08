@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.police.MozPolInfoRepository">
+	
+	<select id="selectPolInfoList" parameterType="com.moz.ates.traffic.common.entity.police.MozPolInfo" resultType="com.moz.ates.traffic.common.entity.police.MozPolInfo">
+        SELECT  POL_NM            
+                , POL_LCEN_ID  
+                , PHONE     
+                , EMAIL      
+                , JUR   
+        FROM    MOZ_POL_INFO
+        WHERE   1=1
+        ORDER BY CR_DT DESC
+        LIMIT #{length} OFFSET #{start}
+    </select>
+	
+	<select id="selectPolInfoListCnt" parameterType="com.moz.ates.traffic.common.entity.police.MozPolInfo" resultType="int">
+        SELECT  COUNT(*)    AS "cnt"
+        FROM    MOZ_POL_INFO
+    </select>
+    
+	<select id="findAllMozPolInfo" parameterType="com.moz.ates.traffic.common.entity.police.MozPolInfo" resultType="com.moz.ates.traffic.common.entity.police.MozPolInfo">
+        SELECT  ROW_NUMBER() OVER(ORDER BY CR_DT) AS rnum
+        		, POL_NM            
+                , POL_LCEN_ID  
+                , PHONE     
+                , EMAIL      
+                , JUR   
+        FROM    MOZ_POL_INFO
+        WHERE   1=1
+        ORDER BY rnum DESC
+        LIMIT #{length} OFFSET #{start}
+    </select>
+	
+	<select id="countMozPolInfo" parameterType="com.moz.ates.traffic.common.entity.police.MozPolInfo" resultType="int">
+        SELECT  COUNT(*)    AS "cnt"
+        FROM    MOZ_POL_INFO
+    </select>
+	
+	<select id="selectPolInfoDetail" parameterType="String" resultType="com.moz.ates.traffic.common.entity.police.MozPolInfo">
+        SELECT  POL_ID
+                , POL_LCEN_ID
+                , POL_NM
+                , POL_LCEN_DT
+                , POL_DEPT_NM
+                , CLASS
+                , JUR
+                , BRTH
+                , ADDR
+                , PHONE
+                , EMAIL
+                , APP_PERMISSION
+                , APP_POL_ID
+        FROM    MOZ_POL_INFO
+        WHERE   POL_LCEN_ID = #{polLcenId}
+    </select>
+    
+	<select id="findOneMozPolInfo" parameterType="String" resultType="com.moz.ates.traffic.common.entity.police.MozPolInfo">
+        SELECT  POL_ID
+                , POL_LCEN_ID
+                , POL_NM
+                , POL_LCEN_DT
+                , POL_DEPT_NM
+                , CLASS
+                , JUR
+                , BRTH
+                , ADDR
+                , PHONE
+                , EMAIL
+                , APP_PERMISSION
+                , APP_POL_ID
+        FROM    MOZ_POL_INFO
+        WHERE   POL_LCEN_ID = #{polLcenId}
+    </select>
+	
+	<select id="selectPoliceInfo" parameterType="com.moz.ates.traffic.common.entity.police.MozPolInfo" resultType="com.moz.ates.traffic.common.entity.police.MozPolInfo">
+		SELECT 
+				POL_ID,
+				POL_LCEN_ID,
+				POL_NM,
+				POL_LCEN_DT,
+				POL_DEPT_NM,
+				CLASS,
+				JUR,
+				BRTH,
+				ADDR,
+				DEV_ID,
+				PHONE,
+				EMAIL,
+				APP_PERMISSION,
+				APP_POL_ID,
+				APP_POL_PW,
+				CR_DT,
+				CRTR			
+		FROM	MOZ_POL_INFO
+		WHERE	APP_POL_ID	= #{appPolId}
+	</select>
+	
+	<select id="selectPoliceInfoByPoliceId" parameterType="String" resultType="com.moz.ates.traffic.common.entity.police.MozPolInfo">
+		SELECT 
+				APP_POL_ID,
+				APP_POL_PW,
+				APP_PERMISSION
+		FROM	MOZ_POL_INFO
+		WHERE	APP_POL_ID	= #{appPolId}
+	</select>
+</mapper>

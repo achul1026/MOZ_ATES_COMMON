@@ -1,0 +1,413 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.payment.MozFinePymntInfoRepository">
+	
+    <resultMap type="com.moz.ates.traffic.common.entity.common.MozCmCd" id="cmCdForSelectPenaltyList">
+		<result column="CD_NM" property="cdNm"/>
+	</resultMap>
+
+	<resultMap type="com.moz.ates.traffic.common.entity.enforcement.MozTfcEnfMaster" id="tfcEnfMasterForSelectPenaltyList">
+		<result column="ROAD_ADDR" property="roadAddr"/>
+		<result column="TFC_ACDNT_ID" property="tfcAcdntId"/>
+		<result column="TFC_ENF_DT" property="tfcEnfDt"/>
+		<result column="VIO_ID" property="vioId"/>
+		<result column="VH_REG_NO" property="vhRegNo"/>
+	</resultMap>
+
+	<resultMap type="com.moz.ates.traffic.common.entity.payment.MozFinePymntInfo" id="finePymntInfo">
+		<result column="rnum" property="rnum"/>
+		<result column="PYMNT_ID" property="pymntId"/>
+		<result column="TFC_ENF_ID" property="tfcEnfId"/>
+		<result column="TOTAL_PRICE" property="totalPrice"/>
+		<result column="PYMNT_STTS" property="pymntStts"/>
+		<result column="PYMNT_METHOD" property="pymntMethod"/>
+		<result column="PENALTYNAME" property="penaltyname"/>
+		<result column="PYMNT_DDLN" property="pymntDdln"/>
+		<result column="PENALTYDETAIL" property="penaltydetail"/>
+		<result column="PAYER_NM" property="payerNm"/>
+		<result column="CR_DT" property="crDt"/>
+		<result column="CRTR" property="crtr"/>
+		<collection property="cmCd" resultMap="cmCdForSelectPenaltyList"/>
+		<collection property="tfcEnfMaster" resultMap="tfcEnfMasterForSelectPenaltyList"/>
+	</resultMap>	
+    
+    <resultMap type="com.moz.ates.traffic.common.entity.common.MozCmCd" id="cmCdForSearchPenaltyDetail">
+		<result column="CD_NM" property="cdNm"/>
+	</resultMap>
+
+	<resultMap type="com.moz.ates.traffic.common.entity.enforcement.MozTfcEnfMaster" id="tfcEnfMasterForSearchPenaltyDetail">
+		<result column="ROAD_ADDR" property="roadAddr"/>
+		<result column="TFC_ACDNT_ID" property="tfcAcdntId"/>
+		<result column="TFC_ENF_DT" property="tfcEnfDt"/>
+		<result column="VIO_ID" property="vioId"/>
+		<result column="VH_REG_NO" property="vhRegNo"/>
+	</resultMap>
+	
+	<resultMap type="com.moz.ates.traffic.common.entity.police.MozPolInfo" id="polInfoForSearchPenaltyDetail">
+		<result column="JUR" property="jur"/>
+	</resultMap>
+
+	<resultMap type="com.moz.ates.traffic.common.entity.payment.MozFinePymntInfo" id="finePymntInfoForSearchPenaltyDetail">
+		<result column="PYMNT_ID" property="pymntId"/>
+		<result column="TFC_ENF_ID" property="tfcEnfId"/>
+		<result column="TOTAL_PRICE" property="totalPrice"/>
+		<result column="PYMNT_STTS" property="pymntStts"/>
+		<result column="PYMNT_METHOD" property="pymntMethod"/>
+		<result column="PENALTYNAME" property="penaltyname"/>
+		<result column="PYMNT_DDLN" property="pymntDdln"/>
+		<result column="PENALTYDETAIL" property="penaltydetail"/>
+		<result column="PAYER_NM" property="payerNm"/>
+		<result column="CR_DT" property="crDt"/>
+		<result column="CRTR" property="crtr"/>
+		<collection property="cmCd" resultMap="cmCdForSearchPenaltyDetail"/>
+		<collection property="tfcEnfMaster" resultMap="tfcEnfMasterForSearchPenaltyDetail"/>
+		<collection property="polInfo" resultMap="polInfoForSearchPenaltyDetail"/>
+	</resultMap>
+	
+	<resultMap type="com.moz.ates.traffic.common.entity.payment.MozFinePymntInfo" id="finePymntInfoForSelectTrafficEnfDetail">
+		<result column="TOTAL_PRICE" property="totalPrice"/>
+		<result column="PYMNT_STTS" property="pymntStts"/>
+	</resultMap>
+	
+	<resultMap type="com.moz.ates.traffic.common.entity.enforcement.MozTfcEnfMaster" id="tfcEnfMaster">
+		<result column="TFC_ENF_ID" property="tfcEnfId"/>
+		<result column="VIO_ID" property="vioId"/>
+		<result column="TFC_ENF_DT" property="tfcEnfDt"/>
+		<result column="ROAD_ADDR" property="roadAddr"/>
+		<result column="TFC_ACDNT_ID" property="tfcAcdntId"/>
+		<result column="LAST_TFC_ENF_PROC_CD" property="lastTfcEnfProcCd"/>
+		<result column="TFC_ENF_DETAIL" property="tfcEnfDetail"/>
+		<result column="TFC_ENF_INFOIMAGE" property="tfcEnfInfoimage"/>
+		<result column="TFC_ENF_IMAGEPATH" property="tfcEnfImagepath"/>
+		<result column="LNG" property="lng"/>
+		<result column="LAT" property="lat"/>
+		<collection property="finePymntInfo" resultMap="finePymntInfoForSelectTrafficEnfDetail"/>
+	</resultMap>
+	
+	<resultMap type="com.moz.ates.traffic.common.entity.payment.MozFinePymntInfo" id="pymntDetail">
+		<result column="PYMNT_ID" property="pymntId"/>
+		<result column="TFC_ENF_ID" property="tfcEnfId"/>
+		<result column="TOTAL_PRICE" property="totalPrice"/>
+		<result column="PYMNT_STTS" property="pymntStts"/>
+		<result column="PYMNT_METHOD" property="pymntMethod"/>
+		<result column="PYMNT_DDLN" property="pymntDdln"/>
+		<result column="PYMNT_OPRTR" property="pymntOprtr"/>
+		<result column="CR_DT" property="crDt"/>
+		<collection property="cmCd" resultMap="cmCdForSelectPenaltyList"/>
+	</resultMap>
+    
+    <select id="selectPenaltyList" parameterType="com.moz.ates.traffic.common.entity.payment.MozFinePymntInfo" resultMap="finePymntInfo">
+		SELECT  fpit.PYMNT_ID
+                , fpit.TFC_ENF_ID
+                , fpit.TOTAL_PRICE
+                , fpit.PYMNT_STTS
+                , fpit.PYMNT_METHOD
+                , fpit.PENALTYNAME
+                , fpit.PYMNT_DDLN
+                , fpit.CR_DT
+                , fpit.CRTR
+                , cct.CD_NM
+                , temt.ROAD_ADDR
+                , temt.TFC_ACDNT_ID
+               	, temt.TFC_ENF_DT
+        FROM    MOZ_FINE_PYMNT_INFO fpit
+                LEFT JOIN MOZ_CM_CD cct ON (fpit.PYMNT_METHOD = cct.CD_ID)
+                 JOIN MOZ_TFC_ENF_MASTER temt ON(temt.TFC_ENF_ID = fpit.TFC_ENF_ID )
+       WHERE   1=1
+       ORDER BY CR_DT DESC
+<!--        <include refid="penaltyList-Where"/>-->
+	   LIMIT #{length} OFFSET #{start}
+    </select>
+    
+    <select id="findAllMozFinePymntInfo" parameterType="com.moz.ates.traffic.common.entity.payment.MozFinePymntInfo" resultMap="finePymntInfo">
+		SELECT  ROW_NUMBER() OVER(ORDER BY CR_DT) AS rnum
+				, fpit.PYMNT_ID
+                , fpit.TFC_ENF_ID
+                , fpit.TOTAL_PRICE
+                , fpit.PYMNT_STTS
+                , fpit.PYMNT_METHOD
+                , fpit.PENALTYNAME
+                , fpit.PYMNT_DDLN
+                , fpit.CR_DT
+                , fpit.CRTR
+                , cct.CD_NM
+                , temt.ROAD_ADDR
+                , temt.TFC_ACDNT_ID
+               	, temt.TFC_ENF_DT
+        FROM    MOZ_FINE_PYMNT_INFO fpit
+                LEFT JOIN MOZ_CM_CD cct ON (fpit.PYMNT_METHOD = cct.CD_ID)
+                 JOIN MOZ_TFC_ENF_MASTER temt ON(temt.TFC_ENF_ID = fpit.TFC_ENF_ID )
+       WHERE   1=1
+       ORDER BY rnum DESC
+<!--        <include refid="penaltyList-Where"/>-->
+	   LIMIT #{length} OFFSET #{start}
+    </select>
+    
+    <select id="selectPenaltyDupliCnt" parameterType="com.moz.ates.traffic.common.entity.payment.MozFinePymntInfo" resultType="int">
+        SELECT  COUNT(*)    AS "cnt"
+        FROM    MOZ_FINE_PYMNT_INFO
+        WHERE   PYMNT_ID = #{pymntId}
+    </select>
+    
+    <select id="countMozFinePymntInfo" parameterType="com.moz.ates.traffic.common.entity.payment.MozFinePymntInfo" resultType="int">
+        SELECT  COUNT(*)    AS "cnt"
+        FROM    MOZ_FINE_PYMNT_INFO fpit
+                LEFT JOIN MOZ_CM_CD cct ON (fpit.PYMNT_METHOD = cct.CD_ID)
+    </select>
+    
+    <select id="selectPenaltyDetailForAdmin" parameterType="String" resultMap="finePymntInfoForSearchPenaltyDetail">
+        SELECT  fpit.PYMNT_ID 
+                , fpit.TFC_ENF_ID
+                , fpit.TOTAL_PRICE
+                , fpit.PYMNT_STTS
+                , fpit.PYMNT_METHOD
+                , fpit.PYMNT_DDLN
+                , fpit.PYMNT_OPRTR
+                , fpit.CR_DT
+                , fpit.PAYER_NM
+                , cct.CD_NM
+                , fpit.PENALTYNAME
+                , temt.ROAD_ADDR
+                , temt.TFC_ACDNT_ID
+               	, temt.TFC_ENF_DT
+               	, temt.VIO_ID
+               	, temt.VH_REG_NO
+               	, pit.JUR
+               	, fpit.PENALTYDETAIL
+        FROM    MOZ_FINE_PYMNT_INFO fpit
+                LEFT JOIN MOZ_CM_CD cct ON (fpit.PYMNT_METHOD = cct.CD_ID)
+                LEFT JOIN MOZ_TFC_ENF_MASTER temt ON(temt.TFC_ENF_ID = fpit.TFC_ENF_ID )
+                LEFT JOIN MOZ_POL_INFO pit ON(fpit.POL_ID = pit.POL_ID)
+        WHERE   fpit.PYMNT_ID=#{pymntId}
+    </select>
+    
+    <select id="findOneMozFinePymntInfoForAdmin" parameterType="String" resultMap="finePymntInfoForSearchPenaltyDetail">
+        SELECT  fpit.PYMNT_ID 
+                , fpit.TFC_ENF_ID
+                , fpit.TOTAL_PRICE
+                , fpit.PYMNT_STTS
+                , fpit.PYMNT_METHOD
+                , fpit.PYMNT_DDLN
+                , fpit.PYMNT_OPRTR
+                , fpit.CR_DT
+                , fpit.PAYER_NM
+                , cct.CD_NM
+                , fpit.PENALTYNAME
+                , temt.ROAD_ADDR
+                , temt.TFC_ACDNT_ID
+               	, temt.TFC_ENF_DT
+               	, temt.VIO_ID
+               	, temt.VH_REG_NO
+               	, pit.JUR
+               	, fpit.PENALTYDETAIL
+        FROM    MOZ_FINE_PYMNT_INFO fpit
+                LEFT JOIN MOZ_CM_CD cct ON (fpit.PYMNT_METHOD = cct.CD_ID)
+                LEFT JOIN MOZ_TFC_ENF_MASTER temt ON(temt.TFC_ENF_ID = fpit.TFC_ENF_ID )
+                LEFT JOIN MOZ_POL_INFO pit ON(fpit.POL_ID = pit.POL_ID)
+        WHERE   fpit.PYMNT_ID=#{pymntId}
+    </select>
+    
+    <select id="updateMozTfcEnfMaster" parameterType="String" resultMap="finePymntInfoForSearchPenaltyDetail">
+        SELECT  fpit.PYMNT_ID 
+                , fpit.TFC_ENF_ID
+                , fpit.TOTAL_PRICE
+                , fpit.PYMNT_STTS
+                , fpit.PYMNT_METHOD
+                , fpit.PYMNT_DDLN
+                , fpit.PYMNT_OPRTR
+                , fpit.CR_DT
+                , fpit.PAYER_NM
+                , cct.CD_NM
+                , fpit.PENALTYNAME
+                , temt.ROAD_ADDR
+                , temt.TFC_ACDNT_ID
+               	, temt.TFC_ENF_DT
+               	, temt.VIO_ID
+               	, temt.VH_REG_NO
+               	, pit.JUR
+               	, fpit.PENALTYDETAIL
+        FROM    MOZ_FINE_PYMNT_INFO fpit
+                LEFT JOIN MOZ_CM_CD cct ON (fpit.PYMNT_METHOD = cct.CD_ID)
+                LEFT JOIN MOZ_TFC_ENF_MASTER temt ON(temt.TFC_ENF_ID = fpit.TFC_ENF_ID )
+                LEFT JOIN MOZ_POL_INFO pit ON(fpit.POL_ID = pit.POL_ID)
+        WHERE   fpit.PYMNT_ID=#{pymntId}
+    </select>
+    
+    <select id="selectPenaltyDetail" parameterType="String" resultMap="pymntDetail">
+        SELECT  fpit.PYMNT_ID
+                , fpit.TFC_ENF_ID
+                , fpit.TOTAL_PRICE
+                , fpit.PYMNT_STTS
+                , fpit.PYMNT_METHOD
+                , fpit.PYMNT_DDLN
+                , fpit.PYMNT_OPRTR
+                , fpit.CR_DT
+                , cct.CD_NM
+        FROM    MOZ_FINE_PYMNT_INFO fpit
+                LEFT JOIN MOZ_CM_CD cct ON (fpit.PYMNT_METHOD = cct.CD_ID)
+        WHERE   fpit.PYMNT_ID=#{pymntId}
+    </select>
+    
+    <select id="selectTrafficEnfDetail" parameterType="String" resultMap="tfcEnfMaster">
+        SELECT  temt.TFC_ENF_ID
+                , temt.VIO_ID
+                , temt.TFC_ENF_DT
+                , temt.ROAD_ADDR
+                , temt.TFC_ACDNT_ID
+                , temt.LAST_TFC_ENF_PROC_CD
+                , temt.TFC_ENF_DETAIL
+                , temt.TFC_ENF_INFOIMAGE
+                , temt.TFC_ENF_IMAGEPATH
+                , temt.LNG
+                , temt.LAT
+                , fpit.TOTAL_PRICE
+                , fpit.PYMNT_STTS
+        FROM    MOZ_TFC_ENF_MASTER temt,
+                MOZ_FINE_PYMNT_INFO fpit
+        WHERE temt.TFC_ENF_ID = fpit.TFC_ENF_ID(+)
+		AND temt.TFC_ENF_ID = #{tfcEnfId}
+    </select>
+    
+    <insert id="insertPenaltyForAdmin" parameterType="com.moz.ates.traffic.common.entity.payment.MozFinePymntInfo">
+		INSERT INTO
+		MOZ_FINE_PYMNT_INFO(
+			PYMNT_ID,
+			TFC_ENF_ID,
+			TOTAL_PRICE,
+			PYMNT_DDLN,
+			PAYER_NM,
+			CR_DT,
+			CRTR,
+			PENALTYNAME,
+			PENALTYDETAIL
+		)VALUES(
+			#{pymntId},
+			#{tfcEnfId},
+			#{totalPrice},
+			#{pymntDdln},
+			#{payerNm},
+			NOW(),
+			#{crtr},
+			#{penaltyname},
+			#{penaltydetail}
+		)
+	</insert>
+	
+    <insert id="saveMozFinePymntInfo" parameterType="com.moz.ates.traffic.common.entity.payment.MozFinePymntInfo">
+		INSERT INTO
+		MOZ_FINE_PYMNT_INFO(
+			PYMNT_ID,
+			TFC_ENF_ID,
+			TOTAL_PRICE,
+			PYMNT_DDLN,
+			PAYER_NM,
+			CR_DT,
+			CRTR,
+			PENALTYNAME,
+			PENALTYDETAIL
+		)VALUES(
+			#{pymntId},
+			#{tfcEnfId},
+			#{totalPrice},
+			#{pymntDdln},
+			#{payerNm},
+			NOW(),
+			#{crtr},
+			#{penaltyname},
+			#{penaltydetail}
+		)
+	</insert>
+	
+	<!-- 결제정보 등록 -->
+	<insert id="insertFinePaymentInfo" parameterType="com.moz.ates.traffic.common.entity.payment.MozFinePymntInfo">
+		INSERT INTO MOZ_FINE_PYMNT_INFO 
+			(
+				PYMNT_ID,
+				TFC_ENF_ID,
+				PLACE_PYMNT_ID,
+				TOTAL_PRICE,
+				PYMNT_PRICE,
+				PYMNT_STTS,
+				PYMNT_DDLN,
+				PAYER_NM,
+				PYMNT_OPRTR,
+				CR_DT,
+				CRTR,
+				PENALTYDETAIL
+			 )VALUES(
+				#{pymntId},
+				#{tfcEnfId},
+				#{placePymntId},
+				#{totalPrice},
+				#{pymntPrice},
+				#{pymntStts},
+				TO_CHAR(ADD_MONTHS(NOW(),+2),'yy/mm/dd'),
+				#{payerNm},
+				#{pymntOprtr},
+				NOW(),
+				#{crtr},
+				#{penaltydetail}
+			)
+	</insert>
+	
+	<update id="updatePenalty" parameterType="com.moz.ates.traffic.common.entity.payment.MozFinePymntInfo">
+        UPDATE  MOZ_FINE_PYMNT_INFO
+        SET     TOTAL_PRICE = #{totalPrice}
+                , PYMNT_STTS = #{pymntStts}
+                , PYMNT_METHOD = #{pymntMethod}
+                , PYMNT_DDLN = #{pymntDdln}
+                , PYMNT_OPRTR = #{pymntOprtr}
+                , PENALTYNAME = #{penaltyname}
+        WHERE   PYMNT_ID = #{pymntId}
+    </update>
+    
+	<update id="updateMozFinePymntInfo" parameterType="com.moz.ates.traffic.common.entity.payment.MozFinePymntInfo">
+        UPDATE  MOZ_FINE_PYMNT_INFO
+        SET     TOTAL_PRICE = #{totalPrice}
+                , PYMNT_STTS = #{pymntStts}
+                , PYMNT_METHOD = #{pymntMethod}
+                , PYMNT_DDLN = #{pymntDdln}
+                , PYMNT_OPRTR = #{pymntOprtr}
+                , PENALTYNAME = #{penaltyname}
+        WHERE   PYMNT_ID = #{pymntId}
+    </update>
+    
+    <update id="updateFineTotalPrice" parameterType="com.moz.ates.traffic.common.entity.payment.MozFinePymntInfo">
+        UPDATE  MOZ_FINE_PYMNT_INFO
+        SET     TOTAL_PRICE=#{totalPrice}
+        WHERE   TFC_ENF_ID=#{tfcEnfId}
+    </update>
+    
+   	<!-- 결제정보 수정 -->	
+	<update id="updatePaymentInfo" parameterType="com.moz.ates.traffic.common.entity.payment.MozFinePymntInfo">
+		UPDATE 	MOZ_FINE_PYMNT_INFO
+				SET
+					PYMNT_STTS	 = 'Y',
+					PYMNT_METHOD = #{pymntMethod}
+   			    WHERE PYMNT_ID = #{pymntId}
+	</update>
+	
+	<update id="paymentCencal" parameterType="String">
+		UPDATE MOZ_FINE_PYMNT_INFO
+		SET    PYMNT_STTS ='N'
+		WHERE PYMNT_ID = #{pymntId}
+	</update>
+	
+	<update id="paymentCompleted" parameterType="String">
+		UPDATE MOZ_FINE_PYMNT_INFO
+		SET    PYMNT_STTS ='Y'
+		WHERE PYMNT_ID = #{pymntId}
+	</update>
+	
+	<update id="updateMozFinePymntInfoForPymntN" parameterType="String">
+		UPDATE MOZ_FINE_PYMNT_INFO
+		SET    PYMNT_STTS ='N'
+		WHERE PYMNT_ID = #{pymntId}
+	</update>
+	
+	<update id="updateMozFinePymntInfoForPymntY" parameterType="String">
+		UPDATE MOZ_FINE_PYMNT_INFO
+		SET    PYMNT_STTS ='Y'
+		WHERE PYMNT_ID = #{pymntId}
+	</update>
+</mapper>

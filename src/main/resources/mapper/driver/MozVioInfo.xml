@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.driver.MozVioInfoRepository">
+	
+	<!-- 단속정보 고유번호 조회 -->
+	<select id="searchTrafficList" parameterType="map" resultType="map">
+		SELECT 
+				TEMT.TFC_ENF_ID					AS "tfcEnfId",
+				TLIT.LAW_NM						AS "lawNm"
+		FROM 	MOZ_VIO_INFO VIT 
+		INNER JOIN MOZ_TFC_ENF_MASTER	TEMT ON TEMT.VIO_ID = VIT.VIO_ID 
+		INNER JOIN MOZ_FINE_PYMNT_INFO FPIT ON 	TEMT.TFC_ENF_ID = FPIT.TFC_ENF_ID
+		LEFT JOIN MOZ_TFC_LW_INFO	TLIT ON TEMT.TFC_LAW_ID = TLIT.TFC_LAW_ID
+		WHERE DVR_LCEN_ID = #{dvrLcenId}
+		AND	  VIO_NM 	  = #{vioNm}
+	</select>
+	
+	<!-- 위반자 정보 등록 -->
+	<insert id="insertVioInfo" parameterType="com.moz.ates.traffic.common.entity.driver.MozVioInfo">
+		INSERT INTO MOZ_VIO_INFO	
+			(
+				VIO_ID,
+				DVR_LCEN_ID,
+				VIO_NM,
+				VIO_BRTH,
+				VIO_ADDR,
+				VIO_PNO,
+				VIO_EMAIL,
+				DVR_LCEN_TY,
+				CR_DT,
+				CRTR
+			)VALUES(
+				#{vioId},
+				#{dvrLcenId},
+				#{vioNm},
+				#{vioBrth},
+				#{vioAddr},
+				#{vioPno},
+				#{vioEmail},
+				#{dvrLcenTy},
+				NOW(),
+				#{crtr}
+		)
+	</insert>
+</mapper>

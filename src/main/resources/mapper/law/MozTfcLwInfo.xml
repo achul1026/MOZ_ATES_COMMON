@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.law.MozTfcLwInfoRepository">
+	
+	<sql id="enfLawList-Where">
+        <if test="searchType == 'all' and searchTxt != '' and searchTxt != null">
+            AND (LAW_ARTICLE_NO LIKE '%' ||  #{searchTxt} || '%' OR LAW_NM LIKE '%' ||  #{searchTxt} || '%' OR CRTR LIKE '%' ||  #{searchTxt} || '%')
+        </if>
+        <if test="searchType == 'lawArticl' and searchTxt != '' and searchTxt != null">
+            AND LAW_ARTICLE_NO LIKE '%' ||  #{searchTxt} || '%'
+        </if>
+        <if test="searchType == 'lawNm' and searchTxt != '' and searchTxt != null">
+            AND LAW_NM LIKE '%' ||  #{searchTxt} || '%'
+        </if>
+        <if test="searchType == 'crtr' and searchTxt != '' and searchTxt != null">
+            AND CRTR LIKE '%' ||  #{searchTxt} || '%'
+        </if>
+        <if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
+            <![CDATA[
+                AND TO_CHAR(CR_DT, 'YYYY-MM-DD') >= #{sDate}
+            ]]>
+        </if>
+        <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
+            <![CDATA[
+                AND TO_CHAR(CR_DT, 'YYYY-MM-DD') <= #{eDate}
+            ]]>
+        </if>
+        <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
+            <![CDATA[
+                AND TO_CHAR(CR_DT, 'YYYY-MM-DD') >= #{sDate}
+                AND TO_CHAR(CR_DT, 'YYYY-MM-DD') <= #{eDate}
+            ]]>
+        </if>
+    </sql>
+	
+	<select id="findAllLawListsByTfcLwInfo" resultType="com.moz.ates.traffic.common.entity.law.MozTfcLwInfo" parameterType="com.moz.ates.traffic.common.entity.law.MozTfcLwInfo">
+        SELECT   TFC_LAW_ID
+                , LAW_NM
+                , LAW_ARTICLE_NO
+                , LAW_DESC
+                , CR_DT
+                , CRTR
+        FROM    MOZ_TFC_LW_INFO
+        WHERE   1=1
+        <include refid="enfLawList-Where"/>
+        ORDER BY CR_DT DESC
+        LIMIT #{length} OFFSET #{start}
+    </select>
+    
+    <select id="countLawListsByTfcLwInfo" parameterType="com.moz.ates.traffic.common.entity.law.MozTfcLwInfo" resultType="int">
+        SELECT  COUNT(*) AS "cnt"
+        FROM    MOZ_TFC_LW_INFO
+        WHERE   1=1
+        <include refid="enfLawList-Where"/>
+    </select>
+    
+    <select id="findOneLawDetail" parameterType="String" resultType="com.moz.ates.traffic.common.entity.law.MozTfcLwInfo">
+        SELECT   TFC_LAW_ID
+                 , LAW_NM
+                 , LAW_ARTICLE_NO
+                 , LAW_DESC
+                 , CR_DT
+                 , CRTR
+        FROM    MOZ_TFC_LW_INFO
+        WHERE   TFC_LAW_ID = #{tfcLawId}
+
+    </select>
+    
+   	<!-- 법률 조회 -->
+	<select id="selectTrafficLawsList" parameterType="com.moz.ates.traffic.common.entity.law.MozTfcLwInfo" resultType="com.moz.ates.traffic.common.entity.law.MozTfcLwInfo">
+		SELECT 	TFC_LAW_ID
+				, LAW_NM
+				, LAW_ARTICLE_NO
+				, LAW_DESC
+		FROM	MOZ_TFC_LW_INFO
+	</select>
+    
+	<insert id="insertMozTfcLwInfo" parameterType="com.moz.ates.traffic.common.entity.law.MozTfcLwInfo">
+        INSERT INTO MOZ_TFC_LW_INFO
+            (
+                TFC_LAW_ID
+                , LAW_NM
+                , LAW_ARTICLE_NO
+                , LAW_DESC
+                , CR_DT
+                , CRTR
+            )
+        VALUES
+            (
+                LAW_SEQ.NEXTVAL
+               , #{lawNm}
+               , #{lawArticleNo}
+               , #{lawDesc}
+               , NOW()
+               , 'auto'
+            )
+    </insert>
+    
+     <update id="updateMozTfcLwInfoByTfcLawId" parameterType="com.moz.ates.traffic.common.entity.law.MozTfcLwInfo">
+        UPDATE  MOZ_TFC_LW_INFO
+        SET     LAW_NM=#{lawNm}
+                , LAW_ARTICLE_NO=#{lawArticleNo}
+                , LAW_DESC=#{lawDesc}
+        WHERE   TFC_LAW_ID=#{tfcLawId}
+    </update>
+    
+    <delete id="deleteMozTfcLwInfoByTfcLawId" parameterType="String">
+        DELETE FROM MOZ_TFC_LW_INFO
+        WHERE
+        	TFC_LAW_ID=#{tfcLawId}
+    </delete>
+    
+</mapper>

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.menu.MozMenuRepository">
+    <select id="selectList" parameterType="com.moz.ates.traffic.common.entity.menu.MozMenu" resultType="com.moz.ates.traffic.common.entity.menu.MozMenu">
+    	SELECT * FROM MOZ_MENU
+    </select>
+    
+    <select id="selectParentMenuListByMenuAuth" parameterType="String" resultType="com.moz.ates.traffic.common.entity.menu.MozMenu">
+	     SELECT
+			mm.MENU_ID,
+			mm.PARENT_MENU_ID,
+			mm.MAIN_SORT_NO,
+			mm.MENU_NM_ENG,
+			mm.MENU_NM_POR,
+			mm.USE_YN,
+			mm.SUB_SORT_NO,
+			mm.MENU_URL,
+			mm.CR_DT,
+			mm.CRTR,
+			mm.MENU_ABV
+		FROM
+			MOZ_MENU mm
+		INNER JOIN MOZ_AUTH_MENU mam ON mm.MENU_ID = mam.MENU_ID
+		INNER JOIN MOZ_AUTH ma ON mam.AUTH_ID = ma.AUTH_ID
+		WHERE
+			PARENT_MENU_ID IS NULL
+			AND USE_YN = 'Y'
+			AND (mam.READ_YN = 'Y' AND mam.AUTH_ID  = #{authId})
+		GROUP BY mm.MENU_ID 
+		ORDER BY
+			mm.MAIN_SORT_NO
+    </select>
+    
+    <select id="selectSubMenuListByMenuAuthAndMenuId" parameterType="java.util.HashMap" resultType="com.moz.ates.traffic.common.entity.menu.MozMenu">
+	    SELECT
+			mm.MENU_ID,
+			mm.PARENT_MENU_ID,
+			mm.MAIN_SORT_NO,
+			mm.MENU_NM_ENG,
+			mm.MENU_NM_POR,
+			mm.USE_YN,
+			mm.SUB_SORT_NO,
+			mm.MENU_URL,
+			mm.CR_DT,
+			mm.CRTR,
+			mm.MENU_ABV
+		FROM
+			MOZ_MENU mm
+			INNER JOIN MOZ_AUTH_MENU mam ON mm.MENU_ID = mam.MENU_ID
+			INNER JOIN MOZ_AUTH ma ON mam.AUTH_ID = ma.AUTH_ID
+		WHERE
+			PARENT_MENU_ID = #{menuId}
+			AND USE_YN = 'Y'
+			AND (mam.READ_YN = 'Y' AND mam.AUTH_ID  = #{authId})
+		GROUP BY mm.MENU_ID 
+		ORDER BY
+			mm.SUB_SORT_NO
+    </select>
+    
+    <select id="selectParentMenuList" resultType="com.moz.ates.traffic.common.entity.menu.MozMenu">
+    SELECT
+		mm.MENU_ID,
+		mm.PARENT_MENU_ID,
+		mm.MAIN_SORT_NO,
+		mm.MENU_NM_ENG,
+		mm.MENU_NM_POR,
+		mm.USE_YN,
+		mm.SUB_SORT_NO,
+		mm.MENU_URL,
+		mm.CR_DT,
+		mm.CRTR,
+		mm.MENU_ABV
+	FROM
+		MOZ_MENU mm
+	WHERE
+		PARENT_MENU_ID IS NULL
+		AND USE_YN = 'Y'
+	ORDER BY
+		mm.MAIN_SORT_NO
+    </select>
+    
+    <select id="selectSubMenuListByMenuId" parameterType="String" resultType="com.moz.ates.traffic.common.entity.menu.MozMenu">
+    SELECT
+		mm.MENU_ID,
+		mm.PARENT_MENU_ID,
+		mm.MAIN_SORT_NO,
+		mm.MENU_NM_ENG,
+		mm.MENU_NM_POR,
+		mm.USE_YN,
+		mm.SUB_SORT_NO,
+		mm.MENU_URL,
+		mm.CR_DT,
+		mm.CRTR,
+		mm.MENU_ABV
+	FROM
+		MOZ_MENU mm
+	WHERE
+		PARENT_MENU_ID = #{menuId}
+		AND USE_YN = 'Y'
+	ORDER BY
+		mm.SUB_SORT_NO
+    </select>
+</mapper>

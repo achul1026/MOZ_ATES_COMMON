@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.accident.MozTfcAcdntMasterRepository">
+	
+	<sql id="acdntMngList-Where">
+		<if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
+            <![CDATA[
+                AND TO_CHAR(tamt.ACDNT_DT, 'YYYY-MM-DD') >= #{sDate}
+            ]]>
+        </if>
+        <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
+            <![CDATA[
+                AND TO_CHAR(tamt.ACDNT_DT, 'YYYY-MM-DD') <= #{eDate}
+            ]]>
+        </if>
+        <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
+            <![CDATA[
+                AND TO_CHAR(tamt.ACDNT_DT, 'YYYY-MM-DD') >= #{sDate}
+                AND TO_CHAR(tamt.ACDNT_DT, 'YYYY-MM-DD') <= #{eDate}
+            ]]>
+        </if>
+    </sql>
+    
+    <resultMap type="com.moz.ates.traffic.common.entity.driver.MozVioInfo" id="vioInfoForSelectMngDetail">
+		<result column="VIO_NM" property="vioNm"/>
+	</resultMap>
+	
+	<resultMap type="com.moz.ates.traffic.common.entity.common.MozCmCd" id="cmCdForSelectMngDetail">
+		<result column="CD_NM" property="cdNm"/>
+	</resultMap>
+
+	<resultMap type="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster" id="selectMngDetailForTfcAcdntMaster">
+		<result column="TFC_ACDNT_ID" property="tfcAcdntId"/>
+		<result column="VH_REG_NO" property="vhRegNo"/>
+		<result column="ACDNT_DT" property="acdntDt"/>
+		<result column="LAST_ACDNT_PRC_CD" property="lastAcdntPrcCd"/>
+		<result column="ROAD_ADDR" property="roadAddr"/>
+		<result column="POL_ID" property="polId"/>
+		<collection property="cmCd" resultMap="cmCdForSelectMngDetail"/>
+		<collection property="vioInfo" resultMap="vioInfoForSelectMngDetail"/>
+	</resultMap>
+	
+	<select id="selectAcdntList" resultType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster" parameterType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster">
+        SELECT TFC_ACDNT_ID
+        		, ACDNT_DT
+        		, ROAD_ADDR
+        		, LAT
+        		, LNG
+        FROM	MOZ_TFC_ACDNT_MASTER
+        ORDER BY ACDNT_DT DESC
+        LIMIT #{length} OFFSET #{start}
+    </select>
+    
+    <select id="selectAccidentInfo" resultType="com.moz.ates.traffic.common.entity.common.AccidentDomain">
+		SELECT
+			ROAD_ADDR 
+			, LAT
+			, LNG
+		FORM MOZ_TFC_ACDNT_MASTER
+		WHERE TFC_ACDNT_ID = #{tfcAcdntId}
+	</select>
+	
+	<select id="selectAcdntDupliCnt" parameterType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster" resultType="int">
+        SELECT  COUNT(*)    AS "cnt"
+        FROM    MOZ_TFC_ACDNT_MASTER
+        WHERE   TFC_ACDNT_ID = #{tfcAcdntId}
+    </select>
+    
+    <select id="countTfcAcdntMaster" parameterType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster" resultType="int">
+        SELECT  COUNT(*)    AS "cnt"
+        FROM    MOZ_TFC_ACDNT_MASTER
+        WHERE   TFC_ACDNT_ID = #{tfcAcdntId}
+    </select>
+    
+    <select id="selectMngList" parameterType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster" resultType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster">
+        SELECT  tamt.TFC_ACDNT_ID
+                , vit.VIO_NM
+                , tamt.VH_REG_NO
+                , tamt.ACDNT_DT
+                , tamt.ROAD_ADDR
+        FROM    MOZ_TFC_ACDNT_MASTER tamt
+                LEFT JOIN MOZ_CM_CD cct ON (cct.CD_ID = tamt.LAST_ACDNT_PRC_CD)
+                LEFT JOIN MOZ_TFC_ENF_MASTER temt ON (temt.TFC_ACDNT_ID = tamt.TFC_ACDNT_ID)
+                LEFT JOIN MOZ_VIO_INFO vit ON (temt.VIO_ID = vit.VIO_ID)
+        WHERE   1=1
+        <include refid="acdntMngList-Where"/>
+        ORDER BY tamt.ACDNT_DT DESC
+        LIMIT #{length} OFFSET #{start}
+    </select>
+    
+    <select id="selectMngListCnt" parameterType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster" resultType="int">
+        SELECT  COUNT(*)    AS "cnt"
+        FROM    MOZ_TFC_ACDNT_MASTER tamt
+                LEFT JOIN MOZ_CM_CD cct ON (cct.CD_ID = tamt.LAST_ACDNT_PRC_CD)
+                LEFT JOIN MOZ_TFC_ENF_MASTER temt ON (temt.TFC_ACDNT_ID = tamt.TFC_ACDNT_ID)
+                LEFT JOIN MOZ_VIO_INFO vit ON (temt.VIO_ID = vit.VIO_ID)
+       	WHERE   1=1
+        <include refid="acdntMngList-Where"/>
+    </select>
+    
+    <select id="findAllMozTfcAcdntMaster" parameterType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster" resultType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster">
+        SELECT  ROW_NUMBER() OVER(ORDER BY tamt.ACDNT_DT) AS rnum
+        		, tamt.TFC_ACDNT_ID
+                , vit.VIO_NM
+                , tamt.VH_REG_NO
+                , tamt.ACDNT_DT
+                , tamt.ROAD_ADDR
+        FROM    MOZ_TFC_ACDNT_MASTER tamt
+                LEFT JOIN MOZ_CM_CD cct ON (cct.CD_ID = tamt.LAST_ACDNT_PRC_CD)
+                LEFT JOIN MOZ_TFC_ENF_MASTER temt ON (temt.TFC_ACDNT_ID = tamt.TFC_ACDNT_ID)
+                LEFT JOIN MOZ_VIO_INFO vit ON (temt.VIO_ID = vit.VIO_ID)
+        WHERE   1=1
+        <include refid="acdntMngList-Where"/>
+        ORDER BY rnum DESC
+        LIMIT #{length} OFFSET #{start}
+    </select>
+    
+    <select id="countMozTfcAcdntMaster" parameterType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster" resultType="int">
+        SELECT  COUNT(*)    AS "cnt"
+        FROM    MOZ_TFC_ACDNT_MASTER tamt
+                LEFT JOIN MOZ_CM_CD cct ON (cct.CD_ID = tamt.LAST_ACDNT_PRC_CD)
+                LEFT JOIN MOZ_TFC_ENF_MASTER temt ON (temt.TFC_ACDNT_ID = tamt.TFC_ACDNT_ID)
+                LEFT JOIN MOZ_VIO_INFO vit ON (temt.VIO_ID = vit.VIO_ID)
+       	WHERE   1=1
+        <include refid="acdntMngList-Where"/>
+    </select>
+	
+    <select id="selectMngDetail" parameterType="String" resultMap="selectMngDetailForTfcAcdntMaster">
+        SELECT  tamt.TFC_ACDNT_ID
+                , tamt.VH_REG_NO
+                , tamt.ACDNT_DT
+                , tamt.LAST_ACDNT_PRC_CD
+                , tamt.ROAD_ADDR
+                , tamt.POL_ID
+                , vit.VIO_NM
+                , cct.CD_NM
+        FROM    MOZ_TFC_ACDNT_MASTER tamt
+                LEFT JOIN MOZ_CM_CD cct ON (cct.CD_ID = tamt.LAST_ACDNT_PRC_CD)
+                LEFT JOIN MOZ_TFC_ENF_MASTER temt ON (temt.TFC_ACDNT_ID = tamt.TFC_ACDNT_ID)
+                LEFT JOIN MOZ_VIO_INFO vit ON (temt.VIO_ID = vit.VIO_ID)
+        WHERE   tamt.TFC_ACDNT_ID=#{tfcAcdntId}
+    </select>
+    
+    <insert id="insertAcdnt" parameterType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster">
+        INSERT INTO MOZ_TFC_ACDNT_MASTER	(
+											TFC_ACDNT_ID,
+											ACDNT_VH_GRP_ID,
+											VH_REG_NO,
+											VH_TY,
+											ACDNT_DT,
+											LAST_ACDNT_PRC_CD,
+											LAT,
+											LNG,
+											ROAD_ADDR,
+											CR_DT,
+											CRTR,
+											POL_ID
+										)VALUES(
+											#{tfcAcdntId},
+											#{acdntVhGrpId},
+											#{vhRegNo},
+											#{vhTy},
+											NOW(),
+											#{lastAcdntPrcCd},
+											#{lat},
+											#{lng},
+											#{roadAddr},
+											NOW(),
+											#{crtr},
+											#{polId}
+										)
+    </insert>
+    
+    <insert id="saveMozTfcAcdntMaster" parameterType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster">
+        INSERT INTO MOZ_TFC_ACDNT_MASTER	(
+											TFC_ACDNT_ID,
+											ACDNT_VH_GRP_ID,
+											VH_REG_NO,
+											VH_TY,
+											ACDNT_DT,
+											LAST_ACDNT_PRC_CD,
+											LAT,
+											LNG,
+											ROAD_ADDR,
+											CR_DT,
+											CRTR,
+											POL_ID
+										)VALUES(
+											#{tfcAcdntId},
+											#{acdntVhGrpId},
+											#{vhRegNo},
+											#{vhTy},
+											NOW(),
+											#{lastAcdntPrcCd},
+											#{lat},
+											#{lng},
+											#{roadAddr},
+											NOW(),
+											#{crtr},
+											#{polId}
+										)
+    </insert>
+    
+    <update id="upateAcdnt" parameterType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster">
+        UPDATE  MOZ_TFC_ACDNT_MASTER
+        SET     VH_REG_NO = #{vhRegNo}
+                , ACDNT_DT = #{acdntDt}
+                , LAST_ACDNT_PRC_CD = #{lastAcdntPrcCd}
+                , ROAD_ADDR = #{roadAddr}
+        WHERE   TFC_ACDNT_ID = #{tfcAcdntId}
+
+    </update>
+    
+    <update id="updateMozTfcAcdntMaster" parameterType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster">
+        UPDATE  MOZ_TFC_ACDNT_MASTER
+        SET     VH_REG_NO = #{vhRegNo}
+                , ACDNT_DT = #{acdntDt}
+                , LAST_ACDNT_PRC_CD = #{lastAcdntPrcCd}
+                , ROAD_ADDR = #{roadAddr}
+        WHERE   TFC_ACDNT_ID = #{tfcAcdntId}
+
+    </update>
+    
+</mapper>

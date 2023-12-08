@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.board.MozObjRegRepository">
+	
+	<sql id="objectionList-Where">
+        <if test="searchType == 'all' and searchTxt != '' and searchTxt != null">
+            AND (POST_TTL LIKE '%' ||  #{searchTxt} || '%' OR WRTR_EMAIL LIKE '%' ||  #{searchTxt} || '%')
+        </if>
+        <if test="searchType == 'POST_TTL' and searchTxt != '' and searchTxt != null">
+            AND POST_TTL LIKE '%' ||  #{searchTxt} || '%'
+        </if>
+        <if test="searchType == 'wrtrEmail' and searchTxt != '' and searchTxt != null">
+            AND WRTR_EMAIL LIKE '%' ||  #{searchTxt} || '%'
+        </if>
+        <if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
+            <![CDATA[
+                AND TO_CHAR(ORT.CR_DT, 'YYYY-MM-DD') >= #{sDate}
+            ]]>
+        </if>
+        <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
+            <![CDATA[
+                AND TO_CHAR(ORT.CR_DT, 'YYYY-MM-DD') <= #{eDate}
+            ]]>
+        </if>
+        <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
+            <![CDATA[
+             	AND TO_CHAR(ORT.CR_DT, 'YYYY-MM-DD') >= #{sDate}
+                AND TO_CHAR(ORT.CR_DT, 'YYYY-MM-DD') <= #{eDate}
+            ]]>
+        </if>
+    </sql>
+
+	<resultMap type="com.moz.ates.traffic.common.entity.common.MozCmCd" id="cmCdForSelectObjectionList">
+		<result column="CD_NM" property="cdNm"/>
+	</resultMap>
+	
+	<resultMap type="com.moz.ates.traffic.common.entity.board.MozObjReg" id="objRegForSelectObjectionList">
+		<result column="OBJ_IDX" property="objIdx"/>
+		<result column="WRTR_EMAIL" property="wrtrEmail"/>
+		<result column="POST_TTL" property="postTtl"/>
+		<result column="CR_DT" property="crDt"/>
+		<result column="ANS_STTS" property="ansStts"/>
+		<collection property="cmCd" resultMap="cmCdForSelectObjectionList"/>
+	</resultMap>
+	
+	<resultMap type="com.moz.ates.traffic.common.entity.common.MozCmCd" id="cmCdForselectObjectionDetail">
+		<result column="CD_NM" property="cdNm"/>
+	</resultMap>
+	
+	<resultMap type="com.moz.ates.traffic.common.entity.board.MozObjReg" id="objRegForselectObjectionDetail">
+		<result column="rnum" property="rnum"/>
+		<result column="OBJ_IDX" property="objIdx"/>
+		<result column="TFC_ENF_ID" property="tfcEnfId"/>
+		<result column="WRTR_EMAIL" property="wrtrEmail"/>
+		<result column="POST_TTL" property="postTtl"/>
+		<result column="POST_CN" property="postCn"/>
+		<result column="CR_DT" property="crDt"/>
+		<result column="OPRTR_ID" property="oprtrId"/>
+		<result column="ANS_EMAIL" property="ansEmail"/>
+		<result column="ANS_STTS" property="ansStts"/>
+		<result column="ANS_CONTENTS" property="ansContents"/>
+		<result column="ANS_CR_DT" property="ansCrDt"/>
+		<collection property="cmCd" resultMap="cmCdForselectObjectionDetail"/>
+	</resultMap>
+	
+    <select id="findAllMozObjReg" parameterType="com.moz.ates.traffic.common.entity.board.MozObjReg" resultMap="objRegForSelectObjectionList">
+        SELECT  ROW_NUMBER() OVER(ORDER BY ort.CR_DT) AS rnum
+        		, OBJ_IDX
+                , cct.CD_NM
+                , WRTR_EMAIL
+                , POST_TTL
+                , ort.CR_DT
+                , ANS_STTS
+        FROM	MOZ_OBJ_REG ort , MOZ_CM_CD cct
+        WHERE ort.CATE_CD =cct.CD_ID			
+        <include refid="objectionList-Where"/> 
+		ORDER BY rnum DESC
+        LIMIT #{length} OFFSET #{start}
+    </select>
+    
+    <select id="countMozObjReg" parameterType="com.moz.ates.traffic.common.entity.board.MozObjReg" resultType="int">
+        SELECT  COUNT(*)    AS "cnt"
+        FROM	MOZ_OBJ_REG ort , MOZ_CM_CD cct
+        WHERE   ort.CATE_CD =cct.CD_ID
+        <include refid="objectionList-Where"/>
+    </select>
+
+    <select id="findOneMozObjReg" parameterType="String" resultMap="objRegForselectObjectionDetail">
+        SELECT  OBJ_IDX
+                , cct.CD_NM
+                , TFC_ENF_ID
+                , WRTR_EMAIL
+                , POST_TTL
+                , POST_CN
+                , ort.CR_DT
+                , OPRTR_ID
+                , ANS_EMAIL
+                , ANS_STTS
+                , ANS_CONTENTS
+                , ANS_CR_DT
+        FROM	MOZ_OBJ_REG ort
+                , MOZ_CM_CD cct
+        WHERE   ort.CATE_CD =cct.CD_ID
+                AND OBJ_IDX = #{objIdx}
+    </select>
+    
+    <!-- 이의제기 등록 -->
+	<insert id="insertObjectionInfo" parameterType="com.moz.ates.traffic.common.entity.board.MozObjReg">
+		INSERT INTO MOZ_OBJ_REG
+			(
+				OBJ_IDX,
+				TFC_ENF_ID,
+				CATE_CD,
+				WRTR_EMAIL,
+				POST_TTL,
+				POST_CN,
+				CR_DT
+			)VALUES(
+				OBJ_REG_SEQ.NEXTVAL,
+				#{tfcEnfId},
+				#{cateCd},
+				#{wrtrEmail},
+				#{postTtl},
+				#{postCn},
+				NOW()
+			)
+		
+	</insert>
+    
+   	<update id="updateObjAns" parameterType="com.moz.ates.traffic.common.entity.board.MozObjReg">
+        UPDATE MOZ_OBJ_REG ORT 
+        SET OPRTR_ID = 'admin'
+       		,ANS_EMAIL = #{ansEmail}
+     		,ANS_STTS = 'Y'
+      	  	,ANS_CONTENTS = #{ansContents}
+			,ANS_CR_DT = NOW() 
+      	  	,ANS_UPD_DT = NOW() 
+        WHERE OBJ_IDX = #{objIdx}
+    </update>
+</mapper>

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.payment.MozPlPymntInfoRepository">
+	
+	  <sql id="penaltyPlaceList-Where">
+        <if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
+            <![CDATA[
+                AND TO_CHAR(CR_DT, 'YYYY-MM-DD') >= #{sDate}
+            ]]>
+        </if>
+        <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
+            <![CDATA[
+                AND TO_CHAR(CR_DT, 'YYYY-MM-DD') <= #{eDate}
+            ]]>
+        </if>
+        <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
+            <![CDATA[
+             	AND TO_CHAR(CR_DT, 'YYYY-MM-DD') >= #{sDate}
+                AND TO_CHAR(CR_DT, 'YYYY-MM-DD') <= #{eDate}
+            ]]>
+        </if>
+    </sql>
+    
+    <select id="findAllPenaltyPlaceList" parameterType="com.moz.ates.traffic.common.entity.payment.MozPlPymntInfo" resultType="com.moz.ates.traffic.common.entity.payment.MozPlPymntInfo">
+        SELECT  ROW_NUMBER() OVER(ORDER BY CR_DT) AS rnum
+        		, PLACE_PYMNT_ID
+                , PLACE_PYMNT_NM
+                , PLACE_PYMNT_ADDR
+                , PLACE_PYMNT_RPRSV_NM
+        FROM    MOZ_PL_PYMNT_INFO
+        WHERE   1=1
+        <include refid="penaltyPlaceList-Where"/>
+        ORDER BY rnum DESC
+        LIMIT #{length} OFFSET #{start}
+    </select>
+    
+    <select id="countPenaltyPlaceList" parameterType="com.moz.ates.traffic.common.entity.payment.MozPlPymntInfo" resultType="int">
+        SELECT  COUNT(*)    AS "cnt"
+        FROM    MOZ_PL_PYMNT_INFO
+        WHERE   1=1
+    </select>
+    
+    <select id="findOnePenaltyPlaceDetail" parameterType="String" resultType="com.moz.ates.traffic.common.entity.payment.MozPlPymntInfo">
+        SELECT  PLACE_PYMNT_ID
+                , PLACE_PYMNT_NM
+                , PLACE_PYMNT_ADDR
+                , PLACE_PYMNT_RPRSV_NM
+                , CR_DT
+                , CRTR
+        FROM    MOZ_PL_PYMNT_INFO
+        WHERE   PLACE_PYMNT_ID = #{placePymntId}
+    </select>
+    
+   	<!-- 납부지 조회 -->
+	<select id="selectPlacePaymentList" parameterType="com.moz.ates.traffic.common.entity.payment.MozPlPymntInfo" resultType="com.moz.ates.traffic.common.entity.payment.MozPlPymntInfo">
+		SELECT 	PLACE_PYMNT_ID			AS "placePymntId",
+				PLACE_PYMNT_NM			AS "placePymntNm",
+				PLACE_PYMNT_ADDR		AS "placePymntAddr",
+				PLACE_PYMNT_RPRSV_NM	AS "placePymntRprsvNm"
+		FROM	MOZ_PL_PYMNT_INFO
+		<if test="placePymntId != null and placePymntId != ''">
+		WHERE 	PLACE_PYMNT_ID = #{placePymntId}
+		</if>
+	</select>
+    
+   	<update id="updatePenaltyPlace" parameterType="com.moz.ates.traffic.common.entity.payment.MozPlPymntInfo">
+        UPDATE  MOZ_PL_PYMNT_INFO
+        SET     PLACE_PYMNT_NM = #{placePymntNm}
+                , PLACE_PYMNT_ADDR = #{placePymntAddr}
+                , PLACE_PYMNT_RPRSV_NM = #{placePymntRprsvNm}
+        WHERE   PLACE_PYMNT_ID = #{placePymntId}
+    </update>
+	
+	<insert id="saveMozPlPymntInfo" parameterType="com.moz.ates.traffic.common.entity.payment.MozPlPymntInfo">
+        INSERT INTO MOZ_PL_PYMNT_INFO
+            (
+                PLACE_PYMNT_ID
+                , PLACE_PYMNT_NM
+                , PLACE_PYMNT_ADDR
+                , PLACE_PYMNT_RPRSV_NM
+                , CR_DT
+                , CRTR
+            )
+        VALUES
+            (
+                PLACE_SEQ.NEXTVAL
+               , #{placePymntNm}
+               , #{placePymntAddr}
+               , #{placePymntRprsvNm}
+               , NOW()
+               , #{crtr}
+            )
+    </insert>
+    
+    <delete id="deletePenaltyPlace" parameterType="String">
+        DELETE FROM MOZ_PL_PYMNT_INFO
+        WHERE       PLACE_PYMNT_ID=#{placePymntId}
+
+    </delete>
+</mapper>

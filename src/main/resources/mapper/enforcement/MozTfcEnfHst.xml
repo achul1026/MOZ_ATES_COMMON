@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.enforcement.MozTfcEnfHstRepository">
+	
+	<sql id="enfLogList-Where">
+        <if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
+            <![CDATA[
+                AND TO_CHAR(teht.CR_DT, 'YYYY-MM-DD') >= #{sDate}
+            ]]>
+        </if>
+        <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
+            <![CDATA[
+                AND TO_CHAR(teht.CR_DT, 'YYYY-MM-DD') <= #{eDate}
+            ]]>
+        </if>
+        <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
+            <![CDATA[
+                AND TO_CHAR(teht.CR_DT, 'YYYY-MM-DD') >= #{sDate}
+                AND TO_CHAR(teht.CR_DT, 'YYYY-MM-DD') <= #{eDate}
+            ]]>
+        </if>
+    </sql>  
+	
+	<resultMap type="com.moz.ates.traffic.common.entity.common.MozCmCd" id="cmCdForSelectLogList">
+		<result column="CD_NM" property="cdNm"/>
+	</resultMap>
+	
+	<resultMap type="com.moz.ates.traffic.common.entity.enforcement.MozTfcEnfHst" id="tfcEnfHstForSelectLogList">
+		<result column="HST_ID" property="hstId"/>
+		<result column="TFC_ENF_ID" property="tfcEnfId"/>
+		<result column="OPRTR_ID" property="oprtrId"/>
+		<result column="TFC_ENF_PRC_CD" property="tfcEnfPrcCd"/>
+		<result column="CMNT" property="cmnt"/>
+		<result column="CR_DT" property="crDt"/>
+		<result column="CRTR" property="crtr"/>
+		<collection property="cmCd" resultMap="cmCdForSelectLogList"/>
+	</resultMap>
+	
+	<select id="findAllLogListsByTfcEnfHst" parameterType="com.moz.ates.traffic.common.entity.enforcement.MozTfcEnfHst" resultMap="tfcEnfHstForSelectLogList">
+        SELECT  teht.HST_ID
+                , teht.TFC_ENF_ID
+                , teht.OPRTR_ID
+                , teht.TFC_ENF_PRC_CD
+                , teht.CR_DT
+                , teht.CRTR
+                , teht.CMNT
+                , cct.CD_NM
+        FROM    MOZ_TFC_ENF_HST teht
+                LEFT JOIN MOZ_CM_CD cct ON (teht.TFC_ENF_PRC_CD=cct.CD_ID)
+        WHERE 	1=1
+        <include refid="enfLogList-Where"/>
+        ORDER BY teht.CR_DT DESC
+       	LIMIT #{length} OFFSET #{start}
+    </select>
+    
+    <select id="countLogListsByTfcEnfHst" parameterType="com.moz.ates.traffic.common.entity.enforcement.MozTfcEnfHst" resultType="int">
+        SELECT  COUNT(*)    AS "cnt"
+        FROM    MOZ_TFC_ENF_HST teht
+                LEFT JOIN MOZ_CM_CD cct ON (teht.TFC_ENF_PRC_CD=cct.CD_ID)
+        WHERE 	1=1
+        <include refid="enfLogList-Where"/>
+    </select>
+    
+    <!-- 위반 로그 정보 등록 -->
+	<insert id="insertTfcEnfHstInfo" parameterType="com.moz.ates.traffic.common.entity.enforcement.MozTfcEnfHst">
+		INSERT INTO MOZ_TFC_ENF_HST 
+			(
+				HST_ID,
+				TFC_ENF_ID,
+				TFC_ENF_PRC_CD,
+				CR_DT,
+				CRTR
+		   )VALUES(
+				#{hstId},
+				#{tfcEnfId},
+				#{tfcEnfPrcCd},
+				NOW(),
+				#{crtr}
+	 	   )
+	</insert>
+</mapper>

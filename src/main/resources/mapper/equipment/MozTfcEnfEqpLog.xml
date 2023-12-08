@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.equipment.MozTfcEnfEqpLogRepository">
+	
+	<sql id="eqpLogList-Where">
+		<if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
+		    <![CDATA[
+		        AND TO_CHAR(CR_DT, 'YYYY-MM-DD') >= #{sDate}
+		    ]]>
+		</if>
+		<if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
+		    <![CDATA[
+		        AND TO_CHAR(CR_DT, 'YYYY-MM-DD') <= #{eDate}
+		    ]]>
+		</if>
+		<if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
+		    <![CDATA[
+		        AND TO_CHAR(CR_DT, 'YYYY-MM-DD') >= #{sDate}
+		        AND TO_CHAR(CR_DT, 'YYYY-MM-DD') <= #{eDate}
+		    ]]>
+		</if>
+    </sql>    
+    
+	<select id="findAllMozTfcEnfEqpLog" parameterType="com.moz.ates.traffic.common.entity.equipment.MozTfcEnfEqpLog" resultType="com.moz.ates.traffic.common.entity.equipment.MozTfcEnfEqpLog">
+        SELECT  ROW_NUMBER() OVER(ORDER BY CR_DT) AS rnum
+        		, LOG_ID
+                , TFC_ENF_EQP_ID
+                , ROAD_LN
+                , CNTRL_REQ_TY
+                , CNTRL_RESULT
+                , CR_DT
+                , CRTR
+        FROM	MOZ_TFC_ENF_EQP_LOG
+        WHERE   1=1
+		<include refid="eqpLogList-Where"/>
+		ORDER BY rnum DESC
+		LIMIT #{length} OFFSET #{start}
+    </select>
+
+    <select id="countMozTfcEnfEqpLog" parameterType="com.moz.ates.traffic.common.entity.equipment.MozTfcEnfEqpLog" resultType="int">
+        SELECT  COUNT(*)    AS "cnt"
+        FROM	MOZ_TFC_ENF_EQP_LOG
+        WHERE   1=1
+		<include refid="eqpLogList-Where"/>
+    </select>
+    
+</mapper>

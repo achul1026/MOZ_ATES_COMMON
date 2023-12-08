@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.enforcement.MozTfcEnfMasterRepository">
+	
+	
+	<resultMap type="com.moz.ates.traffic.common.entity.payment.MozFinePymntInfo" id="finePymntInfo">
+		<result column="TOTAL_PRICE" property="totalPrice"/>
+		<result column="PYMNT_STTS" property="pymntStts"/>
+		<result column="PYMNT_ID" property="pymntId"/>
+		<result column="PAYER_NM" property="payerNm"/>
+		<result column="PYMNT_PRICE" property="pymntPrice"/>
+		<result column="PYMNT_DDLN" property="pymntDdln"/>
+		<result column="PYMNT_METHOD" property="pymntMethod"/>
+	</resultMap>
+	
+	<resultMap type="com.moz.ates.traffic.common.entity.driver.MozVioInfo" id="vioInfo">
+		<result column="VIO_ID" property="vioId"/>
+		<result column="DVR_LCEN_ID" property="dvrLcenId"/>
+		<result column="VIO_NM" property="vioNm"/>
+		<result column="VIO_BRTH" property="vioBrth"/>
+		<result column="VIO_ADDR" property="vioAddr"/>
+		<result column="VIO_PNO" property="vioPno"/>
+		<result column="VIO_EMAIL" property="vioEmail"/>
+		<result column="DVR_LCEN_TY" property="dvrLcenTy"/>
+	</resultMap>
+	
+	<resultMap type="com.moz.ates.traffic.common.entity.law.MozTfcLwInfo" id="tfcLwInfo">
+		<result column="LAW_NM" property="lawNm"/>
+	</resultMap>
+	
+	<resultMap type="com.moz.ates.traffic.common.entity.enforcement.MozTfcEnfMaster" id="tfcEnfMaster">
+		<result column="RNUM" property="rnum"/>
+		<result column="TFC_ENF_ID" property="tfcEnfId"/>
+		<result column="VIO_ID" property="vioId"/>
+		<result column="TFC_LAW_ID" property="tfcLawId"/>
+		<result column="TFC_ENF_EQP_ID" property="tfcEnfEqpId"/>
+		<result column="POL_ID" property="polId"/>
+		<result column="TFC_ENF_DT" property="tfcEnfDt"/>
+		<result column="ROAD_ADDR" property="roadAddr"/>
+		<result column="ROAD_LN" property="roadLn"/>
+		<result column="VH_REG_NO" property="vhRegNo"/>
+		<result column="VH_TY" property="vhTy"/>
+		<result column="SPD_LMT" property="spdLmt"/>
+		<result column="VIO_SPD" property="vioSpd"/>
+		<result column="OVER_SPD" property="overSpd"/>
+		<result column="TFC_ACDNT_ID" property="tfcAcdntId"/>
+		<result column="VIO_FILE_NO" property="vioFileNo"/>
+		<result column="LAST_TFC_ENF_PROC_CD" property="lastTfcEnfProcCd"/>
+		<result column="TFC_ENF_DETAIL" property="tfcEnfDetail"/>
+		<result column="TFC_ENF_INFOIMAGE" property="tfcEnfInfoimage"/>
+		<result column="TFC_ENF_IMAGEPATH" property="tfcEnfImagepath"/>
+		<result column="LNG" property="lng"/>
+		<result column="LAT" property="lat"/>
+		<collection property="finePymntInfo" resultMap="finePymntInfo"/>
+		<collection property="tfcLwInfo" resultMap="tfcLwInfo"/>
+		<collection property="vioInfo" resultMap="vioInfo"/>
+	</resultMap>
+	
+	<select id="selectEnfList" parameterType="com.moz.ates.traffic.common.entity.enforcement.MozTfcEnfMaster" resultType="com.moz.ates.traffic.common.entity.enforcement.MozTfcEnfMaster">
+        SELECT  TFC_ENF_ID
+        		, TFC_ENF_DT
+                , ROAD_ADDR
+                , lat
+                , lng
+        FROM    MOZ_TFC_ENF_MASTER
+        ORDER BY TFC_ENF_DT DESC
+        LIMIT #{length} OFFSET #{start}
+    </select>
+    
+    <sql id="enfInfoList-Where">
+<!--    <if test="searchType == 'all' and searchTxt != '' and searchTxt != null">
+               AND (VIO_ID LIKE '%' ||  #{searchTxt} || '%' OR LAST_TFC_ENF_PROC_CD LIKE '%' ||  #{searchTxt} || '%')
+        </if> -->
+        <if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
+            <![CDATA[
+                AND TO_CHAR(TFC_ENF_DT, 'YYYY-MM-DD') >= #{sDate}
+            ]]>
+        </if>
+        <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
+            <![CDATA[
+                AND TO_CHAR(TFC_ENF_DT, 'YYYY-MM-DD') <= #{eDate}
+            ]]>
+        </if>
+        <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
+            <![CDATA[
+                AND TO_CHAR(TFC_ENF_DT, 'YYYY-MM-DD') >= #{sDate}
+                AND TO_CHAR(TFC_ENF_DT, 'YYYY-MM-DD') <= #{eDate}
+            ]]>
+        </if>
+    </sql>
+    
+    <select id="selectOne" parameterType="String" resultType="com.moz.ates.traffic.common.entity.enforcement.MozTfcEnfMaster">
+    	SELECT * 
+    	FROM MOZ_TFC_ENF_MASTER
+    	WHERE TFC_ENF_ID = #{tfcEnfId}
+    </select>
+    
+    <select id="findAllInfoList" parameterType="com.moz.ates.traffic.common.entity.enforcement.MozTfcEnfMaster" resultType="com.moz.ates.traffic.common.entity.enforcement.MozTfcEnfMaster">
+        SELECT  
+        				ROW_NUMBER() OVER(ORDER BY TFC_ENF_DT) AS rnum
+        				, TFC_ENF_ID
+                , VIO_ID
+                , TFC_ENF_DT
+                , ROAD_ADDR
+                , LAST_TFC_ENF_PROC_CD
+        FROM    MOZ_TFC_ENF_MASTER
+        WHERE  1=1
+		<include refid="enfInfoList-Where"/>
+		ORDER BY rnum DESC
+		LIMIT #{length} OFFSET #{start}
+    </select>
+    
+    <select id="countInfoList" parameterType="com.moz.ates.traffic.common.entity.enforcement.MozTfcEnfMaster" resultType="int">
+        SELECT  COUNT(*)    AS "cnt"
+        FROM    MOZ_TFC_ENF_MASTER
+        WHERE  1=1
+		<include refid="enfInfoList-Where"/>
+    </select>
+    
+    <select id="findOneMozTfcEnfMasterBytfcEnfId" parameterType="String" resultMap="tfcEnfMaster">
+        SELECT  temt.TFC_ENF_ID
+                , temt.VIO_ID
+                , temt.TFC_ENF_DT
+                , temt.ROAD_ADDR
+                , temt.TFC_ACDNT_ID
+                , temt.LAST_TFC_ENF_PROC_CD
+                , temt.TFC_ENF_DETAIL
+                , temt.TFC_ENF_INFOIMAGE
+                , temt.TFC_ENF_IMAGEPATH
+                , temt.LNG
+                , temt.LAT
+                , fpit.TOTAL_PRICE
+                , fpit.PYMNT_STTS
+        FROM    MOZ_TFC_ENF_MASTER temt,
+                MOZ_FINE_PYMNT_INFO fpit
+        WHERE temt.TFC_ENF_ID = fpit.TFC_ENF_ID
+				AND temt.TFC_ENF_ID = #{tfcEnfId}
+    </select>
+    
+    <select id="selectEnforcementList" resultType="com.moz.ates.traffic.common.entity.common.EnforcementDomain">
+		SELECT
+			ROAD_ADDR 
+			, LAT
+			, LNG
+		FROM
+			MOZ_TFC_ENF_MASTER
+		ORDER BY CR_DT DESC
+	</select>
+	
+	<!-- 벌금 내역 조회 -->
+	<select id="selectFinesListTotalCnt" parameterType="map" resultType="int">
+		SELECT 	COUNT(*)
+		FROM 	MOZ_TFC_ENF_MASTER	TEMT
+		INNER JOIN MOZ_VIO_INFO VIT	ON TEMT.VIO_ID = VIT.VIO_ID
+		INNER JOIN MOZ_TFC_LW_INFO	TLIT ON TEMT.TFC_LAW_ID = TLIT.TFC_LAW_ID
+		INNER JOIN MOZ_FINE_PYMNT_INFO FPIT ON 	TEMT.TFC_ENF_ID = FPIT.TFC_ENF_ID
+		WHERE 	VIT.VIO_NM = #{vioNm}
+		AND		VIT.DVR_LCEN_ID = #{dvrLcenId}
+		ORDER BY TEMT.CR_DT DESC
+	</select>
+	
+	<!-- 벌금 내역 상세 조회 -->
+	<select id="selectFinesDetail" parameterType="com.moz.ates.traffic.common.entity.enforcement.MozTfcEnfMaster" resultMap="tfcEnfMaster">
+		SELECT 
+				TEMT.TFC_ENF_ID,
+				TEMT.VIO_ID,
+				TEMT.TFC_LAW_ID,
+				TEMT.TFC_ENF_EQP_ID,
+				TEMT.POL_ID,
+				TEMT.TFC_ACDNT_ID,
+				TEMT.VIO_FILE_NO,
+				TEMT.TFC_ENF_DT,
+				TEMT.ROAD_ADDR,
+				TEMT.ROAD_LN,
+				TEMT.VH_REG_NO,
+				TEMT.VH_TY,
+				TEMT.SPD_LMT,
+				TEMT.VIO_SPD,
+				TEMT.OVER_SPD,
+				TEMT.LAST_TFC_ENF_PROC_CD,
+				TEMT.LAT,
+				TEMT.LNG,
+				TLIT.LAW_NM,
+				FPIT.PYMNT_STTS,
+				FPIT.PYMNT_ID,
+				VIT.VIO_ID,
+				VIT.DVR_LCEN_ID,
+				VIT.VIO_NM,
+				VIT.VIO_BRTH,
+				VIT.VIO_ADDR,
+				VIT.VIO_PNO,
+				VIT.VIO_EMAIL,
+				VIT.DVR_LCEN_TY
+		FROM 	MOZ_TFC_ENF_MASTER	TEMT
+		INNER JOIN MOZ_VIO_INFO VIT	ON TEMT.VIO_ID = VIT.VIO_ID
+		INNER JOIN MOZ_TFC_LW_INFO	TLIT ON TEMT.TFC_LAW_ID = TLIT.TFC_LAW_ID
+		INNER JOIN MOZ_FINE_PYMNT_INFO FPIT ON 	TEMT.TFC_ENF_ID = FPIT.TFC_ENF_ID
+		WHERE TEMT.VIO_ID = #{vioId}	
+	</select>
+	
+	<!-- 결제정보 조회 -->
+	<select id="selectPaymentInfo" parameterType="hashMap" resultMap="tfcEnfMaster">
+		SELECT 
+				TEMT.TFC_ENF_ID,
+				TEMT.VIO_ID,
+				TEMT.TFC_LAW_ID,
+				TEMT.TFC_ENF_EQP_ID,
+				TEMT.POL_ID,
+				TEMT.TFC_ACDNT_ID,
+				TEMT.VIO_FILE_NO,
+				TEMT.TFC_ENF_DT,
+				TEMT.ROAD_ADDR,
+				TEMT.ROAD_LN,
+				TEMT.VH_REG_NO,
+				TEMT.VH_TY,
+				TEMT.SPD_LMT,
+				TEMT.VIO_SPD,
+				TEMT.OVER_SPD,
+				TEMT.LAST_TFC_ENF_PROC_CD,
+				TEMT.LAT,
+				TEMT.LNG,
+				TLIT.LAW_NM,
+				FPIT.PYMNT_STTS	,
+				FPIT.PYMNT_ID,
+				FPIT.PAYER_NM,
+				FPIT.PYMNT_PRICE,
+				FPIT.PYMNT_DDLN,
+				FPIT.PYMNT_METHOD
+		FROM 	MOZ_TFC_ENF_MASTER	TEMT
+		INNER JOIN MOZ_TFC_LW_INFO	TLIT ON TEMT.TFC_LAW_ID = TLIT.TFC_LAW_ID
+		INNER JOIN MOZ_FINE_PYMNT_INFO FPIT ON 	TEMT.TFC_ENF_ID = FPIT.TFC_ENF_ID
+		INNER JOIN MOZ_VIO_INFO	VIT ON TEMT.VIO_ID = VIT.VIO_ID
+		WHERE 1 = 1 
+		<if test="pymntStts != null and pymntStts != ''">
+		AND FPIT.PYMNT_STTS = #{pymntStts} 
+		</if>
+		<if test="pymntId != null and pymntId != ''">
+		AND FPIT.PYMNT_ID = #{pymntId} 
+		</if>
+		<if test="dvrLcenId != null and dvrLcenId != ''">
+		AND VIT.DVR_LCEN_ID = #{dvrLcenId} 
+		</if>
+		<if test="vioNm != null and vioNm != ''">
+		AND VIT.VIO_NM = #{vioNm} 
+		</if>
+		<if test="tfcEnfId != null and tfcEnfId != ''">
+		AND TEMT.TFC_ENF_ID = #{tfcEnfId} 
+		</if>
+	</select>
+	
+	<!-- 위반정보 등록-->
+	<insert id="insertTfcEnfInfo" parameterType="com.moz.ates.traffic.common.entity.enforcement.MozTfcEnfMaster">
+		INSERT INTO MOZ_TFC_ENF_MASTER
+			(
+				TFC_ENF_ID,
+				VIO_ID,
+				TFC_LAW_ID,
+				POL_ID,
+				TFC_ACDNT_ID,
+				TFC_ENF_DT,
+				ROAD_ADDR,
+				ROAD_LN,
+				VH_REG_NO,
+				VH_TY,
+				SPD_LMT,
+				VIO_SPD,
+				OVER_SPD,
+				LAST_TFC_ENF_PROC_CD,
+				LAT,
+				LNG,
+				CR_DT,
+				CRTR
+		 	)VALUES(
+			    #{tfcEnfId},
+			    #{vioId},
+			    #{tfcLawId},
+			    #{polId},
+			    #{tfcAcdntId},
+			    NOW(),
+			    #{roadAddr},
+			    #{roadLn},
+			    #{vhRegNo},
+			    #{vhTy},
+			    #{spdLmt},
+			    #{vioSpd},
+			    #{overSpd},
+			    #{lastTfcEnfProcCd},
+			    #{lat},
+			    #{lng},
+			    NOW(),
+			    #{crtr}
+			   )
+	</insert>
+	
+	<update id="updateMozTfcEnfMaster" parameterType="com.moz.ates.traffic.common.entity.enforcement.MozTfcEnfMaster">
+        UPDATE  MOZ_TFC_ENF_MASTER
+        SET     ROAD_ADDR = #{roadAddr}
+                <if test="tfcEnfImagepath != '' and tfcEnfImagepath != null and tfcEnfInfoimage != null and tfcEnfInfoimage != '' " >
+                    , TFC_ENF_INFOIMAGE = #{tfcEnfInfoimage}
+                    , TFC_ENF_IMAGEPATH = #{tfcEnfImagepath}
+                </if>
+                , LAST_TFC_ENF_PROC_CD = #{lastTfcEnfProcCd}
+                , TFC_ENF_DETAIL = #{tfcEnfDetail}
+                , LAT = #{lat}
+                , LNG = #{lng}
+        WHERE   TFC_ENF_ID = #{tfcEnfId}
+    </update>
+    
+    <update id="updatePenaltyMaster" parameterType="com.moz.ates.traffic.common.entity.enforcement.MozTfcEnfMaster">
+    	UPDATE MOZ_TFC_ENF_MASTER
+    		SET  TFC_ENF_DT = #{tfcEnfDt}
+				, ROAD_ADDR = #{roadAddr}
+				, VH_REG_NO = #{vhRegNo}
+				, CR_DT = NOW()
+		WHERE TFC_ENF_ID = #{tfcEnfId}
+    </update>
+	
+	<update id="insertPenaltyMaster" parameterType="com.moz.ates.traffic.common.entity.payment.MozFinePymntInfo">
+		UPDATE MOZ_TFC_ENF_MASTER
+			SET	VIO_ID = #{tfcEnfMaster.vioId}
+				, TFC_ENF_DT = TO_DATE(#{tfcEnfMaster.tfcEnfDt},'YYYY-MM-DD HH24:MI:SS')
+				, ROAD_ADDR = #{tfcEnfMaster.roadAddr}
+				, VH_REG_NO = #{tfcEnfMaster.vhRegNo}
+				, CR_DT = NOW()
+		WHERE TFC_ENF_ID = #{tfcEnfId}	
+	</update>
+	
+	<update id="deleteEnfImage" parameterType="com.moz.ates.traffic.common.entity.enforcement.MozTfcEnfMaster">
+    	UPDATE MOZ_TFC_ENF_MASTER
+   	 	SET    TFC_ENF_IMAGEPATH = #{tfcEnfImagePath},
+    	   	   TFC_ENF_INFOIMAGE = #{tfcEnfInfoImage}
+   		WHERE  TFC_ENF_ID = #{tfcEnfId}
+    </update>
+    
+    
+    <!-- 벌금 내역 조회 -->
+	<select id="selectFinesList" parameterType="map" resultMap="tfcEnfMaster">
+			SELECT B.* FROM (
+				SELECT A.*, ROWNUM AS RNUM FROM (
+					SELECT 	
+							ROW_NUMBER () OVER(ORDER BY TEMT.CR_DT DESC),
+							TEMT.TFC_ENF_ID,
+							TEMT.VIO_ID,
+							TEMT.TFC_LAW_ID,
+							TEMT.TFC_ENF_EQP_ID,
+							TEMT.POL_ID,
+							TEMT.TFC_ACDNT_ID,
+							TEMT.VIO_FILE_NO,
+							TEMT.TFC_ENF_DT,
+							TEMT.ROAD_ADDR,
+							TEMT.ROAD_LN,
+							TEMT.VH_REG_NO,
+							TEMT.VH_TY,
+							TEMT.SPD_LMT,
+							TEMT.VIO_SPD,
+							TEMT.OVER_SPD,
+							TEMT.LAST_TFC_ENF_PROC_CD,
+							TEMT.LAT,
+							TEMT.LNG,
+							TLIT.LAW_NM,
+							FPIT.PYMNT_STTS,
+							FPIT.PYMNT_ID
+					FROM 	MOZ_TFC_ENF_MASTER	TEMT
+					INNER JOIN MOZ_VIO_INFO VIT	ON TEMT.VIO_ID = VIT.VIO_ID
+					INNER JOIN MOZ_TFC_LW_INFO	TLIT ON TEMT.TFC_LAW_ID = TLIT.TFC_LAW_ID
+					INNER JOIN MOZ_FINE_PYMNT_INFO FPIT ON 	TEMT.TFC_ENF_ID = FPIT.TFC_ENF_ID
+					WHERE 	VIT.VIO_NM = #{vioNm}
+					AND		VIT.DVR_LCEN_ID = #{dvrLcenId}
+					) A
+				)B
+			<![CDATA[
+				WHERE RNUM >= #{startIndex} AND RNUM <= #{endIndex}
+			]]>	
+	</select>
+	
+</mapper>

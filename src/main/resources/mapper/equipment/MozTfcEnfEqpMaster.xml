@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.equipment.MozTfcEnfEqpMasterRepository">
+
+    <sql id="eqpMngList-Where">
+        <if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
+            <![CDATA[
+                AND TO_CHAR(CR_DT, 'YYYY-MM-DD') >= #{sDate}
+            ]]>
+        </if>
+        <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
+            <![CDATA[
+                AND TO_CHAR(CR_DT, 'YYYY-MM-DD') <= #{eDate}
+            ]]>
+        </if>
+        <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
+            <![CDATA[
+                AND TO_CHAR(CR_DT, 'YYYY-MM-DD') >= #{sDate}
+                AND TO_CHAR(CR_DT, 'YYYY-MM-DD') <= #{eDate}
+            ]]>
+        </if>
+    </sql>
+    
+    <select id="selectEqpDupliCnt" parameterType="com.moz.ates.traffic.common.entity.equipment.MozTfcEnfEqpMaster" resultType="int">
+        SELECT  COUNT(*)    AS "cnt"
+        FROM    MOZ_TFC_ENF_EQP_MASTER
+        WHERE   TFC_ENF_EQP_ID = #{tfcEnfEqpId}
+    </select>
+		
+    <select id="selectMngList" parameterType="com.moz.ates.traffic.common.entity.equipment.MozTfcEnfEqpMaster" resultType="com.moz.ates.traffic.common.entity.equipment.MozTfcEnfEqpMaster">
+        SELECT  TFC_ENF_EQP_ID
+                , ROAD_ADDR
+                , EQP_TY
+                , CR_DT
+                , CR_OPRTR_ID
+                , USE_YN
+                , MNFCTR
+        FROM    MOZ_TFC_ENF_EQP_MASTER
+        WHERE   1=1
+        <include refid="eqpMngList-Where"/>
+        ORDER BY CR_DT DESC
+        LIMIT #{length} OFFSET #{start}
+    </select>
+    
+   	<select id="selectMngListCnt" parameterType="com.moz.ates.traffic.common.entity.equipment.MozTfcEnfEqpMaster" resultType="int">
+        SELECT  COUNT(*)    AS "cnt"
+        FROM    MOZ_TFC_ENF_EQP_MASTER
+        WHERE   1=1
+        <include refid="eqpMngList-Where"/>
+    </select>
+    
+    <select id="findAllMozTfcEnfEqpMaster" parameterType="com.moz.ates.traffic.common.entity.equipment.MozTfcEnfEqpMaster" resultType="com.moz.ates.traffic.common.entity.equipment.MozTfcEnfEqpMaster">
+        SELECT   ROW_NUMBER() OVER(ORDER BY CR_DT) AS rnum
+        		, TFC_ENF_EQP_ID
+                , ROAD_ADDR
+                , EQP_TY
+                , CR_DT
+                , CR_OPRTR_ID
+                , USE_YN
+                , MNFCTR
+        FROM    MOZ_TFC_ENF_EQP_MASTER
+        WHERE   1=1
+        <include refid="eqpMngList-Where"/>
+        ORDER BY rnum DESC
+        LIMIT #{length} OFFSET #{start}
+    </select>
+    
+   	<select id="countMozTfcEnfEqpMaster" parameterType="com.moz.ates.traffic.common.entity.equipment.MozTfcEnfEqpMaster" resultType="int">
+        SELECT  COUNT(*)    AS "cnt"
+        FROM    MOZ_TFC_ENF_EQP_MASTER
+        WHERE   1=1
+        <include refid="eqpMngList-Where"/>
+    </select>
+    
+    <select id="selectEqpDetail" parameterType="String" resultType="com.moz.ates.traffic.common.entity.equipment.MozTfcEnfEqpMaster">
+        SELECT  TFC_ENF_EQP_ID 
+                , ROAD_ADDR
+                , LAT
+                , LNG
+                , EQP_TY 
+                , CR_DT
+                , CR_OPRTR_ID
+                , USE_YN
+                , MNFCTR
+                , STTS_INFO_GNR_CY
+                , FREIGHT_VH_LMT_SPD
+                , NR_VH_LMT_SPD
+                , ROAD_LN_QY
+                , CR_OPRTR_DEPT
+                , TFC_ENF_EQP_INFO
+                , TFC_ENF_EQP_IMAGEPATH
+                , TFC_ENF_EQP_IMAGENAME           
+        FROM    MOZ_TFC_ENF_EQP_MASTER
+        WHERE   TFC_ENF_EQP_ID=#{tfcEnfEqpId}
+    </select>
+    
+    <insert id="insertEqp" parameterType="com.moz.ates.traffic.common.entity.equipment.MozTfcEnfEqpMaster">
+        INSERT INTO MOZ_TFC_ENF_EQP_MASTER
+            (
+                TFC_ENF_EQP_ID
+                , ROAD_ADDR
+                , EQP_TY
+                , CR_DT
+                , CR_OPRTR_ID
+                , USE_YN
+                , MNFCTR
+                , CR_OPRTR_DEPT
+                , TFC_ENF_EQP_INFO
+                , TFC_ENF_EQP_IMAGEPATH
+                , TFC_ENF_EQP_IMAGENAME
+            )
+        VALUES
+            (
+                #{tfcEnfEqpId}
+                , #{roadAddr}
+                , #{eqpTy}
+                , #{crDt}
+                , #{crOprtrId}
+                , #{useYn}
+                , #{mnfctr}
+                , #{crOprtrDept}
+                , #{tfcEnfEqpInfo}
+                , #{tfcEnfEqpImagepath}
+                , #{tfcEnfEqpImageorgn}
+            )
+    </insert>
+    
+    <update id="updateEqp" parameterType="com.moz.ates.traffic.common.entity.equipment.MozTfcEnfEqpMaster">
+        UPDATE  MOZ_TFC_ENF_EQP_MASTER
+        SET     ROAD_ADDR = #{roadAddr}
+                <if test="tfcEnfEqpImagepath != '' and tfcEnfEqpImagepath != null and tfcEnfEqpImageorgn != null and tfcEnfEqpImageorgn != '' " >
+                    , TFC_ENF_EQP_IMAGEPATH = #{tfcEnfEqpImagepath}
+                    , TFC_ENF_EQP_IMAGENAME = #{tfcEnfEqpImageorgn}
+                </if>
+                , EQP_TY = #{eqpTy}
+                , CR_OPRTR_ID = #{crOprtrId}
+                , USE_YN = #{useYn}
+                , MNFCTR = #{mnfctr}
+                , CR_OPRTR_DEPT = #{crOprtrDept}
+                , TFC_ENF_EQP_INFO = #{tfcEnfEqpInfo}
+        WHERE   TFC_ENF_EQP_ID = #{tfcEnfEqpId}
+    </update>
+    
+    <update id="deleteEqpImage" parameterType="com.moz.ates.traffic.common.entity.equipment.MozTfcEnfEqpMaster">
+	    UPDATE MOZ_TFC_ENF_EQP_MASTER
+	    SET    TFC_ENF_EQP_IMAGEPATH = #{tfcEnfEqpImagepath},
+	    	   TFC_ENF_EQP_IMAGENAME = #{tfcEnfEqpImageorgn}
+	    WHERE  TFC_ENF_EQP_ID = #{tfcEnfEqpId}
+    </update>
+</mapper>
