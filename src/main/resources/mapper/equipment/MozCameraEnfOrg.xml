@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.equipment.MozCameraEnfOrgRepository">
+
+	<resultMap type="MozCameraEnfOrg" id="cameraEnfOrgList">
+		<result column="RNUM" property="rnum"/>
+		<result column="IDX" property="idx"/>
+		<result column="CODE" property="code"/>
+		<result column="ENFORCE_TIME" property="enforceTime"/>
+		<result column="CAR_PLATE" property="carPlate"/>
+		<result column="ENFORCE_CODE" property="enforceCode"/>
+		<result column="CR_DT" property="crDt"/>
+		<result column="TFC_EQP_ENF_YN" property="tfcEqpEnfYn"/>
+		<collection property="tfcEnfEqpMatser" resultMap="tfcEnfEqpMatser"/>
+	</resultMap>
+	
+	<resultMap type="MozTfcEnfEqpMaster" id="tfcEnfEqpMatser">
+		<result column="TFC_ENF_EQP_ID" property="tfcEnfEqpId"/> 
+		<result column="ROAD_ADDR" property="roadAddr"/>
+		<result column="LNG" property="lng"/>
+		<result column="LAT" property="lat"/>
+		<result column="EQP_NM" property="eqpNm"/> 
+	</resultMap>
+
+	<resultMap type="MozCameraEnfOrg" id="cameraEnfOrgDetail">
+		<result column="IDX" property="idx"/>
+		<result column="CODE" property="code"/>
+		<result column="AVG_SPEED" property="avgSpeed"/>
+		<result column="SPEED_LIMIT" property="speedLimit"/>
+		<result column="SIGNAL_INFO" property="signalInfo"/>
+		<result column="ENFORCE_MODE" property="enforceMode"/>
+		<result column="ENFORCE_CODE" property="enforceCode"/>
+		<result column="ENFORCE_SPEED" property="enforceSpeed"/>
+		<result column="ENFORCE_LANE" property="enforceLane"/>
+		<result column="ENFORCE_TIME" property="enforceTime"/>
+		<result column="CAR_PLATE" property="carPlate"/>
+		<result column="CR_DT" property="crDt"/>
+		<result column="TFC_EQP_ENF_YN" property="tfcEqpEnfYn"/>
+		<collection property="tfcEnfEqpMatser" resultMap="tfcEnfEqpMatser"/>
+	</resultMap>
+	
+	<select id="findAllBySearchOption" parameterType="MozCameraEnfOrg" resultMap="cameraEnfOrgList">
+		SELECT 
+			ROW_NUMBER() OVER(ORDER BY IDX) AS rnum,
+			MCEO.IDX,
+			MCEO.CODE,
+			MCEO.ENFORCE_TIME,
+			MCEO.CAR_PLATE,
+			MCEO.ENFORCE_CODE,
+			MCEO.CR_DT,
+			MTEEM.ROAD_ADDR,
+			MTEEM.EQP_NM,
+			CASE WHEN MTEEI.TFC_ENF_ID IS NOT NULL THEN 'Y' ELSE 'N' END AS TFC_EQP_ENF_YN
+		FROM MOZ_CAMERA_ENF_ORG MCEO
+		INNER JOIN MOZ_TFC_ENF_EQP_MASTER MTEEM ON MTEEM.TFC_ENF_EQP_ID = MCEO.CODE
+		LEFT OUTER JOIN MOZ_TFC_EQP_ENF_INFO MTEEI ON MCEO.IDX = MTEEI.IDX AND MTEEM.TFC_ENF_EQP_ID = MCEO.CODE 
+		ORDER BY rnum DESC
+		LIMIT #{length} OFFSET #{start}
+	</select>
+	
+	<select id="fineOneByIdx" parameterType="Long" resultMap="cameraEnfOrgDetail">
+		SELECT 
+			MCEO.IDX,
+			MCEO.CODE,
+			MCEO.ENFORCE_TIME,
+			MCEO.CAR_PLATE,
+			MCEO.ENFORCE_CODE,
+			MCEO.AVG_SPEED,
+			MCEO.SIGNAL_INFO,
+			MCEO.ENFORCE_MODE,
+			MCEO.ENFORCE_SPEED,
+			MCEO.SPEED_LIMIT,
+			MCEO.ENFORCE_LANE,
+			MCEO.CR_DT,
+			MTEEM.ROAD_ADDR,
+			MTEEM.EQP_NM,
+			MTEEM.LAT,
+			MTEEM.LNG,
+			CASE WHEN MTEEI.TFC_ENF_ID IS NOT NULL THEN 'Y' ELSE 'N' END AS TFC_EQP_ENF_YN
+		FROM MOZ_CAMERA_ENF_ORG MCEO
+		INNER JOIN MOZ_TFC_ENF_EQP_MASTER MTEEM ON MTEEM.TFC_ENF_EQP_ID = MCEO.CODE
+		LEFT OUTER JOIN MOZ_TFC_EQP_ENF_INFO MTEEI ON MCEO.IDX = MTEEI.IDX AND MTEEM.TFC_ENF_EQP_ID = MCEO.CODE 
+		<where>
+			MCEO.IDX = #{idx}
+		</where>
+	</select>
+
+	<select id="countBySearchOption" parameterType="MozCameraEnfOrg" resultType="int">
+		SELECT 
+			COUNT(1)
+		FROM MOZ_CAMERA_ENF_ORG MCEO
+		INNER JOIN MOZ_TFC_ENF_EQP_MASTER MTEEM ON MTEEM.TFC_ENF_EQP_ID = MCEO.CODE
+	</select>
+</mapper>

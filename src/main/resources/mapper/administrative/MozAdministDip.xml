@@ -1,5 +1,156 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.moz.ates.traffic.common.repository.board.MozAtchFileRepository">
-
+<mapper namespace="com.moz.ates.traffic.common.repository.administrative.MozAdministDipRepository">
+	
+	<sql id="administList-Where">
+		<if test="searchType == 'all' and searchTxt != null and searchTxt != ''">
+			AND (vi.VIO_NM LIKE CONCAT('%', #{searchTxt}, '%') 
+				OR adt.TFC_ENF_ID LIKE CONCAT('%', #{searchTxt}, '%'))
+		</if>
+		<if test="searchType == 'vioNm' and searchTxt != null and searchTxt != ''">
+			AND vi.VIO_NM LIKE CONCAT('%', #{searchTxt}, '%') 
+		</if>
+		<if test="searchType == 'tfcEnfId' and searchTxt != null and searchTxt != ''">
+			AND adt.TFC_ENF_ID LIKE CONCAT('%', #{searchTxt}, '%') 
+		</if>
+      	<if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
+            <![CDATA[ AND adt.CR_DT >= #{sDate}]]>
+        </if>
+        <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
+            <![CDATA[ AND adt.CR_DT <= #{eDate} ]]>
+        </if>
+        <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
+            <![CDATA[ AND adt.CR_DT >= #{sDate} AND adt.CR_DT <= #{eDate} ]]>
+        </if>
+		<if test="processYn != null and processYn != ''">
+			AND adt.PROCESS_YN = #{processYn}
+		</if>
+	</sql>
+	
+	<resultMap type="MozVioInfo" id="vioInfoForSelectAdministDipList">
+		<result column="VIO_NM" property="vioNm"/>
+		<result column="VIO_PNO" property="vioPno"/>
+		<result column="VIO_ADDR" property="vioAddr"/>
+		<result column="VIO_EMAIL" property="vioEmail"/>
+	</resultMap>
+	
+	<resultMap type="MozCmCd" id="cmCdForSelectAdministDipList">
+		<result column="CD_NM" property="cdNm"/>
+	</resultMap>
+	
+	<resultMap type="MozAdministDip" id="administDipList">
+		<result column="rnum" property="rnum"/>
+		<result column="ADMINIST_DIP_ID" property="administDipId"/>
+		<result column="TFC_ENF_ID" property="tfcEnfId"/>
+		<result column="COURT" property="court"/>	
+		<result column="PRO_HOLD_DT" property="proHoldDt"/>	
+		<result column="PRO_HOLD_YN" property="proHoldYn"/>	
+		<result column="CR_DT" property="crDt"/>	
+		<result column="PROCESS_YN" property="processYn"/>	
+		<collection property="cmCd" resultMap="cmCdForSelectAdministDipList"/>	
+		<collection property="vioInfo" resultMap="vioInfoForSelectAdministDipList"/>
+	</resultMap>
+	
+	<resultMap type="MozAdministDip" id="administDipDetail">
+		<result column="ADMINIST_DIP_ID" property="administDipId"/>
+		<result column="COURT" property="court"/>	
+		<result column="PRO_HOLD_DT" property="proHoldDt"/>	
+		<result column="PRO_HOLD_YN" property="proHoldYn"/>	
+		<result column="PROCESS_YN" property="processYn"/>	
+		<result column="PRO_HOLD_ADDR" property="proHoldAddr"/>	
+		<result column="PENALTY_PRICE" property="penaltyPrice"/>	
+		<result column="DIP_DESC" property="dipDesc"/>	
+		<collection property="cmCd" resultMap="cmCdForSelectAdministDipList"/>	
+		<collection property="vioInfo" resultMap="vioInfoForSelectAdministDipList"/>
+	</resultMap>
+	
+	<select id="countMozAdminstDip" parameterType="MozAdministDip" resultType="int">
+		SELECT COUNT(*) AS cnt
+		FROM MOZ_ADMINIST_DIP adt
+		INNER JOIN MOZ_CM_CD cct ON (adt.CASE_TY = cct.CD_ID)
+       	INNER JOIN MOZ_TFC_ENF_MASTER temt ON adt.TFC_ENF_ID = temt.TFC_ENF_ID 
+       	INNER JOIN MOZ_VIO_INFO vi ON adt.VIO_ID = vi.VIO_ID
+		WHERE 1=1
+			<include refid="administList-Where"/>
+	</select>
+	
+	<select id="findAllMozAdministList" parameterType="MozAdministDip" resultMap="administDipList">
+		SELECT
+			ROW_NUMBER() OVER(ORDER BY adt.CR_DT) AS rnum
+			, adt.ADMINIST_DIP_ID
+			, adt.TFC_ENF_ID
+			, adt.COURT
+			, adt.PRO_HOLD_DT
+			, adt.PRO_HOLD_YN
+			, adt.PROCESS_YN
+			, adt.CR_DT
+			, vi.VIO_NM
+			, cct.CD_NM
+		FROM MOZ_ADMINIST_DIP adt
+		INNER JOIN MOZ_CM_CD cct ON (adt.CASE_TY = cct.CD_ID)
+       	INNER JOIN MOZ_TFC_ENF_MASTER temt ON adt.TFC_ENF_ID = temt.TFC_ENF_ID 
+       	INNER JOIN MOZ_VIO_INFO vi ON adt.VIO_ID = vi.VIO_ID
+		WHERE 1=1
+			<include refid="administList-Where"/>
+		ORDER BY rnum DESC
+		<if test="'N'.equals(chartYn)">
+			LIMIT #{length} OFFSET #{start}
+		</if>
+	</select>
+	
+	<select id="findOneByAdministDipId" parameterType="String" resultMap="administDipDetail">
+		SELECT
+			adt.ADMINIST_DIP_ID
+			, adt.COURT
+			, adt.PRO_HOLD_DT
+			, adt.PRO_HOLD_YN
+			, adt.PROCESS_YN
+			, adt.PRO_HOLD_ADDR 
+			, adt.PENALTY_PRICE
+			, adt.DIP_DESC 
+			, vi.VIO_NM
+			, vi.VIO_PNO 
+			, vi.VIO_ADDR 
+			, vi.VIO_EMAIL 
+			, cct.CD_NM
+		FROM MOZ_ADMINIST_DIP adt
+		INNER JOIN MOZ_CM_CD cct ON (adt.CASE_TY = cct.CD_ID)
+       	INNER JOIN MOZ_TFC_ENF_MASTER temt ON adt.TFC_ENF_ID = temt.TFC_ENF_ID 
+       	INNER JOIN MOZ_VIO_INFO vi ON adt.VIO_ID = vi.VIO_ID
+       	WHERE adt.ADMINIST_DIP_ID = #{administDipId}
+	</select>
+	
+	<insert id="saveMozAdministDip" parameterType="MozAdministDip">
+		INSERT INTO MOZ_ADMINIST_DIP (
+			ADMINIST_DIP_ID,
+			TFC_ENF_ID,
+			VIO_ID,
+			TFC_LAW_ID,
+			CASE_TY,
+			COURT,
+			PRO_HOLD_YN,
+			PRO_HOLD_ADDR,
+			PENALTY_PRICE,
+			DIP_DESC,
+			CR_DT,
+			CRTR,
+			PRO_HOLD_DT,
+			PROCESS_YN
+		) VALUES (
+			#{administDipId},
+			#{tfcEnfId},
+			#{vioId},
+			#{tfcLawId},
+			#{caseTy},
+			#{court},
+			#{proHoldYn},
+			#{proHoldAddr},
+			#{penaltyPrice},
+			#{dipDesc},
+			NOW(),
+			#{crtr},
+			#{proHoldDt},
+			#{processYn}
+		)
+	</insert>
 </mapper>

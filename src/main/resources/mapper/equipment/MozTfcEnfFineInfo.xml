@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.equipment.MozTfcEnfFineInfoRepository">
+
+	<resultMap type="MozTfcLwFineInfo" id="tfcLwFineInfo">
+		<result column="FINE_DESC" property="fineDesc"/>
+	</resultMap>
+
+	<resultMap type="MozTfcLwInfo" id="tfcLwInfo">
+		<result column="LAW_NM" property="lawNm"/>
+	</resultMap>
+
+	<resultMap type="MozTfcEnfFineInfo" id="tfcEnfFineInfo">
+		<result column="TFC_ENF_PRICE" property="tfcEnfPrice"/>
+		
+		<collection property="tfcLwFineInfo" resultMap="tfcLwFineInfo"/>
+		<collection property="tfcLwInfo" resultMap="tfcLwInfo"/>
+	</resultMap>
+	
+	<select id="findAllTfcEnfFineInfoJoinTfcLwFineInfoAndTfcLwInfoByTfcEnfId" parameterType="String" resultMap="tfcEnfFineInfo">
+   	SELECT 
+     		MTEFI.TFC_ENF_PRICE 
+     		, MTLFI.FINE_DESC 
+     		, MTLI.LAW_NM 
+   	FROM 
+   		MOZ_TFC_ENF_FINE_INFO MTEFI 
+     	INNER JOIN 
+     		MOZ_TFC_LW_FINE_INFO MTLFI 
+     		ON MTLFI.TFC_LAW_FINE_ID = MTEFI.TFC_LAW_FINE_ID 
+	 		INNER JOIN 
+	 			MOZ_TFC_LW_INFO MTLI 
+	 			ON MTEFI.TFC_LAW_ID = MTLI.TFC_LAW_ID 
+		WHERE 
+				MTEFI.TFC_ENF_ID = #{tfcEnfId}
+		ORDER BY MTLI.LAW_ARTICLE_NO
+	</select>
+	
+	
+	<insert id="insertTfcEnfFineInfo" parameterType="MozTfcEnfFineInfo">
+		INSERT INTO MOZ_TFC_ENF_FINE_INFO(
+			TFC_ENF_ID,
+			TFC_LAW_FINE_ID,
+			TFC_LAW_ID,
+			TFC_ENF_PRICE,
+			TFC_ENF_DT
+			) VALUES ( 
+			#{tfcEnfId},
+			#{tfcLawFineId},
+			#{tfcLawId},
+			#{tfcEnfPrice},
+			#{tfcEnfDt}
+		)
+	</insert>
+	
+	<delete id="deleteFineNtcInfoByTfcEnfId" parameterType="String">
+		DELETE FROM MOZ_TFC_ENF_FINE_INFO
+		WHERE TFC_ENF_ID = #{tfcEnfId}
+	</delete>
+</mapper>

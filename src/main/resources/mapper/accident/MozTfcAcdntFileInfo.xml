@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.accident.MozTfcAcdntFileInfoRepository">
+	<select id="findAllTfcAcdntFileInfoByTfcAcdntId" parameterType="String" resultType="MozTfcAcdntFileInfo">
+		SELECT
+			ACDNT_FILE_NO
+			, FILE_PATH
+			, FILE_ORIGIN_NM
+			, FILE_EXT
+			, FILE_NM
+			, FILE_SIZE
+		FROM MOZ_TFC_ACDNT_FILE_INFO
+		WHERE TFC_ACDNT_ID = #{tfcAcdntId}
+	</select>
+		
+	<select id="findOneMozTfcAcdntFileInfoByAcdntFileNo" parameterType="String" resultType="MozTfcAcdntFileInfo">
+		SELECT
+			ACDNT_FILE_NO
+			, FILE_PATH
+			, FILE_ORIGIN_NM
+			, FILE_EXT
+			, FILE_NM
+			, FILE_SIZE
+		FROM MOZ_TFC_ACDNT_FILE_INFO
+		WHERE ACDNT_FILE_NO = #{acdntFileNo}
+	</select>
+	
+	<insert id="insertMozTfcAcdntFileInfo" parameterType="MozTfcAcdntFileInfo">
+		INSERT MOZ_TFC_ACDNT_FILE_INFO(
+                ACDNT_FILE_NO
+                , TFC_ACDNT_ID
+                , FILE_PATH
+                , FILE_ORIGIN_NM
+                , FILE_EXT
+                , FILE_NM
+                , FILE_SIZE
+                , CRTR
+                , CR_DT
+            )VALUES(
+            	#{acdntFileNo}
+                , #{tfcAcdntId}
+                , #{filePath}
+                , #{fileOriginNm}
+                , #{fileExt}
+                , #{fileNm}
+                , #{fileSize}
+                , #{crtr}
+                , NOW()
+            )
+	</insert>
+	
+	<delete id="deleteMozTfcAcdntFileInfoByAcdntFileNo" parameterType="String">
+		DELETE FROM MOZ_TFC_ACDNT_FILE_INFO
+        WHERE ACDNT_FILE_NO=#{acdntFileNo}
+	</delete>
+	
+</mapper>

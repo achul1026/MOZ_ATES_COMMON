@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.equipment.MozTfcEqpMntnHstRepository">
+
+	<select id="findAllEqpMntnHstList" parameterType="String" resultType="MozTfcEqpMntnHst">
+		SELECT 
+			MTEMH.MNTN_HST_ID,
+			MTEMH.TFC_ENF_EQP_ID,
+			MTEMH.OPRTR_ID,
+			MTEMH.CR_DT,
+			MTEMH.CRTR,
+			MCCT.CD_NM AS MNTN_TYPE,
+			MCCS.CD_NM AS MNTN_STTS,
+			MTEMH.MNTN_DETAIL,
+			MWO.OPRTR_NM
+		FROM MOZ_TFC_EQP_MNTN_HST MTEMH
+		INNER JOIN MOZ_WEB_OPRTR MWO ON MTEMH.OPRTR_ID = MWO.OPRTR_ID
+		LEFT OUTER JOIN MOZ_CM_CD MCCT ON MTEMH.MNTN_TYPE = MCCT.CD_ID AND MCCT.CD_GROUP_ID = 'MNTN_TYPE_CD'
+		LEFT OUTER JOIN MOZ_CM_CD MCCS ON MTEMH.MNTN_STTS = MCCS.CD_ID AND MCCS.CD_GROUP_ID = 'MNTN_STTS_CD'
+		WHERE 
+			TFC_ENF_EQP_ID = #{tfcEnfEqpId}
+	</select>
+	
+	<insert id="saveTfcEqpMntnHst" parameterType="MozTfcEqpMntnHst">
+		INSERT INTO MOZ_TFC_EQP_MNTN_HST ( 
+			MNTN_HST_ID,
+			TFC_ENF_EQP_ID,
+			OPRTR_ID,
+			CR_DT,
+			CRTR,
+			MNTN_TYPE,
+			MNTN_STTS,
+			MNTN_DETAIL
+		) VALUES ( 
+			#{mntnHstId},
+			#{tfcEnfEqpId},
+			#{oprtrId},
+			NOW(),
+			#{crtr},
+			#{mntnType},
+			#{mntnStts},
+			#{mntnDetail}
+		)
+	</insert>
+	
+	<delete id="deleteMozTfcEqpMntnHstByMntnHstId" parameterType="String">
+		DELETE FROM MOZ_TFC_EQP_MNTN_HST
+		WHERE 
+			MNTN_HST_ID = #{mntnHstId}
+	</delete>
+	
+	<delete id="deleteMozTfcEqpMntnHstByTfcEnfEqpId" parameterType="String">
+		DELETE FROM MOZ_TFC_EQP_MNTN_HST
+		WHERE 
+			TFC_ENF_EQP_ID = #{tfcEnfEqpId}
+	</delete>
+</mapper>

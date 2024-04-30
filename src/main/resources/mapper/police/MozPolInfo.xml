@@ -1,107 +1,313 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.moz.ates.traffic.common.repository.police.MozPolInfoRepository">
+<mapper
+	namespace="com.moz.ates.traffic.common.repository.police.MozPolInfoRepository">
+
+	<sql id="polList-Where">
+		<if
+			test="searchType == 'all' and searchTxt != null and searchTxt != ''">
+			AND (POL_NM LIKE CONCAT('%', #{searchTxt}, '%')
+			OR POL_LCEN_ID LIKE CONCAT('%', #{searchTxt}, '%')
+			OR OPRTR_PNO LIKE CONCAT('%', #{searchTxt}, '%')
+			OR EMAIL LIKE CONCAT('%', #{searchTxt}, '%')
+			OR JUR LIKE CONCAT('%', #{searchTxt}, '%'))
+		</if>
+		<if
+			test="searchType == 'oprtrNm' and searchTxt != null and searchTxt != ''">
+			AND POL_NM LIKE CONCAT('%', #{searchTxt}, '%')
+		</if>
+		<if
+			test="searchType == 'oprtrId' and searchTxt != null and searchTxt != ''">
+			AND POL_LCEN_ID LIKE CONCAT('%', #{searchTxt}, '%')
+		</if>
+		<if
+			test="searchType == 'oprtrPno' and searchTxt != null and searchTxt != ''">
+			AND PHONE LIKE CONCAT('%', #{searchTxt}, '%')
+		</if>
+		<if
+			test="searchType == 'oprtrEmail' and searchTxt != null and searchTxt != ''">
+			AND EMAIL LIKE CONCAT('%', #{searchTxt}, '%')
+		</if>
+		<if
+			test="searchType == 'ogzn' and searchTxt != null and searchTxt != ''">
+			AND JUR LIKE CONCAT('%', #{searchTxt}, '%')
+		</if>
+		<if test="polStts != null and polStts != ''">
+			AND POL_STTS = #{polStts}
+		</if>
+	</sql>
+
+	<select id="findAllPolInfoList" parameterType="MozPolInfo"
+		resultType="MozPolInfo">
+		SELECT POL_NM
+		, POL_LCEN_ID
+		, PHONE
+		, EMAIL
+		, JUR
+		FROM MOZ_POL_INFO
+		WHERE 1=1
+		ORDER BY CR_DT DESC
+		LIMIT #{length} OFFSET #{start}
+	</select>
+
+	<select id="countPolInfoListCnt" parameterType="MozPolInfo"
+		resultType="int">
+		SELECT COUNT(*) AS "cnt"
+		FROM MOZ_POL_INFO
+	</select>
+
+	<select id="findAllMozPolInfo" parameterType="MozPolInfo"
+		resultType="MozPolInfo">
+		SELECT ROW_NUMBER() OVER(ORDER BY CR_DT) AS rnum
+		, POL_ID
+		, POL_NM
+		, POL_DEPT_NM
+		, POL_LCEN_ID
+		, POL_STTS
+		, PHONE
+		, EMAIL
+		, JUR
+		FROM MOZ_POL_INFO
+		<where>
+			<include refid="polList-Where" />
+			<if test="loginUserPermission != 'OPC000'">
+				AND POL_STTS != 'PSC003'
+			</if>
+		</where>
+		ORDER BY rnum DESC
+		LIMIT #{length} OFFSET #{start}
+	</select>
+
+	<select id="countMozPolInfo" parameterType="MozPolInfo"
+		resultType="int">
+		SELECT COUNT(*) AS "cnt"
+		FROM MOZ_POL_INFO
+		<where>
+			<include refid="polList-Where" />
+			<if test="loginUserPermission != 'OPC000'">
+				AND POL_STTS != 'PSC003'
+			</if>
+		</where>
+	</select>
+
+	<select id="fineOnePolInfoDetail" parameterType="String"
+		resultType="MozPolInfo">
+		SELECT POL_ID
+		, POL_LCEN_ID
+		, POL_NM
+		, POL_LCEN_DT
+		, POL_DEPT_NM
+		, CLASSES
+		, JUR
+		, BRTH
+		, ADDR
+		, PHONE
+		, EMAIL
+		, APP_PERMISSION
+		, APP_POL_ID
+		FROM MOZ_POL_INFO
+		WHERE POL_LCEN_ID = #{polLcenId}
+	</select>
+
+	<select id="findOneMozPolInfo" parameterType="String"
+		resultType="MozPolInfo">
+		SELECT POL_ID
+		, POL_LCEN_ID
+		, POL_NM
+		, POL_LCEN_DT
+		, POL_DEPT_NM
+		, POL_STTS
+		, CLASSES
+		, JUR
+		, BRTH
+		, ADDR
+		, PHONE
+		, EMAIL
+		, APP_PERMISSION
+		, APP_POL_ID
+		FROM MOZ_POL_INFO
+		WHERE POL_ID = #{polId}
+	</select>
+
+	<select id="findAllPoliceInfo" parameterType="MozPolInfo"
+		resultType="MozPolInfo">
+		SELECT
+		POL_ID,
+		POL_LCEN_ID,
+		POL_NM,
+		POL_LCEN_DT,
+		POL_DEPT_NM,
+		CLASSES,
+		JUR,
+		BRTH,
+		ADDR,
+		DEV_ID,
+		PHONE,
+		EMAIL,
+		APP_PERMISSION,
+		APP_POL_ID,
+		APP_POL_PW,
+		CR_DT,
+		CRTR
+		FROM MOZ_POL_INFO
+		WHERE APP_POL_ID = #{appPolId}
+	</select>
+
+	<select id="findOnePoliceInfoByPoliceLcenId"
+		parameterType="String" resultType="MozPolInfo">
+		SELECT
+		POL_ID,
+		POL_LCEN_ID,
+		POL_NM,
+		POL_LCEN_DT,
+		POL_DEPT_NM,
+		CLASSES,
+		JUR,
+		BRTH,
+		ADDR,
+		DEV_ID,
+		PHONE,
+		EMAIL,
+		APP_PERMISSION,
+		APP_POL_ID,
+		APP_POL_PW,
+		CR_DT,
+		CRTR
+		FROM MOZ_POL_INFO
+		WHERE POL_LCEN_ID = #{appPolId}
+	</select>
+
+	<select id="findPasswordByPoliceId" parameterType="String"
+		resultType="String">
+		SELECT
+		APP_POL_PW
+		FROM MOZ_POL_INFO
+		WHERE POL_ID = #{polId}
+	</select>
+
+	<select id="findOnePoliceInfoByPoliceId" parameterType="String"
+		resultType="MozPolInfo">
+		SELECT
+		APP_POL_ID,
+		APP_POL_PW,
+		APP_PERMISSION
+		FROM MOZ_POL_INFO
+		WHERE APP_POL_ID = #{appPolId}
+	</select>
+
+	<update id="updateMozPolInfo" parameterType="MozPolInfo">
+		UPDATE MOZ_POL_INFO
+		SET EMAIL = #{email},
+		PHONE = #{phone},
+		POL_STTS = #{polStts},
+		JUR = #{jur},
+		POL_NM = #{polNm},
+		POL_LCEN_ID = #{polLcenId},
+		APP_PERMISSION = #{appPermission}
+		WHERE
+		POL_ID = #{polId}
+	</update>
+
+	<update id="updateMozPolInfoByPoliceApp"
+		parameterType="MozPolInfo">
+		UPDATE MOZ_POL_INFO
+		SET EMAIL = #{email},
+		PHONE = #{phone},
+		JUR = #{jur},
+		POL_NM = #{polNm},
+		POL_DEPT_NM = #{polDeptNm},
+		ADDR = #{addr},
+		LAST_UPD_DT = NOW()
+		WHERE
+		POL_ID = #{polId}
+	</update>
+
+	<update id="updateAppPolPwByPolId" parameterType="MozPolInfo">
+		UPDATE
+		MOZ_POL_INFO
+		SET APP_POL_PW = #{appPolPw},
+		LAST_UPD_DT = NOW()
+		WHERE
+		POL_ID = #{polId}
+	</update>
+
+	<update id="deleteMozPolInfo" parameterType="MozPolInfo">
+		UPDATE MOZ_POL_INFO
+		SET POL_STTS = 'PSC003'
+		WHERE POL_ID = #{polId}
+	</update>
+
+	<insert id="saveMozPolInfo" parameterType="MozPolInfo">
+		INSERT INTO MOZ_POL_INFO (
+			POL_ID,
+			POL_LCEN_ID,
+			POL_NM,
+			POL_LCEN_DT,
+			POL_DEPT_NM,
+			POL_STTS,
+			CLASSES,
+			JUR,
+			BRTH,
+			ADDR,
+			DEV_ID,
+			PHONE,
+			EMAIL,
+			APP_PERMISSION,
+			APP_POL_ID,
+			APP_POL_PW,
+			CR_DT,
+			CRTR,
+			LAST_UPD_DT
+		) VALUES ( 
+			#{polId},
+			#{polLcenId},
+			#{polNm},
+			#{polLcenDt},
+			#{polDeptNm},
+			#{polStts},
+			#{classes},
+			#{jur},
+			#{brth},
+			#{addr},
+			#{devId},
+			#{phone},
+			#{email},
+			#{appPermission},
+			#{appPolId},
+			#{appPolPw},
+			#{crDt},
+			#{crtr},
+			NOW()
+		)
+	</insert>
 	
-	<select id="selectPolInfoList" parameterType="com.moz.ates.traffic.common.entity.police.MozPolInfo" resultType="com.moz.ates.traffic.common.entity.police.MozPolInfo">
-        SELECT  POL_NM            
-                , POL_LCEN_ID  
-                , PHONE     
-                , EMAIL      
-                , JUR   
-        FROM    MOZ_POL_INFO
-        WHERE   1=1
-        ORDER BY CR_DT DESC
-        LIMIT #{length} OFFSET #{start}
-    </select>
-	
-	<select id="selectPolInfoListCnt" parameterType="com.moz.ates.traffic.common.entity.police.MozPolInfo" resultType="int">
-        SELECT  COUNT(*)    AS "cnt"
-        FROM    MOZ_POL_INFO
-    </select>
-    
-	<select id="findAllMozPolInfo" parameterType="com.moz.ates.traffic.common.entity.police.MozPolInfo" resultType="com.moz.ates.traffic.common.entity.police.MozPolInfo">
-        SELECT  ROW_NUMBER() OVER(ORDER BY CR_DT) AS rnum
-        		, POL_NM            
-                , POL_LCEN_ID  
-                , PHONE     
-                , EMAIL      
-                , JUR   
-        FROM    MOZ_POL_INFO
-        WHERE   1=1
-        ORDER BY rnum DESC
-        LIMIT #{length} OFFSET #{start}
-    </select>
-	
-	<select id="countMozPolInfo" parameterType="com.moz.ates.traffic.common.entity.police.MozPolInfo" resultType="int">
-        SELECT  COUNT(*)    AS "cnt"
-        FROM    MOZ_POL_INFO
-    </select>
-	
-	<select id="selectPolInfoDetail" parameterType="String" resultType="com.moz.ates.traffic.common.entity.police.MozPolInfo">
-        SELECT  POL_ID
-                , POL_LCEN_ID
-                , POL_NM
-                , POL_LCEN_DT
-                , POL_DEPT_NM
-                , CLASS
-                , JUR
-                , BRTH
-                , ADDR
-                , PHONE
-                , EMAIL
-                , APP_PERMISSION
-                , APP_POL_ID
-        FROM    MOZ_POL_INFO
-        WHERE   POL_LCEN_ID = #{polLcenId}
-    </select>
-    
-	<select id="findOneMozPolInfo" parameterType="String" resultType="com.moz.ates.traffic.common.entity.police.MozPolInfo">
-        SELECT  POL_ID
-                , POL_LCEN_ID
-                , POL_NM
-                , POL_LCEN_DT
-                , POL_DEPT_NM
-                , CLASS
-                , JUR
-                , BRTH
-                , ADDR
-                , PHONE
-                , EMAIL
-                , APP_PERMISSION
-                , APP_POL_ID
-        FROM    MOZ_POL_INFO
-        WHERE   POL_LCEN_ID = #{polLcenId}
-    </select>
-	
-	<select id="selectPoliceInfo" parameterType="com.moz.ates.traffic.common.entity.police.MozPolInfo" resultType="com.moz.ates.traffic.common.entity.police.MozPolInfo">
-		SELECT 
-				POL_ID,
-				POL_LCEN_ID,
-				POL_NM,
-				POL_LCEN_DT,
-				POL_DEPT_NM,
-				CLASS,
-				JUR,
-				BRTH,
-				ADDR,
-				DEV_ID,
-				PHONE,
-				EMAIL,
-				APP_PERMISSION,
-				APP_POL_ID,
-				APP_POL_PW,
-				CR_DT,
-				CRTR			
-		FROM	MOZ_POL_INFO
-		WHERE	APP_POL_ID	= #{appPolId}
+	<select id="existsByPolLcenId" resultType="boolean" parameterType="String">
+		SELECT CASE WHEN COUNT(1) > 0 THEN 'true' ELSE 'false' END AS exists_result
+		FROM MOZ_POL_INFO
+		WHERE POL_LCEN_ID = #{polLcenId}
 	</select>
 	
-	<select id="selectPoliceInfoByPoliceId" parameterType="String" resultType="com.moz.ates.traffic.common.entity.police.MozPolInfo">
-		SELECT 
-				APP_POL_ID,
-				APP_POL_PW,
-				APP_PERMISSION
-		FROM	MOZ_POL_INFO
-		WHERE	APP_POL_ID	= #{appPolId}
+	<select id="findOnePoliceInfoByPoliceLcenIdAndBrth" resultType="MozPolInfo" parameterType="MozPolInfo">
+		SELECT
+			POL_ID,
+			POL_LCEN_ID,
+			POL_NM,
+			POL_LCEN_DT,
+			POL_DEPT_NM,
+			CLASSES,
+			JUR,
+			BRTH,
+			ADDR,
+			DEV_ID,
+			PHONE,
+			EMAIL,
+			APP_PERMISSION,
+			APP_POL_ID,
+			APP_POL_PW,
+			CR_DT,
+			CRTR
+		FROM MOZ_POL_INFO
+		WHERE POL_LCEN_ID = #{polLcenId}
+		AND DATE_FORMAT(BRTH, '%Y-%m-%d') = DATE_FORMAT(#{brth}, '%Y-%m-%d')
 	</select>
 </mapper>

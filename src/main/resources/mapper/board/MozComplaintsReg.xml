@@ -3,72 +3,109 @@
 <mapper namespace="com.moz.ates.traffic.common.repository.board.MozComplaintsRegRepository">
 	
 	<sql id="complaintList-Where">
-        <if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
-            <![CDATA[
-                AND TO_CHAR(crt.CR_DT, 'YYYY-MM-DD') >= #{sDate}
-            ]]>
-        </if>
-        <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
-            <![CDATA[
-                AND TO_CHAR(crt.CR_DT, 'YYYY-MM-DD') <= #{eDate}
-            ]]>
-        </if>
-        <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
-            <![CDATA[
-             	AND TO_CHAR(crt.CR_DT, 'YYYY-MM-DD') >= #{sDate}
-                AND TO_CHAR(crt.CR_DT, 'YYYY-MM-DD') <= #{eDate}
-            ]]>
+		<if test="searchType == 'all' and searchTxt != '' and searchTxt != null">
+            AND (crt.POST_TTL LIKE CONCAT('%', #{searchTxt}, '%')
+            		OR crt.WRTR_NM LIKE CONCAT('%', #{searchTxt}, '%'))
+    </if>
+    <if test="searchType == 'title' and searchTxt != '' and searchTxt != null">
+        AND crt.POST_TTL LIKE CONCAT('%', #{searchTxt}, '%')
+    </if>
+    <if test="searchType == 'wrtrNm' and searchTxt != '' and searchTxt != null">
+        AND crt.WRTR_NM LIKE CONCAT('%', #{searchTxt}, '%')
+    </if>
+    <if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
+        <![CDATA[
+            AND DATE_FORMAT(crt.CR_DT, '%Y-%m-%d') >= #{sDate}
+        ]]>
+    </if>
+    <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
+        <![CDATA[
+            AND DATE_FORMAT(crt.CR_DT, '%Y-%m-%d') <= #{eDate}
+        ]]>
+    </if>
+    <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
+        <![CDATA[
+         	AND DATE_FORMAT(crt.CR_DT, '%Y-%m-%d') >= #{sDate}
+            AND DATE_FORMAT(crt.CR_DT, '%Y-%m-%d') <= #{eDate}
+        ]]>
         </if>
     </sql>
 	
-	<resultMap type="com.moz.ates.traffic.common.entity.common.MozCmCd" id="cmCdForSelectComplaintList">
+	<resultMap type="MozCmCd" id="cmCdForSelectComplaintList">
 		<result column="CD_NM" property="cdNm"/>
 	</resultMap>
 	
-	<resultMap type="com.moz.ates.traffic.common.entity.board.MozComplaintsReg" id="finePymntInfoForSelectComplaintList">
-		<result column="COMPLAINTS_IDX" property="complaintsIdx"/>
-		<result column="CATE_CD" property="cateCd"/>
-		<result column="CR_DT" property="crDt"/>
-		<result column="WRTR_EMAIL" property="wrtrEmail"/>
-		<result column="POST_TTL" property="postTtl"/>
-		<result column="ANS_STTS" property="ansStts"/>
-		<collection property="cmCd" resultMap="cmCdForSelectComplaintList"/>
+	<resultMap type="mozWebOprtr" id="webOprtrForSelectComplaintList">
+		<result column="OPRTR_DEPT_NM" property="oprtrDeptNm"/>
+		<result column="OPRTR_ACCOUNT_ID" property="oprtrAccountId"/>
 	</resultMap>
 	
-	<resultMap type="com.moz.ates.traffic.common.entity.common.MozCmCd" id="cmCdForSelectComplaintDetail">
-		<result column="CD_NM" property="cdNm"/>
-	</resultMap>
-	
-	<resultMap type="com.moz.ates.traffic.common.entity.board.MozComplaintsReg" id="finePymntInfoForSelectComplaintDetail">
+	<resultMap type="MozComplaintsReg" id="finePymntInfoForSelectComplaintList">
 		<result column="rnum" property="rnum"/>
 		<result column="COMPLAINTS_IDX" property="complaintsIdx"/>
 		<result column="CATE_CD" property="cateCd"/>
-		<result column="WRTR_EMAIL" property="wrtrEmail"/>
+		<result column="CR_DT" property="crDt"/>
+		<result column="WRTR_NM" property="wrtrNm"/>
+		<result column="POST_TTL" property="postTtl"/>
+		<result column="ANS_STTS" property="ansStts"/>
+		<result column="OPRTR_ID" property="oprtrId"/>
+		<result column="ANS_CR_DT" property="ansCrDt"/>
+		<result column="ANS_UPD_DT" property="ansUpdDt"/>
+		<collection property="cmCd" resultMap="cmCdForSelectComplaintList"/>
+		<collection property="webOprtr" resultMap="webOprtrForSelectComplaintList"/>
+	</resultMap>
+	
+	<resultMap type="MozCmCd" id="cmCdForSelectComplaintDetail">
+		<result column="CD_NM" property="cdNm"/>
+	</resultMap>
+	
+	<resultMap type="MozAtchFile" id="atchFileForSelectComplaintnDetail">
+		<result column="file_org_nm" property="fileOrgNm"/>
+	</resultMap>
+	
+	<resultMap type="MozComplaintsReg" id="finePymntInfoForSelectComplaintDetail">
+		<result column="rnum" property="rnum"/>
+		<result column="COMPLAINTS_IDX" property="complaintsIdx"/>
+		<result column="CATE_CD" property="cateCd"/>
+		<result column="WRTR_NM" property="wrtrNm"/>
+		<result column="WRTR_PNO" property="wrtrPno"/>
 		<result column="CR_DT" property="crDt"/>
 		<result column="POST_TTL" property="postTtl"/>
 		<result column="POST_CN" property="postCn"/>
 		<result column="ANS_STTS" property="ansStts"/>
+		<result column="ANS_CR_DT" property="ansCrDt"/>
 		<result column="ANS_CONTENTS" property="ansContents"/>
 		<collection property="cmCd" resultMap="cmCdForSelectComplaintDetail"/>
+		<collection property="atchFile" resultMap="atchFileForSelectComplaintnDetail"/>
+		<collection property="webOprtr" resultMap="webOprtrForSelectComplaintList"/>
 	</resultMap>
 	
-	<select id="findAllMozComplaintReg" parameterType="com.moz.ates.traffic.common.entity.board.MozComplaintsReg" resultMap="finePymntInfoForSelectComplaintList">
-        SELECT  COMPLAINTS_IDX
-                , CATE_CD
-                , WRTR_EMAIL
-                , POST_TTL
+	<select id="findAllMozComplaintReg" parameterType="MozComplaintsReg" resultMap="finePymntInfoForSelectComplaintList">
+        SELECT  ROW_NUMBER() OVER(ORDER BY crt.CR_DT) AS rnum
+        		, crt.COMPLAINTS_IDX
+                , crt.CATE_CD
+                , crt.WRTR_NM
+                , crt.POST_TTL
                 , crt.CR_DT
-                , ANS_STTS
+                , crt.ANS_STTS
+                , crt.OPRTR_ID
+                , crt.ANS_CR_DT
+                , crt.ANS_UPD_DT
                 , cct.CD_NM
+                , wot.OPRTR_ACCOUNT_ID
         FROM    MOZ_COMPLAINTS_REG crt
-                , MOZ_CM_CD cct
-        WHERE   crt.CATE_CD = cct.CD_ID
-        <include refid="complaintList-Where"/>
-        ORDER BY crt.CR_DT DESC
+        INNER JOIN MOZ_CM_CD cct
+        	ON crt.CATE_CD = cct.CD_ID
+        LEFT JOIN MOZ_WEB_OPRTR wot
+        	ON crt.OPRTR_ID = wot.OPRTR_ID
+        <where>
+	        <include refid="complaintList-Where"/>
+        </where>
+        ORDER BY rnum DESC
         LIMIT #{length} OFFSET #{start}
     </select>
     
-    <select id="countMozComplaintReg" parameterType="com.moz.ates.traffic.common.entity.board.MozComplaintsReg" resultType="int">
+    <select id="countMozComplaintReg" parameterType="MozComplaintsReg" resultType="int">
         SELECT  COUNT(*)    AS "cnt"
         FROM    MOZ_COMPLAINTS_REG crt
                 , MOZ_CM_CD cct
@@ -79,7 +116,7 @@
     <select id="findOneComplaintDetail" parameterType="String" resultMap="finePymntInfoForSelectComplaintDetail">
         SELECT  COMPLAINTS_IDX
                 , CATE_CD
-                , WRTR_EMAIL
+                , WRTR_NM
                 , POST_TTL
                 , crt.CR_DT
                 , ANS_STTS
@@ -87,34 +124,39 @@
                 , POST_CN
                 , ANS_CONTENTS
         FROM    MOZ_COMPLAINTS_REG crt
-                , MOZ_CM_CD cct
-        WHERE   crt.CATE_CD = cct.CD_ID
-                AND COMPLAINTS_IDX = #{complaintsIdx}
+        INNER JOIN MOZ_CM_CD cct
+        	ON  crt.CATE_CD = cct.CD_ID
+        LEFT JOIN MOZ_ATCH_FILE aft
+			ON crt.COMPLAINTS_IDX = aft.ATCH_IDX
+        WHERE COMPLAINTS_IDX = #{complaintsIdx}
     </select>
     
-    	<!-- 컴플레인 등록 -->
-	<insert id="insertComaplainInfo" parameterType="com.moz.ates.traffic.common.entity.board.MozComplaintsReg">
+	<insert id="insertComaplainInfo" parameterType="MozComplaintsReg">
 		INSERT INTO MOZ_COMPLAINTS_REG
 			(
 				COMPLAINTS_IDX,
 				CATE_CD,
-				WRTR_EMAIL,
+				WRTR_NM,
+				WRTR_PNO,
 				POST_TTL,
+				POST_PW,
 				POST_CN,
 				CR_DT
 			)VALUES(
-				COMPLAINTS_REG_SEQ.NEXTVAL,
+				#{complaintsIdx},
 				#{cateCd},
-				#{wrtrEmail},
+				#{wrtrNm},
+				#{wrtrPno},
 				#{postTtl},
+				#{postPw},
 				#{postCn},
 				NOW()
 			)
 	</insert>
     
-    <update id="updateCmpAns" parameterType="com.moz.ates.traffic.common.entity.board.MozComplaintsReg">
+    <update id="updateCmpAns" parameterType="MozComplaintsReg">
         UPDATE MOZ_COMPLAINTS_REG
-        SET OPRTR_ID = 'admin'
+        SET OPRTR_ID = #{oprtrId}
        		,ANS_EMAIL = #{ansEmail}
      		,ANS_STTS = 'Y'
       	  	,ANS_CONTENTS = #{ansContents}
@@ -122,4 +164,75 @@
       	  	,ANS_UPD_DT = NOW() 
         WHERE COMPLAINTS_IDX = #{complaintsIdx}
     </update>
+    
+<!-- ************************* for PORTAL start -->
+	<select id="countAllMozComplaintsReg" parameterType="MozComplaintsReg" resultType="int">
+	SELECT
+	COUNT(*)
+	FROM
+	MOZ_COMPLAINTS_REG MCR
+	WHERE 1=1
+		<if test="cateCd != '' and cateCd != null and cateCd != 'all' and searchTxt != '' and searchTxt != null">
+			AND MCR.POST_TTL LIKE CONCAT('%', #{searchTxt}, '%')
+			AND MCR.CATE_CD = #{cateCd}
+		</if>
+		<if test="cateCd == 'all' and searchTxt != '' and searchTxt != null">
+			AND MCR.POST_TTL LIKE CONCAT('%', #{searchTxt}, '%')
+		</if>
+	</select>
+	
+	<select id="findAllMozComplaintsRegJoinMozCmCd" parameterType="MozComplaintsReg" resultMap="finePymntInfoForSelectComplaintList">
+		SELECT 
+			ROW_NUMBER() OVER(ORDER BY MCR.CR_DT) AS rnum
+			, MCR.COMPLAINTS_IDX 
+			, MCR.POST_TTL 
+			, CONCAT(LEFT(MCR.WRTR_NM, 2), REPEAT('*', LENGTH(MCR.WRTR_NM) - 2)) AS WRTR_NM
+			, MCR.CR_DT
+			, MCR.ANS_STTS 
+			, MCC.CD_NM 
+		FROM MOZ_COMPLAINTS_REG MCR 
+			INNER JOIN MOZ_CM_CD MCC ON MCR.CATE_CD = MCC.CD_ID
+		WHERE 1=1
+		<if test="cateCd != '' and cateCd != null and cateCd != 'all' and searchTxt != '' and searchTxt != null">
+			AND MCR.POST_TTL LIKE CONCAT('%', #{searchTxt}, '%')
+			AND MCR.CATE_CD = #{cateCd}
+		</if>
+		<if test="cateCd == 'all' and searchTxt != '' and searchTxt != null">
+			AND MCR.POST_TTL LIKE CONCAT('%', #{searchTxt}, '%')
+		</if>
+		ORDER BY rnum DESC
+		LIMIT #{length} OFFSET #{start}
+	</select>
+	
+	<select id="findOnePostPwByComplaintsIdx" parameterType="MozComplaintsReg" resultType="String">
+		SELECT 
+			MCR.POST_PW 
+		FROM 
+			MOZ_COMPLAINTS_REG MCR 
+		WHERE 
+			MCR.COMPLAINTS_IDX = #{complaintsIdx}
+	</select>
+	
+	<select id="findOneMozComplaintsRegJoinMozCmCdAndMozWebOprtrByComplaintsIdx" parameterType="MozComplaintsReg" resultMap="finePymntInfoForSelectComplaintDetail">
+		SELECT 
+			MCR.COMPLAINTS_IDX 
+			, MCR.POST_TTL 
+			, MCR.POST_CN 
+			, MCR.WRTR_NM 
+			, MCR.WRTR_PNO
+			, MCR.CR_DT 
+			, MCR.ANS_STTS 
+			, MCR.ANS_CONTENTS 
+			, MCR.ANS_CR_DT 
+			, MCC.CD_NM 
+			, MWO.OPRTR_DEPT_NM 
+		FROM 
+			MOZ_COMPLAINTS_REG MCR
+			INNER JOIN MOZ_CM_CD MCC ON MCR.CATE_CD = MCC.CD_ID 
+			LEFT JOIN MOZ_WEB_OPRTR MWO ON MCR.OPRTR_ID = MWO.OPRTR_ID 
+		WHERE 
+			MCR.COMPLAINTS_IDX = #{complaintsIdx}
+	</select>
+<!-- ************************* for PORTAL end -->	
+	
 </mapper>

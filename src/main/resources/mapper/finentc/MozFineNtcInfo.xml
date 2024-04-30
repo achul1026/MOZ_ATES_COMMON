@@ -1,5 +1,579 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.moz.ates.traffic.common.repository.finentc.MozFineNtcInfoRepository">
+   <sql id="fineNtc-Where">
+   		<if test="searchType == 'all' and searchTxt != null and searchTxt != ''">
+			AND (MFNI.TFC_ENF_ID LIKE CONCAT('%', #{searchTxt}, '%') 
+				OR MVI.VIO_NM LIKE CONCAT('%', #{searchTxt}, '%'))
+		</if>
+		<if test="searchType == 'enfId' and searchTxt != null and searchTxt != ''">
+			AND MFNI.TFC_ENF_ID LIKE CONCAT('%', #{searchTxt}, '%') 
+		</if>
+		<if test="searchType == 'vioNm' and searchTxt != null and searchTxt != ''">
+			AND MVI.VIO_NM LIKE CONCAT('%', #{searchTxt}, '%') 
+		</if>
+		<if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
+            <![CDATA[
+                AND DATE_FORMAT(MFNI.CR_DT, '%Y-%m-%d') >= #{sDate}
+            ]]>
+        </if>
+        <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
+            <![CDATA[
+                AND DATE_FORMAT(MFNI.CR_DT, '%Y-%m-%d') <= #{eDate}
+            ]]>
+        </if>
+        <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
+            <![CDATA[
+                AND DATE_FORMAT(MFNI.CR_DT, '%Y-%m-%d') >= #{sDate}
+                AND DATE_FORMAT(MFNI.CR_DT, '%Y-%m-%d') <= #{eDate}
+            ]]>
+        </if>
+        <if test="ntcTy != null and ntcTy != ''">
+        	AND MFNI.NTC_TY = #{ntcTy}
+        </if>
+   </sql>
    
+   
+   <resultMap type="MozVioInfo" id="vioInfoForNtcInfoList">
+		<result column="VIO_NM" property="vioNm"/>
+	</resultMap>
+
+	<resultMap type="MozFineNtcInfo" id="selectNtcInfoListForFineNtcInfo">
+		<result column="rnum" property="rnum"/>
+		<result column="FINE_NTC_ID" property="fineNtcId"/> 
+		<result column="NTC_TY" property="ntcTy"/>
+		<result column="TFC_ENF_ID" property="tfcEnfId"/> 
+		<result column="FIRST_FINE_NTC_DT" property="firstFineNtcDt"/> 
+		<result column="FIRST_FINE_NTC_PRICE" property="firstFineNtcPrice"/> 
+		<result column="SECOND_FINE_NTC_DT" property="secondFineNtcDt"/> 
+		<result column="SECOND_FINE_NTC_PRICE" property="secondFineNtcPrice"/> 
+		<result column="FIRST_FINE_NTC_DDLN" property="firstFineNtcDdln"/> 
+		<result column="SECOND_FINE_NTC_DDLN" property="secondFineNtcDdln"/> 
+		<result column="LAW_TYPE" property="lawType"/> 
+		<result column="FINE_INFO_CNT" property="fineInfoCnt"/> 
+		<collection property="vioInfo" resultMap="vioInfoForNtcInfoList"/>
+	</resultMap>
+	
+	<resultMap type="MozTfcEnfMaster" id="tfcEnfMasterForDetail">
+		<result column="VH_REG_NO" property="vhRegNo"/>
+		<result column="ROAD_ADDR" property="roadAddr"/>
+		<result column="VH_TY" property="vhTy"/>
+		<result column="TFC_ENF_DETAIL" property="tfcEnfDetail"/>
+	</resultMap>
+	
+	<resultMap type="MozPolInfo" id="polInfoForDetail">
+		<result column="POL_NM" property="polNm"/>
+		<result column="JUR" property="jur"/>
+	</resultMap>
+	
+	<resultMap type="MozTfcLwInfo" id="tfcLwInfoForDetail">
+		<result column="LAW_NM" property="lawNm"/>
+		<result column="LAW_ARTICLE_NO" property="lawArticleNo"/>
+	</resultMap>
+	
+   <resultMap type="MozVioInfo" id="vioInfoForDetail">
+		<result column="VIO_NM" property="vioNm"/>
+		<result column="VIO_ID" property="vioId"/>
+		<result column="VIO_PNO" property="vioPno"/>
+		<result column="VIO_EMAIL" property="vioEmail"/>
+	</resultMap>
+	
+   <resultMap type="MozTfcLwFineInfo" id="tfcLwFineInfoForDetail">
+		<result column="FINE_PRICE" property="finePrice"/>
+	</resultMap>
+	
+   <resultMap type="MozPlPymntInfo" id="plPymntInfoForDetail">
+		<result column="PLACE_PYMNT_NM" property="placePymntNm"/>
+	</resultMap>
+	
+	<resultMap type="MozCmCd" id="mozCmCdForDetail">
+		<result column="CD_NM" property="cdNm"/>
+	</resultMap>
+	
+	<resultMap type="MozFineNtcInfo" id="mozFinNtcInfoDetail">
+		<result column="FINE_NTC_ID" property="fineNtcId"/> 
+		<result column="TFC_ENF_ID" property="tfcEnfId"/>
+		<result column="TFC_LAW_FINE_ID" property="tfcLawFineId"/>
+		<result column="CR_DT" property="crDt"/> 
+		<result column="NTC_TY" property="ntcTy"/>
+		<result column="FINE_NTC_DDLN" property="fineNtcDdln"/> 
+		<result column="FIRST_FINE_NTC_DT" property="firstFineNtcDt"/> 
+		<result column="FIRST_FINE_NTC_PRICE" property="firstFineNtcPrice"/> 
+		<result column="FISRT_FINE_NTC_DDLN" property="firstFineNtcDdln"/> 
+		<result column="SECOND_FINE_NTC_DT" property="secondFineNtcDt"/> 
+		<result column="SECOND_FINE_NTC_PRICE" property="secondFineNtcPrice"/> 
+		<result column="SECOND_FINE_NTC_DDLN" property="secondFineNtcDdln"/> 
+		<collection property="vioInfo" resultMap="vioInfoForDetail"/>
+		<collection property="tfcEnfMaster" resultMap="tfcEnfMasterForDetail"/>
+		<collection property="polInfo" resultMap="polInfoForDetail"/>
+		<collection property="tfcLwInfo" resultMap="tfcLwInfoForDetail"/>
+		<collection property="tfcLwFineInfo" resultMap="tfcLwFineInfoForDetail"/>
+		<collection property="plPymntInfo" resultMap="plPymntInfoForDetail"/>		
+		<collection property="cmCd" resultMap="mozCmCdForDetail"/>		
+	</resultMap>
+	
+	
+	<resultMap type="MozTfcEnfMaster" id="tfcEnfMasterForObjectionRegist">
+		<result column="VH_REG_NO" property="vhRegNo"/>
+	</resultMap>
+	
+	<resultMap type="MozFinePymntInfo" id="finePymntInfoForObjectionRegist">
+		<result column="PYMNT_STTS" property="pymntStts"/>
+	</resultMap>
+	
+	<resultMap type="MozCmCd" id="cmCdForObjectionRegist">
+		<result column="CD_NM" property="cdNm"/>
+	</resultMap>
+	
+	<resultMap type="MozFineNtcInfo" id="fineNtcInfoForObjectionRegist">
+		<result column="FINE_NTC_ID" property="fineNtcId"/>
+		<result column="TFC_ENF_ID" property="tfcEnfId"/>
+		<collection property="tfcEnfMaster" resultMap="tfcEnfMasterForObjectionRegist"/>
+		<collection property="finePymntInfo" resultMap="finePymntInfoForObjectionRegist"/>
+		<collection property="cmCd" resultMap="cmCdForObjectionRegist"/>
+	</resultMap>
+
+	<resultMap type="MozTfcEnfMaster" id="tfcEnfMasterForStatus">
+		<result column="VH_REG_NO" property="vhRegNo"/>
+	</resultMap>
+	
+	<resultMap type="MozFinePymntInfo" id="finePymntInfoForStatus">
+		<result column="PYMNT_STTS" property="pymntStts"/>
+		<result column="PYMNT_DT" property="pymntDt"/>
+	</resultMap>
+	
+	<resultMap type="MozCmCd" id="cmCdForfineNtcInfoSatus">
+		<result column="CD_NM" property="cdNm"/>
+	</resultMap>
+
+	<resultMap type="MozFineNtcInfo" id="fineNtcInfoForSatus">
+		<result column="TFC_ENF_ID" property="tfcEnfId"/>
+		<collection property="tfcEnfMaster" resultMap="tfcEnfMasterForStatus"/>
+		<collection property="finePymntInfo" resultMap="finePymntInfoForStatus"/>
+		<collection property="cmCd" resultMap="cmCdForfineNtcInfoSatus"/>
+	</resultMap>
+	
+	
+	<resultMap type="MozTfcEnfMaster" id="tfcEnfMasterForNoticeDetail">
+		<result column="VH_REG_NO" property="vhRegNo"/>
+		<result column="ROAD_ADDR" property="roadAddr"/>
+	</resultMap>
+	
+   <resultMap type="MozVioInfo" id="vioInfoForNoticeDetail">
+		<result column="VIO_NM" property="vioNm"/>
+		<result column="DVR_LCEN_ID" property="dvrLcenId"/>
+	</resultMap>
+	
+   <resultMap type="MozPolInfo" id="polInfoForNoticeDetail">
+		<result column="POL_NM" property="polNm"/>
+	</resultMap>
+	
+	<resultMap type="MozFineNtcInfo" id="fineNtcInfoForNoticeDetail">
+		<result column="TFC_ENF_ID" property="tfcEnfId"/>
+		<result column="FIRST_FINE_NTC_DT" property="firstFineNtcDt"/>
+		<result column="FIRST_FINE_NTC_DDLN" property="firstFineNtcDdln"/>
+		<result column="FIRST_FINE_NTC_PRICE" property="firstFineNtcPrice"/>
+		<result column="LAW_TYPE" property="lawType"/>
+		<collection property="tfcEnfMaster" resultMap="tfcEnfMasterForNoticeDetail"/>
+		<collection property="vioInfo" resultMap="vioInfoForNoticeDetail"/>
+		<collection property="polInfo" resultMap="polInfoForNoticeDetail"/>
+	</resultMap>
+	
+   
+   <select id="countFineNtcList" parameterType="MozFineNtcInfo" resultType="int">
+   		SELECT  COUNT(*)    AS "cnt"
+   		FROM MOZ_FINE_NTC_INFO MFNI
+		INNER JOIN MOZ_TFC_ENF_MASTER TEMT ON TEMT.TFC_ENF_ID = MFNI.TFC_ENF_ID
+		INNER JOIN MOZ_VIO_INFO MVI ON TEMT.VIO_ID = MVI.VIO_ID
+		INNER JOIN (
+			 SELECT 
+		       MTEFI.TFC_ENF_ID
+		       , count(*) AS FINE_INFO_CNT
+   		       , SUBSTRING_INDEX(GROUP_CONCAT(MCC.CD_NM ORDER BY MTLFI.FINE_PRICE), ',', 1) AS LAW_TYPE
+	       FROM MOZ_TFC_ENF_FINE_INFO MTEFI
+	       INNER JOIN MOZ_TFC_LW_FINE_INFO MTLFI ON MTLFI.TFC_LAW_FINE_ID = MTEFI.TFC_LAW_FINE_ID 
+	       INNER JOIN MOZ_TFC_LW_INFO MTLI ON MTLI.TFC_LAW_ID = MTEFI.TFC_LAW_ID 
+	       INNER JOIN MOZ_CM_CD MCC ON MTLI.LAW_TYPE = MCC.CD_ID
+	       GROUP BY MTEFI.TFC_ENF_ID
+		) FIL ON FIL.TFC_ENF_ID = MFNI.TFC_ENF_ID
+   		<where>
+   			<include refid="fineNtc-Where"/>
+   		</where>
+   </select>
+   
+   <select id="findAllFineNtcList" parameterType="MozFineNtcInfo" resultMap="selectNtcInfoListForFineNtcInfo">
+   		SELECT ROW_NUMBER() OVER(ORDER BY MFNI.CR_DT) AS rnum
+   			, MFNI.FINE_NTC_ID
+   			, MFNI.NTC_TY
+   			, MFNI.TFC_ENF_ID
+   			, MFNI.FIRST_FINE_NTC_DT
+   			, MFNI.FIRST_FINE_NTC_PRICE
+   			, MFNI.SECOND_FINE_NTC_DT
+   			, MFNI.SECOND_FINE_NTC_PRICE
+   			, MFNI.FIRST_FINE_NTC_DDLN
+   			, MFNI.SECOND_FINE_NTC_DDLN
+   			, MVI.VIO_NM
+			, FIL.LAW_TYPE
+			, FIL.FINE_INFO_CNT
+		FROM    
+			MOZ_FINE_NTC_INFO MFNI
+		INNER JOIN MOZ_TFC_ENF_MASTER TEMT ON TEMT.TFC_ENF_ID = MFNI.TFC_ENF_ID
+		INNER JOIN MOZ_VIO_INFO MVI ON TEMT.VIO_ID = MVI.VIO_ID
+		INNER JOIN (
+			 SELECT 
+		       MTEFI.TFC_ENF_ID
+		       , count(*) AS FINE_INFO_CNT
+   		       , SUBSTRING_INDEX(GROUP_CONCAT(MCC.CD_NM ORDER BY MTLFI.FINE_PRICE), ',', 1) AS LAW_TYPE
+	       FROM MOZ_TFC_ENF_FINE_INFO MTEFI
+	       INNER JOIN MOZ_TFC_LW_FINE_INFO MTLFI ON MTLFI.TFC_LAW_FINE_ID = MTEFI.TFC_LAW_FINE_ID 
+	       INNER JOIN MOZ_TFC_LW_INFO MTLI ON MTLI.TFC_LAW_ID = MTEFI.TFC_LAW_ID 
+	       INNER JOIN MOZ_CM_CD MCC ON MTLI.LAW_TYPE = MCC.CD_ID
+	       GROUP BY MTEFI.TFC_ENF_ID
+		) FIL ON FIL.TFC_ENF_ID = MFNI.TFC_ENF_ID
+   		<where>
+   			<include refid="fineNtc-Where"/>
+   		</where>
+   		ORDER BY rnum DESC
+		LIMIT #{length} OFFSET #{start}
+   </select>
+   
+   <select id="findOneNtcDetailByFineNtcId" parameterType="String" resultMap="mozFinNtcInfoDetail">
+   		SELECT
+			MFNI.FINE_NTC_ID
+			, MFNI.TFC_ENF_ID
+			, MFNI.NTC_TY
+			, MFNI.FIRST_FINE_NTC_DT 
+			, MFNI.FIRST_FINE_NTC_PRICE
+			, MFNI.SECOND_FINE_NTC_DT
+			, MFNI.SECOND_FINE_NTC_PRICE
+			, MFNI.FIRST_FINE_NTC_DDLN
+			, MFNI.SECOND_FINE_NTC_DDLN
+			, MFNI.CR_DT
+			, TEMT.VH_REG_NO
+			, TEMT.ROAD_ADDR
+			, TEMT.VH_TY
+			, TEMT.TFC_ENF_DETAIL
+			, TEMT.VIO_ID
+			, PIT.POL_NM
+			, PIT.JUR
+			, MTLI.LAW_NM
+			, MTLI.LAW_ARTICLE_NO
+			, MVI.VIO_NM
+			, MVI.VIO_PNO
+			, MVI.VIO_EMAIL
+			, MTLFI.FINE_PRICE 
+			, MPPI.PLACE_PYMNT_NM
+			, MCC.CD_NM
+		FROM    
+			MOZ_FINE_NTC_INFO MFNI
+		INNER JOIN MOZ_TFC_ENF_MASTER TEMT ON TEMT.TFC_ENF_ID = MFNI.TFC_ENF_ID
+		INNER JOIN MOZ_TFC_ENF_FINE_INFO MTEFI ON TEMT.TFC_ENF_ID = MTEFI.TFC_ENF_ID  
+		INNER JOIN MOZ_TFC_LW_FINE_INFO MTLFI ON MTLFI.TFC_LAW_FINE_ID  = MTEFI.TFC_LAW_FINE_ID 
+		INNER JOIN MOZ_POL_INFO PIT ON TEMT.POL_ID = PIT.POL_ID
+		INNER JOIN MOZ_TFC_LW_INFO MTLI ON MTLFI.TFC_LAW_ID  = MTLI.TFC_LAW_ID
+		INNER JOIN MOZ_CM_CD MCC ON MTLI.LAW_CHAPTER = MCC.CD_ID
+		INNER JOIN MOZ_VIO_INFO MVI ON TEMT.VIO_ID = MVI.VIO_ID
+		INNER JOIN MOZ_FINE_PYMNT_INFO MFPI ON MFNI.FINE_NTC_ID = MFPI.FINE_NTC_ID
+		INNER JOIN MOZ_PL_PYMNT_INFO MPPI ON MFPI.PLACE_PYMNT_ID = MPPI.PLACE_PYMNT_ID
+		WHERE MFNI.FINE_NTC_ID = #{fineNtcId}
+   </select>
+   
+   <select id="findAllByExpirationFirstNtc" parameterType="String" resultType="MozFineNtcInfo">
+		SELECT 			
+			MFNI.FINE_NTC_ID
+			, MFNI.TFC_ENF_ID
+			, MFNI.NTC_TY
+			, MFNI.FIRST_FINE_NTC_DT 
+			, MFNI.FIRST_FINE_NTC_PRICE
+			, MFNI.FIRST_FINE_NTC_DDLN
+		FROM MOZ_FINE_NTC_INFO MFNI
+		<![CDATA[
+		WHERE FIRST_FINE_NTC_DDLN < CURRENT_DATE() 
+		AND SECOND_FINE_NTC_DT IS NULL
+		AND NTC_TY = #{ntcTy}
+		]]>
+   </select>
+   
+   <select id="findOneFineNtcInfoByTfcEnfId" parameterType="String" resultType="MozFineNtcInfo">
+   		SELECT
+   			FINE_NTC_ID
+   		FROM MOZ_FINE_NTC_INFO
+   		WHERE TFC_ENF_ID = #{tfcEnfId}
+   </select>
+   
+   <update id="updateFirstNoticeBatch" parameterType="MozFineNtcInfo">
+		UPDATE MOZ_FINE_NTC_INFO 
+		INNER JOIN MOZ_FINE_PYMNT_INFO MFPI ON MFPI.FINE_NTC_ID = MOZ_FINE_NTC_INFO.FINE_NTC_ID
+		INNER JOIN MOZ_TFC_ENF_MASTER MTEM ON MTEM.TFC_ENF_ID = MOZ_FINE_NTC_INFO.TFC_ENF_ID
+		SET 
+		    MOZ_FINE_NTC_INFO.NTC_TY = 'NTT002',
+		    MOZ_FINE_NTC_INFO.SECOND_FINE_NTC_DT = FIRST_FINE_NTC_DDLN,
+		    MOZ_FINE_NTC_INFO.SECOND_FINE_NTC_DDLN = DATE_ADD(FIRST_FINE_NTC_DDLN, INTERVAL 15 DAY),
+		    MOZ_FINE_NTC_INFO.SECOND_FINE_NTC_PRICE = ROUND(MOZ_FINE_NTC_INFO.FIRST_FINE_NTC_PRICE * 1.20, 2)
+		WHERE 
+		<![CDATA[
+		    MOZ_FINE_NTC_INFO.FIRST_FINE_NTC_DDLN < CURRENT_DATE()
+		    AND MOZ_FINE_NTC_INFO.FIRST_FINE_NTC_PRICE IS NOT NULL
+		    AND MOZ_FINE_NTC_INFO.SECOND_FINE_NTC_DT IS NULL
+		    AND MFPI.PYMNT_STTS = 'N'
+		    AND MTEM.DEL_YN = 'N'
+		    AND MOZ_FINE_NTC_INFO.NTC_TY = 'NTT001'
+	    ]]>
+   </update>
+   
+   <update id="updateSecondNoticeBatch" parameterType="MozFineNtcInfo">
+		UPDATE MOZ_FINE_NTC_INFO 
+		INNER JOIN MOZ_FINE_PYMNT_INFO MFPI ON MFPI.FINE_NTC_ID = MOZ_FINE_NTC_INFO.FINE_NTC_ID
+		INNER JOIN MOZ_TFC_ENF_MASTER MTEM ON MTEM.TFC_ENF_ID = MOZ_FINE_NTC_INFO.TFC_ENF_ID
+		SET 
+		    MOZ_FINE_NTC_INFO.NTC_TY = 'NTT000'
+		WHERE
+		<![CDATA[
+			MOZ_FINE_NTC_INFO.SECOND_FINE_NTC_DDLN < CURRENT_DATE()
+			AND MFPI.PYMNT_STTS = 'N'
+			AND MTEM.DEL_YN = 'N'
+			AND MOZ_FINE_NTC_INFO.NTC_TY = 'NTT002'
+		]]>
+   </update>
+
+   <update id="updateNtcTyByFineNtcId" parameterType="MozFineNtcInfo">
+        UPDATE MOZ_FINE_NTC_INFO
+        SET  NTC_TY = #{ntcTy}
+        WHERE FINE_NTC_ID = #{fineNtcId}
+   </update>
+   
+      <select id="findAllByExpirationSecondNtc" parameterType="String" resultType="MozFineNtcInfo">
+		SELECT 			
+			MFNI.FINE_NTC_ID
+			, MFNI.TFC_ENF_ID
+			, MFNI.NTC_TY
+			, MFNI.FIRST_FINE_NTC_DT 
+			, MFNI.FIRST_FINE_NTC_PRICE
+			, MFNI.FIRST_FINE_NTC_DDLN
+		FROM MOZ_FINE_NTC_INFO MFNI
+		<![CDATA[
+		WHERE SECOND_FINE_NTC_DDLN < CURRENT_DATE() 
+		AND NTC_TY = #{ntcTy}
+		]]>
+   </select>
+   
+   <insert id="insertFineNtcInfo" parameterType="MozFineNtcInfo">
+   		INSERT INTO MOZ_FINE_NTC_INFO (
+   			FINE_NTC_ID,
+   			TFC_ENF_ID,
+   			FIRST_FINE_NTC_DT,
+   			FIRST_FINE_NTC_PRICE,
+   			FIRST_FINE_NTC_DDLN,
+   			NTC_TY,
+   			CR_DT,
+   			CRTR
+   		) VALUES (
+   			#{fineNtcId},
+   			#{tfcEnfId},
+   			#{firstFineNtcDt},
+   			#{firstFineNtcPrice},
+   			#{firstFineNtcDdln},
+   			#{ntcTy},
+   			#{crDt},
+   			#{crtr}
+   		)
+   </insert>
+   
+   <update id="updateNtcTyForDeleteEnfInfo" parameterType="MozFineNtcInfo">
+   		UPDATE MOZ_FINE_NTC_INFO
+   		SET NTC_TY = #{ntcTy}	
+   		WHERE FINE_NTC_ID = #{fineNtcId}
+   </update>
+   
+   <delete id="deleteFineNtcInfoByTfcEnfId" parameterType="String">
+   		DELETE FROM MOZ_FINE_NTC_INFO
+   		WHERE TFC_ENF_ID = #{tfcEnfId}
+   </delete>
+   
+   <select id="findOneTfcEnfIdByFineNtcId" parameterType="MozFineNtcInfo" resultType="MozFineNtcInfo">
+			SELECT MFNI.TFC_ENF_ID 
+			FROM MOZ_FINE_NTC_INFO MFNI 
+			WHERE MFNI.FINE_NTC_ID = #{fineNtcId}
+   </select>
+   
+   <select id="findOneMozFineNtcInfoJoinMozTfcEnfMasterAndMozFinePymntInfoAndMozCmCdByTfcEnfId" parameterType="MozFineNtcInfo" resultMap="fineNtcInfoForObjectionRegist">
+			SELECT 
+				MFNI.FINE_NTC_ID 
+				, MFNI.TFC_ENF_ID 
+				, MTEM.VH_REG_NO
+				, MFPI.PYMNT_STTS 
+				, MCC.CD_NM  
+			FROM 
+				MOZ_FINE_NTC_INFO MFNI 
+				INNER JOIN MOZ_TFC_ENF_MASTER MTEM ON MFNI.TFC_ENF_ID = MTEM.TFC_ENF_ID 
+				INNER JOIN	MOZ_FINE_PYMNT_INFO MFPI ON MFNI.FINE_NTC_ID = MFPI.FINE_NTC_ID 
+				INNER JOIN MOZ_CM_CD MCC ON MFNI.NTC_TY  = MCC.CD_ID 
+			WHERE 
+				DATE(DATE_ADD(MFNI.FIRST_FINE_NTC_DT, INTERVAL 5 DAY)) >= CURDATE()
+			AND MFNI.TFC_ENF_ID = #{searchTxt}
+   </select>
+   
+   <select id="findOneMozFineNtcInfoStatus" parameterType="map" resultMap="fineNtcInfoForSatus">
+			SELECT 
+				MFNI.TFC_ENF_ID 
+				, MTEM.VH_REG_NO 
+				, MFPI.PYMNT_STTS
+				, MFPI.PYMNT_DT 
+				, MCC.CD_NM 
+			FROM MOZ_FINE_NTC_INFO MFNI
+			INNER JOIN MOZ_FINE_PYMNT_INFO MFPI ON MFPI.FINE_NTC_ID = MFNI.FINE_NTC_ID 
+			INNER JOIN MOZ_TFC_ENF_MASTER MTEM ON MFNI.TFC_ENF_ID = MTEM.TFC_ENF_ID 
+			INNER JOIN MOZ_VIO_INFO MVI ON MTEM.VIO_ID = MVI.VIO_ID 
+			INNER JOIN MOZ_CM_CD MCC ON MFNI.NTC_TY = MCC.CD_ID 
+			WHERE MFNI.TFC_ENF_ID = #{tfcEnfId}
+			AND MVI.VIO_BRTH = #{vioBrth}
+			AND MVI.DVR_LCEN_ID = #{dvrLcenId}
+			AND MTEM.DEL_YN = #{delYn}
+   </select>
+   
+   <select id="findAllChartData" parameterType="ChartSearchDTO" resultType="map">
+	   	SELECT 
+				GROUP_CONCAT(A.SEQ_CNT ORDER BY A.GRAPH_TIME) AS COUNT
+				, GROUP_CONCAT(A.GRAPH_TIME ORDER BY A.GRAPH_TIME) AS LABEL
+			FROM(
+				SELECT 
+					TIME_DATA.GRAPH_TIME
+					,COALESCE(GRAPH_DATA.SEQ_CNT,0) as SEQ_CNT
+				FROM(
+					<if test="timeType == 'monthly'">
+						SELECT 
+							DATE_FORMAT(m1, '%Y-%m') AS GRAPH_TIME
+						FROM(
+							SELECT 
+								(#{sDate} - INTERVAL DAYOFMONTH(#{sDate})-1 DAY) +INTERVAL m MONTH as m1
+							FROM(
+								SELECT @rownum:=@rownum+1 as m FROM
+								(SELECT 1 union SELECT 2 union SELECT 3 union SELECT 4) t1,
+								(SELECT 1 union SELECT 2 union SELECT 3 union SELECT 4) t2,
+								(SELECT 1 union SELECT 2 union SELECT 3 union SELECT 4) t3,
+								(SELECT 1 union SELECT 2 union SELECT 3 union SELECT 4) t4,
+								(SELECT @rownum:=-1) t0
+							) d1
+						) d2 
+						WHERE m1 <![CDATA[<=]]> #{eDate}
+						ORDER BY m1
+					</if>
+					<if test="timeType == 'daily'">
+						SELECT 
+							DATE_ADD(#{sDate}, INTERVAL seq.seq DAY) AS GRAPH_TIME
+						FROM (
+							SELECT 
+								(t3*100 + t2*10 + t1) AS seq
+							FROM
+								(SELECT 0 t1 UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t1,
+								(SELECT 0 t2 UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t2,
+								(SELECT 0 t3 UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t3
+						) AS seq
+						WHERE DATE_ADD(#{sDate}, INTERVAL seq.seq DAY) BETWEEN #{sDate} AND #{eDate}				
+					</if>
+					<if test="timeType == 'hourly'">
+						WITH RECURSIVE CTE AS (
+							SELECT 00 AS RNUM
+							UNION ALL
+							SELECT RNUM + 01 FROM CTE
+							WHERE RNUM <![CDATA[<]]> 23
+						)
+						SELECT IF(RNUM <![CDATA[<]]> 10, CONCAT('0',RNUM) , RNUM) AS GRAPH_TIME FROM CTE
+					</if>
+				)TIME_DATA
+				LEFT JOIN (
+					SELECT 
+						COUNT(MFNI.FINE_NTC_ID) AS SEQ_CNT
+						<if test="timeType == 'monthly'">
+							<if test="cate == 'NTT001'">
+							, DATE_FORMAT(MFNI.FIRST_FINE_NTC_DT, '%Y-%m') as TIME_DATA														
+							</if>
+							<if test="cate == 'NTT002'">
+							, DATE_FORMAT(MFNI.SECOND_FINE_NTC_DT, '%Y-%m') as TIME_DATA							
+							</if>
+						</if>
+						<if test="timeType == 'daily'">
+							<if test="cate == 'NTT001'">
+							, DATE_FORMAT(MFNI.FIRST_FINE_NTC_DT, '%Y-%m-%d') as TIME_DATA														
+							</if>
+							<if test="cate == 'NTT002'">
+							, DATE_FORMAT(MFNI.SECOND_FINE_NTC_DT, '%Y-%m-%d') as TIME_DATA							
+							</if>
+						</if>
+						<if test="timeType == 'hourly'">
+							<if test="cate == 'NTT001'">
+							, DATE_FORMAT(MFNI.FIRST_FINE_NTC_DT, '%H') as TIME_DATA														
+							</if>
+							<if test="cate == 'NTT002'">
+							, DATE_FORMAT(MFNI.SECOND_FINE_NTC_DT, '%H') as TIME_DATA						
+							</if>	
+						</if>
+					FROM  MOZ_FINE_NTC_INFO MFNI
+					WHERE 1=1
+					<if test="timeType == 'monthly'">
+						<if test="cate == 'NTT001'">
+						AND DATE_FORMAT(MFNI.FIRST_FINE_NTC_DT, '%Y-%m') BETWEEN #{sDate} AND #{eDate}													
+						</if>
+						<if test="cate == 'NTT002'">
+						AND DATE_FORMAT(MFNI.SECOND_FINE_NTC_DT, '%Y-%m') BETWEEN #{sDate} AND #{eDate}					
+						</if>	
+					</if>
+					<if test="timeType == 'daily'">
+						<if test="cate == 'NTT001'">
+						AND DATE_FORMAT(MFNI.FIRST_FINE_NTC_DT, '%Y-%m-%d') BETWEEN #{sDate} AND #{eDate}											
+						</if>
+						<if test="cate == 'NTT002'">
+						AND DATE_FORMAT(MFNI.SECOND_FINE_NTC_DT, '%Y-%m-%d') BETWEEN #{sDate} AND #{eDate}				
+						</if>
+					</if>
+					<if test="timeType == 'hourly'">
+						<if test="cate == 'NTT001'">
+						AND DATE_FORMAT(MFNI.FIRST_FINE_NTC_DT, '%Y-%m-%d') = #{sDate}												
+						</if>
+						<if test="cate == 'NTT002'">
+						AND DATE_FORMAT(MFNI.SECOND_FINE_NTC_DT, '%Y-%m-%d') = #{sDate}				
+						</if>
+					</if>
+					AND MFNI.NTC_TY = #{cate}
+					GROUP BY TIME_DATA
+				) GRAPH_DATA on TIME_DATA.GRAPH_TIME = GRAPH_DATA.TIME_DATA
+				ORDER BY TIME_DATA.GRAPH_TIME ASC
+			)A
+   </select>
+   
+   <select id="findOneFineNtcInfoForNoticeDetail" parameterType="map" resultMap="fineNtcInfoForNoticeDetail">
+		SELECT 
+			MFNI.TFC_ENF_ID 
+			, MFNI.FIRST_FINE_NTC_DDLN 
+			, MFNI.FIRST_FINE_NTC_DT
+			, MFNI.FIRST_FINE_NTC_PRICE 
+			, MTEM.VH_REG_NO 
+			, MTEM.ROAD_ADDR 
+			, UPPER(MVI.VIO_NM) AS VIO_NM
+			, MVI.DVR_LCEN_ID
+			, MPI.POL_NM 
+			, TFC_LW_INFO.LAW_INFO AS LAW_TYPE
+		FROM MOZ_TFC_ENF_MASTER MTEM 
+		INNER JOIN MOZ_VIO_INFO MVI ON MVI.VIO_ID = MTEM.VIO_ID 
+		INNER JOIN MOZ_FINE_NTC_INFO MFNI ON MFNI.TFC_ENF_ID = MTEM.TFC_ENF_ID
+		INNER JOIN MOZ_POL_INFO MPI ON MPI.POL_ID = MTEM.POL_ID 
+		INNER JOIN (
+		SELECT 
+			GROUP_CONCAT(MTLI.LAW_ARTICLE_NO ORDER BY MTLI.LAW_ARTICLE_NO ASC SEPARATOR ', ') AS LAW_INFO
+			, MTEFI.TFC_ENF_ID
+		FROM 
+			MOZ_TFC_LW_INFO MTLI 
+			INNER JOIN MOZ_TFC_LW_FINE_INFO MTLFI ON MTLI.TFC_LAW_ID = MTLFI.TFC_LAW_ID 
+			INNER JOIN MOZ_TFC_ENF_FINE_INFO MTEFI ON MTLFI.TFC_LAW_FINE_ID = MTEFI.TFC_LAW_FINE_ID 
+		WHERE
+			MTEFI.TFC_ENF_ID = #{tfcEnfId}
+			GROUP BY MTEFI.TFC_ENF_ID
+			) AS TFC_LW_INFO
+		WHERE 
+		MTEM.TFC_ENF_ID = #{tfcEnfId}
+		AND MVI.DVR_LCEN_ID = #{dvrLcenId}
+		AND MVI.VIO_BRTH = #{vioBrth}
+		AND MFNI.NTC_TY = #{ntcTy}
+		AND MTEM.DEL_YN = #{delYn}
+   </select>
 </mapper>

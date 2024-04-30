@@ -1,5 +1,62 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.moz.ates.traffic.common.repository.equipment.MozTfcEnfFileInfoRepository">
-
+    <insert id="insertTfcEnfFileInfo" parameterType="MozTfcEnfFileInfo">
+        INSERT INTO MOZ_TFC_ENF_FILE_INFO
+        (
+        	TFC_ENF_ID
+            ,TFC_ENF_EQP_ID
+            ,FILE_PATH
+            ,FILE_NM
+            ,FILE_SIZE
+            ,CR_DT
+            ,FILE_ORG_NM
+        )VALUES(
+            #{tfcEnfId},
+            #{tfcEnfEqpId},
+            #{filePath},
+            #{fileNm},
+            #{fileSize},
+            NOW(),
+            #{fileOrgNm}
+               )
+    </insert>
+    
+    <select id="findTfcEnfFileInfoByTfcEnfId" parameterType="String" resultType="MozTfcEnfFileInfo">
+		SELECT 
+			VIO_FILE_NO,
+			TFC_ENF_EQP_ID,
+			FILE_PATH, 
+			FILE_NM,
+			FILE_SIZE,
+			CR_DT,
+			TFC_ENF_ID,
+			FILE_ORG_NM
+		FROM MOZ_TFC_ENF_FILE_INFO
+		WHERE TFC_ENF_ID = #{tfcEnfId}
+		ORDER BY FILE_ORG_NM
+    </select>
+    
+    <select id="findOneByMozTfcEnfFileInfoByVioFileId" parameterType="String" resultType="MozTfcEnfFileInfo">
+		SELECT 
+			VIO_FILE_NO,
+			TFC_ENF_EQP_ID,
+			FILE_PATH, 
+			FILE_NM,
+			FILE_SIZE,
+			CR_DT,
+			TFC_ENF_ID
+		FROM MOZ_TFC_ENF_FILE_INFO
+		WHERE VIO_FILE_NO = #{vioFileNo}
+    </select>
+    
+    <delete id="deleteTfcEnfFileInfoByTfcEnfId" parameterType="String">
+    	DELETE FROM MOZ_TFC_ENF_FILE_INFO
+    	WHERE TFC_ENF_ID = #{tfcEnfId}
+    </delete>
+    
+    <delete id="deleteMozTfcEnfFileInfoByVioFileNo" parameterType="String">
+    	DELETE FROM MOZ_TFC_ENF_FILE_INFO
+    	WHERE VIO_FILE_NO = #{vioFileNo}
+    </delete>
 </mapper>

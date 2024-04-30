@@ -13,5 +13,6 @@
     <typeAliases>
 		<typeAlias alias="hashMap" type="java.util.HashMap" />
         <typeAlias alias="map" type="java.util.Map" />
+        <package name="com.moz.ates.traffic.common.entity"/>
 	</typeAliases>
 </configuration>

@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.moz.ates.traffic.common.repository.menu.MozMenuRepository">
-    <select id="selectList" parameterType="com.moz.ates.traffic.common.entity.menu.MozMenu" resultType="com.moz.ates.traffic.common.entity.menu.MozMenu">
+
+    <select id="selectList" parameterType="MozMenu" resultType="MozMenu">
     	SELECT * FROM MOZ_MENU
     </select>
     
-    <select id="selectParentMenuListByMenuAuth" parameterType="String" resultType="com.moz.ates.traffic.common.entity.menu.MozMenu">
+    <select id="selectParentMenuListByMenuAuth" parameterType="String" resultType="MozMenu">
 	     SELECT
 			mm.MENU_ID,
 			mm.PARENT_MENU_ID,
@@ -23,7 +24,7 @@
 		INNER JOIN MOZ_AUTH_MENU mam ON mm.MENU_ID = mam.MENU_ID
 		INNER JOIN MOZ_AUTH ma ON mam.AUTH_ID = ma.AUTH_ID
 		WHERE
-			PARENT_MENU_ID IS NULL
+			PARENT_MENU_ID = 'ALL'
 			AND USE_YN = 'Y'
 			AND (mam.READ_YN = 'Y' AND mam.AUTH_ID  = #{authId})
 		GROUP BY mm.MENU_ID 
@@ -31,7 +32,7 @@
 			mm.MAIN_SORT_NO
     </select>
     
-    <select id="selectSubMenuListByMenuAuthAndMenuId" parameterType="java.util.HashMap" resultType="com.moz.ates.traffic.common.entity.menu.MozMenu">
+    <select id="selectSubMenuListByMenuAuthAndMenuId" parameterType="MozMenu" resultType="MozMenu">
 	    SELECT
 			mm.MENU_ID,
 			mm.PARENT_MENU_ID,
@@ -49,7 +50,7 @@
 			INNER JOIN MOZ_AUTH_MENU mam ON mm.MENU_ID = mam.MENU_ID
 			INNER JOIN MOZ_AUTH ma ON mam.AUTH_ID = ma.AUTH_ID
 		WHERE
-			PARENT_MENU_ID = #{menuId}
+			PARENT_MENU_ID = #{parentMenuId}
 			AND USE_YN = 'Y'
 			AND (mam.READ_YN = 'Y' AND mam.AUTH_ID  = #{authId})
 		GROUP BY mm.MENU_ID 
@@ -57,7 +58,7 @@
 			mm.SUB_SORT_NO
     </select>
     
-    <select id="selectParentMenuList" resultType="com.moz.ates.traffic.common.entity.menu.MozMenu">
+    <select id="selectParentMenuList" resultType="MozMenu">
     SELECT
 		mm.MENU_ID,
 		mm.PARENT_MENU_ID,
@@ -73,13 +74,13 @@
 	FROM
 		MOZ_MENU mm
 	WHERE
-		PARENT_MENU_ID IS NULL
+		PARENT_MENU_ID = 'ALL'
 		AND USE_YN = 'Y'
 	ORDER BY
 		mm.MAIN_SORT_NO
     </select>
     
-    <select id="selectSubMenuListByMenuId" parameterType="String" resultType="com.moz.ates.traffic.common.entity.menu.MozMenu">
+    <select id="selectSubMenuListByMenuId" parameterType="String" resultType="MozMenu">
     SELECT
 		mm.MENU_ID,
 		mm.PARENT_MENU_ID,
@@ -100,4 +101,235 @@
 	ORDER BY
 		mm.SUB_SORT_NO
     </select>
+    	
+	<select id="selectSidebarAuthMenuList" parameterType="MozWebOprtrDTO" resultType="MozMenu">
+		WITH RECURSIVE MENU_INFO AS (
+			SELECT 
+					PARENT_MENU.MENU_ID ,
+					PARENT_MENU.MENU_URL , 
+					PARENT_MENU.MENU_URL_PATTRN , 
+					PARENT_MENU.MENU_NM_ENG , 
+					PARENT_MENU.MENU_NM_POR , 
+					PARENT_MENU.PARENT_MENU_ID , 
+					PARENT_MENU.MAIN_SORT_NO ,
+					PARENT_MENU.SUB_SORT_NO ,
+					PARENT_MENU.MENU_ABV , 
+					PARENT_MENU.USE_YN, 
+					1 AS MENU_LEVEL
+			FROM 	MOZ_MENU PARENT_MENU
+			WHERE 	PARENT_MENU.PARENT_MENU_ID IS NULL
+			AND 	PARENT_MENU.USE_YN = 'Y'
+			
+			UNION ALL
+			
+			SELECT 
+					SUB_MENU.MENU_ID ,
+					SUB_MENU.MENU_URL , 
+					SUB_MENU.MENU_URL_PATTRN , 
+					SUB_MENU.MENU_NM_ENG , 
+					SUB_MENU.MENU_NM_POR ,
+					SUB_MENU.PARENT_MENU_ID , 
+					SUB_MENU.MAIN_SORT_NO,
+					SUB_MENU.SUB_SORT_NO, 
+					SUB_MENU.MENU_ABV, 
+					SUB_MENU.USE_YN, 
+					MI.MENU_LEVEL + 1
+			FROM MOZ_MENU SUB_MENU
+			INNER JOIN MENU_INFO MI ON SUB_MENU.PARENT_MENU_ID = MI.MENU_ID
+			WHERE SUB_MENU.USE_YN = 'Y'
+		)
+		SELECT 
+				MI.MENU_ID ,
+				MI.MENU_URL , 
+				MI.MENU_URL_PATTRN , 
+				MI.MENU_NM_ENG , 
+				MI.MENU_NM_POR ,  
+				MI.PARENT_MENU_ID , 
+				MI.MAIN_SORT_NO ,
+				MI.SUB_SORT_NO , 
+				MI.MENU_ABV , 
+				MI.USE_YN , 
+				MI.MENU_LEVEL
+		FROM 	MENU_INFO MI
+		INNER JOIN MOZ_AUTH_MENU MAM ON MI.MENU_ID = MAM.MENU_ID 
+		INNER JOIN MOZ_WEB_OPRTR MWO ON MAM.AUTH_ID = MWO.AUTH_ID 
+		WHERE 	MWO.OPRTR_ID 	= #{oprtrId}
+		AND 	MWO.AUTH_ID 	= #{authId}
+		AND MAM.READ_YN = 'Y'
+		ORDER BY 	MI.MAIN_SORT_NO,
+					MI.SUB_SORT_NO,
+					MI.MENU_LEVEL 
+	</select>
+
+	<select id="selectMenuRouteInfo" parameterType="MozMenuRouteDTO" resultType="MozMenuRouteDTO">
+		WITH MENU_INFO AS (
+				SELECT
+					MM.MENU_NM_ENG ,
+					MM.MENU_ID ,
+					MM.PARENT_MENU_ID ,
+					MM.MENU_NM_POR,
+					MM.MAIN_SORT_NO ,
+					MM.SUB_SORT_NO ,
+					MM.MENU_URL ,
+					MM.MENU_URL_PATTRN 
+				FROM
+					MOZ_MENU MM
+				WHERE MM.MENU_URL_PATTRN = #{menuUrlPattrn}
+		)
+		SELECT
+				MI.MENU_ID,
+				<choose>
+					<when test="lang != null and lang != '' and lang == 'por'">
+						MZM.MENU_NM_POR AS MENU_NM ,
+						MI.MENU_NM_POR AS SUB_MENU_NM ,		
+					</when>
+					<otherwise>
+						MZM.MENU_NM_ENG AS MENU_NM ,
+						MI.MENU_NM_ENG AS SUB_MENU_NM ,
+					</otherwise>
+				</choose>
+				MZM.MENU_URL AS MENU_URL ,
+				MI.MENU_URL AS SUB_MENU_URL
+		FROM MENU_INFO MI
+		LEFT JOIN MOZ_MENU MZM ON MI.PARENT_MENU_ID = MZM.MENU_ID
+	</select>
+	
+	<select id="findAllParentMenu" resultType="MozMenu">
+			SELECT
+					MM1.MENU_ID,
+					MM1.MAIN_SORT_NO,
+					MM1.MENU_NM_ENG,
+					MM1.MENU_NM_POR,
+					MM1.USE_YN,
+					MM1.MENU_URL,
+					MM1.MENU_URL_PATTRN,
+					MM1.CR_DT,
+					MM1.CRTR,
+					MM1.MENU_ABV,
+					IFNULL(subMenuTotalCnt, 0) AS subMenuTotalCnt
+			FROM
+					MOZ_MENU MM1
+			LEFT JOIN
+					(
+				SELECT
+					MM2.PARENT_MENU_ID,
+					COUNT(*) AS subMenuTotalCnt
+				FROM
+					MOZ_MENU MM2
+				WHERE
+					MM2.PARENT_MENU_ID IS NOT NULL
+				GROUP BY
+					MM2.PARENT_MENU_ID 
+					) MM3
+					ON
+				MM3.PARENT_MENU_ID = MM1.MENU_ID
+			WHERE 	
+					MM1.PARENT_MENU_ID IS NULL
+			ORDER BY
+					MM1.MAIN_SORT_NO,
+					MM1.CR_DT DESC
+	</select>
+	
+	<select id="findOneByMenuId" parameterType="String" resultType="MozMenu">
+			SELECT
+					MM.MENU_ID,
+					MM.PARENT_MENU_ID,
+					MM.MAIN_SORT_NO,
+					MM.SUB_SORT_NO,
+					MM.MENU_NM_ENG,
+					MM.MENU_NM_POR,
+					MM.USE_YN,
+					MM.MENU_URL,
+					MM.MENU_URL_PATTRN,
+					MM.CR_DT,
+					MM.CRTR,
+					MM.MENU_ABV
+			FROM
+				MOZ_MENU MM
+			WHERE
+				MM.MENU_ID = #{menuId}
+	</select>
+	
+	<select id="findAllSubMenuByParentMenuId" parameterType="String" resultType="MozMenu">
+			SELECT 
+					MM.MENU_ID,
+					MM.PARENT_MENU_ID,
+					MM.MAIN_SORT_NO,
+					MM.SUB_SORT_NO,
+					MM.MENU_NM_ENG,
+					MM.MENU_NM_POR,
+					MM.USE_YN,
+					MM.MENU_URL,
+					MM.MENU_URL_PATTRN,
+					MM.CR_DT,
+					MM.CRTR,
+					MM.MENU_ABV
+			FROM
+				MOZ_MENU MM
+			WHERE
+				MM.PARENT_MENU_ID = #{menuId}
+			ORDER BY
+				MM.SUB_SORT_NO ASC,
+				MM.CR_DT DESC
+	</select>
+
+	<insert id="saveMenu" parameterType="MozMenu">
+		INSERT
+		INTO
+		MOZ_MENU (
+		MENU_ID,
+		PARENT_MENU_ID,
+		MAIN_SORT_NO,
+		MENU_NM_ENG,
+		USE_YN,
+		SUB_SORT_NO,
+		MENU_URL,
+		CR_DT,
+		CRTR,
+		MENU_NM_POR,
+		MENU_URL_PATTRN,
+		MENU_ABV
+		)
+		VALUES (
+		#{menuId},
+		#{parentMenuId},
+		#{mainSortNo},
+		#{menuNmEng},
+		#{useYn},
+		#{subSortNo},
+		#{menuUrl},
+		NOW(),
+		#{crtr},
+		#{menuNmPor},
+		#{menuUrlPattrn},
+		#{menuAbv}
+		)
+	</insert>
+	
+	<delete id="deleteMenu" parameterType="MozMenu">
+		DELETE
+		FROM
+			MOZ_MENU
+		WHERE
+			MENU_ID = #{menuId}
+	</delete>
+	
+	<update id="updateMenu" parameterType="MozMenu">
+		UPDATE
+			MOZ_MENU
+		SET
+			MENU_NM_ENG = #{menuNmEng},
+			MENU_NM_POR = #{menuNmPor},
+			MAIN_SORT_NO = #{mainSortNo},
+			SUB_SORT_NO = #{subSortNo},
+			USE_YN = #{useYn},
+			MENU_URL = #{menuUrl},
+			<if test="menuAbv != null">
+				MENU_ABV = #{menuAbv},
+			</if>
+			MENU_URL_PATTRN = #{menuUrlPattrn}
+		WHERE
+			MENU_ID = #{menuId}
+	</update>
+	
 </mapper>

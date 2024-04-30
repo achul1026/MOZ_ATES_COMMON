@@ -16,7 +16,7 @@
 	</select>
 	
 	<!-- 위반자 정보 등록 -->
-	<insert id="insertVioInfo" parameterType="com.moz.ates.traffic.common.entity.driver.MozVioInfo">
+	<insert id="insertVioInfo" parameterType="MozVioInfo">
 		INSERT INTO MOZ_VIO_INFO	
 			(
 				VIO_ID,
@@ -28,7 +28,10 @@
 				VIO_EMAIL,
 				DVR_LCEN_TY,
 				CR_DT,
-				CRTR
+				CRTR,
+				VIO_SIGN_FILE_PATH,
+				VIO_SIGN_FILE_ORG_NM,
+				VIO_SIGN_FILE_SIZE
 			)VALUES(
 				#{vioId},
 				#{dvrLcenId},
@@ -39,7 +42,105 @@
 				#{vioEmail},
 				#{dvrLcenTy},
 				NOW(),
-				#{crtr}
+				#{crtr},
+				#{vioSignFilePath},
+				#{vioSignFileOrgNm},
+				#{vioSignFileSize}
 		)
 	</insert>
+	
+	<update id="updateVioPnoAndVioEmailByVioId" parameterType="MozVioInfo">
+		UPDATE MOZ_VIO_INFO SET
+		 	VIO_PNO = #{vioPno}
+		  , VIO_EMAIL = #{vioEmail}
+		  WHERE VIO_ID = #{vioId}
+	</update>
+	
+	<update id="updateMozVioINfo" parameterType="MozVioInfo">
+		UPDATE MOZ_VIO_INFO 
+		SET	
+			DVR_LCEN_ID = #{dvrLcenId}
+		  , VIO_NM = #{vioNm}
+		  , VIO_BRTH = #{vioBrth}
+		  , DVR_LCEN_TY = #{dvrLcenTy}
+		  ,	VIO_PNO = #{vioPno}
+		  , VIO_ADDR = #{vioAddr}
+		  , VIO_EMAIL = #{vioEmail}
+		  WHERE VIO_ID = #{vioId}
+	</update>
+	
+	<delete id="deleteVioInfoByVioId" parameterType="String">
+		DELETE FROM MOZ_VIO_INFO
+		WHERE VIO_ID = #{vioId}
+	</delete>
+	
+	<select id="findOneFileInfo" parameterType="String" resultType="MozVioInfo">
+       SELECT 
+       		MVI.VIO_SIGN_FILE_PATH 
+       FROM 
+       		MOZ_VIO_INFO MVI 
+       WHERE 
+       		MVI.VIO_ID = #{vioId}
+	</select>
+	
+	<select id="findAllSecondFineNtcVioInfo" resultType="MozVioInfo">
+		SELECT 
+			MVI.VIO_ID,
+			MVI.VIO_NM,
+			MVI.VIO_PNO,
+			MVI.DVR_LCEN_ID,
+			MTEM.TFC_ENF_ID
+		FROM MOZ_VIO_INFO MVI
+		INNER JOIN MOZ_TFC_ENF_MASTER MTEM ON MVI.VIO_ID = MTEM.VIO_ID
+		INNER JOIN MOZ_FINE_NTC_INFO MFNI ON MTEM.TFC_ENF_ID = MFNI.TFC_ENF_ID 
+		INNER JOIN MOZ_FINE_PYMNT_INFO MFPI ON MFPI.FINE_NTC_ID = MFNI.FINE_NTC_ID
+		WHERE DATE_FORMAT(MFNI.SECOND_FINE_NTC_DT, '%Y-%m-%d') = CURRENT_DATE()
+			AND MFPI.PYMNT_STTS = 'N'
+			AND MTEM.DEL_YN = 'N'
+			AND MFNI.NTC_TY = 'NTT002'
+	</select>
+	
+	<select id="findAllAdministrativeActionVioInfo" resultType="MozVioInfo">
+		SELECT 
+		    MVI.VIO_ID,
+		    MVI.VIO_NM,
+		    MVI.VIO_PNO,
+		    MVI.DVR_LCEN_ID,
+		    MTEM.TFC_ENF_ID,
+		    FIL.TFC_LAW_ID
+		FROM MOZ_VIO_INFO MVI
+		INNER JOIN MOZ_TFC_ENF_MASTER MTEM ON MVI.VIO_ID = MTEM.VIO_ID
+		INNER JOIN MOZ_FINE_NTC_INFO MFNI ON MTEM.TFC_ENF_ID = MFNI.TFC_ENF_ID 
+		INNER JOIN MOZ_FINE_PYMNT_INFO MFPI ON MFPI.FINE_NTC_ID = MFNI.FINE_NTC_ID
+		INNER JOIN (
+			 SELECT
+			 	MTEFI.TFC_ENF_ID ,
+		       SUBSTRING_INDEX(GROUP_CONCAT(MTEFI.TFC_LAW_ID ORDER BY MTLI.LAW_ARTICLE_NO), ',', 1) AS TFC_LAW_ID
+	       FROM MOZ_TFC_ENF_FINE_INFO MTEFI
+	       INNER JOIN MOZ_TFC_LW_FINE_INFO MTLFI ON MTLFI.TFC_LAW_FINE_ID = MTEFI.TFC_LAW_FINE_ID 
+	       INNER JOIN MOZ_TFC_LW_INFO MTLI ON MTLI.TFC_LAW_ID = MTEFI.TFC_LAW_ID 
+	       INNER JOIN MOZ_CM_CD MCC ON MTLI.LAW_TYPE = MCC.CD_ID
+	       GROUP BY MTEFI.TFC_ENF_ID
+		) FIL ON FIL.TFC_ENF_ID = MFNI.TFC_ENF_ID
+		WHERE DATE_FORMAT(MFNI.SECOND_FINE_NTC_DDLN, '%Y-%m-%d') = DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '%Y-%m-%d')
+		    AND MFPI.PYMNT_STTS = 'N'
+		    AND MTEM.DEL_YN = 'N'
+		    AND MFNI.NTC_TY = 'NTT003'
+	</select>
+	
+	<select id="findAllViolationInfoByDvrLcenId" parameterType="String" resultType="MozVioInfo">
+		SELECT 
+		    MVI.VIO_ID,
+		    MVI.VIO_NM,
+		    MVI.DVR_LCEN_ID,
+		    MTEM.TFC_ENF_ID,
+		    MTEM.TFC_ENF_DT,
+		    MTEM.ROAD_ADDR
+		FROM MOZ_VIO_INFO MVI
+		INNER JOIN MOZ_TFC_ENF_MASTER MTEM
+		ON MTEM.VIO_ID = MVI.VIO_ID
+		WHERE MVI.DVR_LCEN_ID = #{dvrLcenId}
+		AND MTEM.DEL_YN = 'N'
+		ORDER BY MTEM.TFC_ENF_DT DESC
+	</select>
 </mapper>

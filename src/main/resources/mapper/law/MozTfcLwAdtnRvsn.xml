@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.law.MozTfcLwAdtnRvsnRepository">
+    <insert id="saveMozTfcLwAdtnRvsn" parameterType="MozTfcLwAdtnRvsn">
+	    INSERT INTO MOZ_TFC_LW_ADTN_RVSN ( 
+	    	TFC_LAW_ID,
+	    	TFC_LAW_ADTN_RVSN_ID,
+	    	ADTN_RVSN_DESC,
+	    	CR_DT,
+	    	ADTN_RVSN_DT
+	    ) VALUES (
+	    	#{tfcLawId},
+	    	#{tfcLawAdtnRvsnId},
+	    	#{adtnRvsnDesc},
+	    	NOW(),
+	    	NOW()
+	    )
+    </insert>
+    
+    <select id="findMozTfcLwAdtnRvsnByTfcLawId" resultType="MozTfcLwAdtnRvsn" parameterType="String">
+		SELECT
+			TFC_LAW_ID,
+			TFC_LAW_ADTN_RVSN_ID,
+			ADTN_RVSN_DESC,
+			CR_DT,
+			ADTN_RVSN_DT
+		FROM MOZ_TFC_LW_ADTN_RVSN
+		WHERE TFC_LAW_ID = #{tfcLawId}
+		ORDER BY CR_DT
+    </select>
+    
+    <update id="updateMozTfcLwAdtnRvsn" parameterType="MozTfcLwAdtnRvsn">
+	    UPDATE MOZ_TFC_LW_ADTN_RVSN SET
+	    	ADTN_RVSN_DESC = #{adtnRvsnDesc},
+	    	ADTN_RVSN_DT = NOW()
+		WHERE 
+			TFC_LAW_ID = #{tfcLawId} 
+			AND TFC_LAW_ADTN_RVSN_ID = #{tfcLawAdtnRvsnId}
+    </update>
+    
+</mapper>

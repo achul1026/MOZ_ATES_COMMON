@@ -2,11 +2,8 @@ package com.moz.ates.traffic.common.entity.payment;
 
 import java.util.Date;
 
-import org.springframework.format.annotation.DateTimeFormat;
-
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.moz.ates.traffic.common.entity.SearchOption;
-import com.moz.ates.traffic.common.entity.equipment.MozTfcEnfEqpMaster;
+import com.moz.ates.traffic.common.entity.common.MozCmCd;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -23,8 +20,9 @@ public class MozPlPymntInfo extends SearchOption{
 	private String operStrTm;					// 시작 시간
 	private String operEndTm;					// 종료 시간
 	private String clsdDt;						// 휴무일
-	@DateTimeFormat(pattern = "yyyy-MM-dd")		
-	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd", timezone = "Asia/Seoul")
-	private Date   crDt;						//생성일
+	private Date   crDt;						// 생성일
 	private String crtr;						// 생성자
+	
+	// 조인 테이블
+	private MozCmCd cmCd;
 }

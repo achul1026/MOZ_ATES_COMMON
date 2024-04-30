@@ -41,4 +41,49 @@ public interface MozComplaintsRegRepository {
      * @return : 
      */
 	public MozComplaintsReg findOneComplaintDetail(String complaintsIdx);
+	
+	
+//************************* for Portal start
+	
+	/**
+	  * @Method Name : countAllMozComplaintsReg
+	  * @Date : 2024. 3. 29.
+	  * @Author : IK.MOON
+	  * @Method Brief : 포털 민원 카운트 조회
+	  * @param mozComplaintsReg
+	  * @return
+	  */
+	public int countAllMozComplaintsReg(MozComplaintsReg mozComplaintsReg);
+	
+	/**
+	  * @Method Name : findAllMozComplaintsRegJoinMozCmCd
+	  * @Date : 2024. 3. 29.
+	  * @Author : IK.MOON
+	  * @Method Brief : 포텋 민원 리스트 조회
+	  * @param mozComplaintsReg
+	  * @return
+	  */
+	public List<MozComplaintsReg> findAllMozComplaintsRegJoinMozCmCd(MozComplaintsReg mozComplaintsReg);
+	
+	/**
+	  * @Method Name : findOnePostPwByComplaintsIdx
+	  * @Date : 2024. 3. 29.
+	  * @Author : IK.MOON
+	  * @Method Brief : 포털 민원 패스워드 조회
+	  * @param mozComplaintsReg
+	  * @return
+	  */
+	public String findOnePostPwByComplaintsIdx(MozComplaintsReg mozComplaintsReg);
+	
+	/**
+	  * @Method Name : findOneMozComplaintsRegJoinMozCmCdAndMozWebOprtrByComplaintsIdx
+	  * @Date : 2024. 3. 29.
+	  * @Author : IK.MOON
+	  * @Method Brief : 포털 민원 상세 조회
+	  * @param mozComplaintsReg
+	  * @return
+	  */
+	public MozComplaintsReg findOneMozComplaintsRegJoinMozCmCdAndMozWebOprtrByComplaintsIdx(MozComplaintsReg mozComplaintsReg);
+	
+//************************* for Portal end
 }

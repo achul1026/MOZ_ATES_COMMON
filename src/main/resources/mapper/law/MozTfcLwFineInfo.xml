@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.law.MozTfcLwFineInfoRepository">
+    <insert id="saveMozTfcLwFineInfo" parameterType="MozTfcLwFineInfo">
+    	INSERT INTO MOZATES.MOZ_TFC_LW_FINE_INFO (
+    		TFC_LAW_ID,
+    		TFC_LAW_FINE_ID,
+    		FINE_TITLE,
+    		FINE_PRICE,
+    		FINE_SORT_LV,
+    		FINE_DESC,
+    		CR_DT,
+    		LAST_UPD_DT
+    	) VALUES (
+    		#{tfcLawId},
+    		#{tfcLawFineId},
+			#{fineTitle},
+			#{finePrice},
+			#{fineSortLv},
+			#{fineDesc},
+			now(),
+			now()
+		)
+    </insert>
+    
+    <select id="findMozTfcLwFineInfoByTfcLawId" resultType="MozTfcLwFineInfo" parameterType="String">
+		SELECT 
+			TFC_LAW_ID,
+			TFC_LAW_FINE_ID,
+			FINE_TITLE,
+			FINE_PRICE,
+			FINE_SORT_LV,
+			FINE_DESC,
+			CR_DT,
+			LAST_UPD_DT
+		FROM MOZ_TFC_LW_FINE_INFO
+		WHERE 
+			TFC_LAW_ID = #{tfcLawId}
+		ORDER BY CR_DT
+    </select>
+    
+    <delete id="deleteMozTfcLwFineInfo" parameterType="String">
+    	DELETE FROM MOZ_TFC_LW_FINE_INFO
+		WHERE 
+			TFC_LAW_FINE_ID = #{tfcLawFineId}
+    </delete>
+    
+    <update id="updateMozTfcLwFineInfo" parameterType="MozTfcLwFineInfo">
+    	UPDATE MOZ_TFC_LW_FINE_INFO SET
+    		 FINE_PRICE = #{finePrice},
+    		 FINE_DESC = #{fineDesc},
+    		 LAST_UPD_DT = NOW()
+		WHERE 
+			TFC_LAW_ID = #{tfcLawId} 
+			AND TFC_LAW_FINE_ID = #{tfcLawFineId}
+    </update>
+</mapper>

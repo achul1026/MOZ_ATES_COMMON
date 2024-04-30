@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.operator.MozOprtrAudLogRepositorty">
+
+	<select id="findAllMozOprtrAudLogList" parameterType="String" resultType="MozOprtrAudLog">
+		SELECT	AUD_NM, CR_DT
+		FROM	MOZ_OPRTR_AUD_LOG
+		WHERE	OPRTR_ID = #{oprtrId}
+	</select>
+	
+	<select id="countMozOprtrAudLog" parameterType="MozOprtrAudLog" resultType="Integer">
+		SELECT	COUNT(*) AS 'cnt'
+		FROM	MOZ_OPRTR_AUD_LOG
+		WHERE	OPRTR_ID = #{oprtrId}
+	</select>
+	
+</mapper>

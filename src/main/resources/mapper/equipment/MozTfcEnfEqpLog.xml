@@ -3,45 +3,108 @@
 <mapper namespace="com.moz.ates.traffic.common.repository.equipment.MozTfcEnfEqpLogRepository">
 	
 	<sql id="eqpLogList-Where">
+		<if test="searchType == 'all' and searchTxt != null and searchTxt != ''">
+			AND 
+		</if>
+		<if test="searchType == 'logId' and searchTxt != null and searchTxt != ''">
+			AND eel.LOG_ID LIKE CONCAT('%', #{searchTxt}, '%')
+		</if>
+		<if test="searchType == 'eqp' and searchTxt != null and searchTxt != ''">
+			AND eel.TFC_ENF_EQP_ID LIKE CONCAT('%', #{searchTxt}, '%')
+		</if>
 		<if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
-		    <![CDATA[
-		        AND TO_CHAR(CR_DT, 'YYYY-MM-DD') >= #{sDate}
-		    ]]>
-		</if>
-		<if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
-		    <![CDATA[
-		        AND TO_CHAR(CR_DT, 'YYYY-MM-DD') <= #{eDate}
-		    ]]>
-		</if>
-		<if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
-		    <![CDATA[
-		        AND TO_CHAR(CR_DT, 'YYYY-MM-DD') >= #{sDate}
-		        AND TO_CHAR(CR_DT, 'YYYY-MM-DD') <= #{eDate}
-		    ]]>
-		</if>
+            <![CDATA[
+                AND DATE_FORMAT(eel.CR_DT, '%Y-%m-%d') >= #{sDate}
+            ]]>
+        </if>
+        <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
+            <![CDATA[
+                AND DATE_FORMAT(eel.CR_DT, '%Y-%m-%d') <= #{eDate}
+            ]]>
+        </if>
+        <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
+            <![CDATA[
+                AND DATE_FORMAT(eel.CR_DT, '%Y-%m-%d') >= #{sDate}
+                AND DATE_FORMAT(eel.CR_DT, '%Y-%m-%d') <= #{eDate}
+            ]]>
+        </if>
     </sql>    
     
-	<select id="findAllMozTfcEnfEqpLog" parameterType="com.moz.ates.traffic.common.entity.equipment.MozTfcEnfEqpLog" resultType="com.moz.ates.traffic.common.entity.equipment.MozTfcEnfEqpLog">
-        SELECT  ROW_NUMBER() OVER(ORDER BY CR_DT) AS rnum
-        		, LOG_ID
-                , TFC_ENF_EQP_ID
-                , ROAD_LN
-                , CNTRL_REQ_TY
-                , CNTRL_RESULT
-                , CR_DT
-                , CRTR
-        FROM	MOZ_TFC_ENF_EQP_LOG
-        WHERE   1=1
-		<include refid="eqpLogList-Where"/>
+    <resultMap type="mozTfcEnfEqpMaster" id="enfEqpMasterForSelectList">
+		<result column="ROAD_ADDR" property="roadAddr"/>
+	</resultMap>
+	
+	<resultMap type="MozTfcEnfEqpLog" id="tfcEnfEqpLogForSelectList">
+		<result column="rnum" property="rnum"/>
+		<result column="LOG_ID" property="logId"/>
+		<result column="TFC_ENF_EQP_ID" property="tfcEnfEqpId"/>
+		<result column="ROAD_LN" property="roadLn"/>
+		<result column="CNTRL_REQ_TY" property="cntrlReqTy"/>
+		<result column="CNTRL_RESULT" property="cntrlResult"/>
+		<result column="CR_DT" property="crDt"/>
+		<result column="CRTR" property="crtr"/>
+		<collection property="enfEqpMaster" resultMap="enfEqpMasterForSelectList"/>
+	</resultMap>
+	
+	<resultMap type="mozTfcEnfEqpMaster" id="enfEqpMasterForSelectDetail">
+		<result column="ROAD_ADDR" property="roadAddr"/>
+	</resultMap>
+	
+	<resultMap type="MozTfcEnfEqpLog" id="tfcEnfEqpLogForSelectDetail">
+		<result column="rnum" property="rnum"/>
+		<result column="LOG_ID" property="logId"/>
+		<result column="TFC_ENF_EQP_ID" property="tfcEnfEqpId"/>
+		<result column="ROAD_LN" property="roadLn"/>
+		<result column="CNTRL_REQ_TY" property="cntrlReqTy"/>
+		<result column="CNTRL_RESULT" property="cntrlResult"/>
+		<result column="CR_DT" property="crDt"/>
+		<result column="CRTR" property="crtr"/>
+		<collection property="enfEqpMaster" resultMap="enfEqpMasterForSelectDetail"/>
+	</resultMap>
+    
+	<select id="findAllMozTfcEnfEqpLog" parameterType="MozTfcEnfEqpLog" resultMap="tfcEnfEqpLogForSelectList">
+        SELECT  ROW_NUMBER() OVER(ORDER BY eel.CR_DT) AS rnum
+        		, eel.LOG_ID
+                , eel.TFC_ENF_EQP_ID
+                , eel.ROAD_LN
+                , eel.CNTRL_REQ_TY
+                , eel.CNTRL_RESULT
+                , eel.CR_DT
+                , eel.CRTR
+                , eem.ROAD_ADDR
+        FROM	MOZ_TFC_ENF_EQP_LOG eel
+        INNER JOIN MOZ_TFC_ENF_EQP_MASTER eem
+        	ON eel.TFC_ENF_EQP_ID = eem.TFC_ENF_EQP_ID 
+        <where>
+			<include refid="eqpLogList-Where"/>
+        </where>
 		ORDER BY rnum DESC
 		LIMIT #{length} OFFSET #{start}
     </select>
 
-    <select id="countMozTfcEnfEqpLog" parameterType="com.moz.ates.traffic.common.entity.equipment.MozTfcEnfEqpLog" resultType="int">
+    <select id="countMozTfcEnfEqpLog" parameterType="MozTfcEnfEqpLog" resultType="int">
         SELECT  COUNT(*)    AS "cnt"
-        FROM	MOZ_TFC_ENF_EQP_LOG
-        WHERE   1=1
-		<include refid="eqpLogList-Where"/>
+        FROM	MOZ_TFC_ENF_EQP_LOG eel
+        INNER JOIN MOZ_TFC_ENF_EQP_MASTER eem
+        	ON eel.TFC_ENF_EQP_ID = eem.TFC_ENF_EQP_ID 
+        <where>
+			<include refid="eqpLogList-Where"/>
+        </where>
     </select>
     
+    
+    <select id="findOneMozTfcEnfEqpLog" parameterType="String" resultMap="tfcEnfEqpLogForSelectDetail">
+    	SELECT
+    		eel.LOG_ID
+    		, eel.CR_DT
+    		, eel.CNTRL_RESULT
+    		, eel.TFC_ENF_EQP_ID
+    		, eem.ROAD_ADDR
+    	FROM MOZ_TFC_ENF_EQP_LOG eel
+    	INNER JOIN MOZ_TFC_ENF_EQP_MASTER eem
+        	ON eel.TFC_ENF_EQP_ID = eem.TFC_ENF_EQP_ID 
+    	<where>
+    		LOG_ID = #{logId}
+    	</where>
+    </select>
 </mapper>

@@ -5,127 +5,323 @@
     <sql id="eqpMngList-Where">
         <if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
             <![CDATA[
-                AND TO_CHAR(CR_DT, 'YYYY-MM-DD') >= #{sDate}
+                AND TO_CHAR(teem.CR_DT, 'YYYY-MM-DD') >= #{sDate}
             ]]>
         </if>
         <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
             <![CDATA[
-                AND TO_CHAR(CR_DT, 'YYYY-MM-DD') <= #{eDate}
+                AND TO_CHAR(teem.CR_DT, 'YYYY-MM-DD') <= #{eDate}
             ]]>
         </if>
         <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
             <![CDATA[
-                AND TO_CHAR(CR_DT, 'YYYY-MM-DD') >= #{sDate}
-                AND TO_CHAR(CR_DT, 'YYYY-MM-DD') <= #{eDate}
+                AND TO_CHAR(teem.CR_DT, 'YYYY-MM-DD') >= #{sDate}
+                AND TO_CHAR(teem.CR_DT, 'YYYY-MM-DD') <= #{eDate}
             ]]>
         </if>
+        <if test="searchTxt != null and searchTxt !=''">
+       		AND (teem.ROAD_ADDR LIKE CONCAT('%', #{searchTxt}, '%')
+       				OR teem.EQP_NM LIKE CONCAT('%', #{searchTxt}, '%'))
+       	</if>
+       	<if test="useYn != null and useYn != ''">
+       		AND teem.USE_YN = #{useYn}
+       	</if>
     </sql>
     
-    <select id="selectEqpDupliCnt" parameterType="com.moz.ates.traffic.common.entity.equipment.MozTfcEnfEqpMaster" resultType="int">
+	<resultMap type="MozCmCd" id="cmCdForSelectEquipmentList">
+		<result column="CD_NM" property="cdNm"/>
+	</resultMap>
+	
+	<resultMap type="MozWebOprtr" id="webOprtrForSelectEquipmentList">
+		<result column="OPRTR_NM" property="oprtrNm"/>
+	</resultMap>
+	
+	<resultMap type="MozTfcEnfEqpMaster" id="selectEnfEqpMasterList">
+		<result column="RNUM" property="rnum"/>
+		<result column="TFC_ENF_EQP_ID" property="tfcEnfEqpId"/>
+		<result column="ROAD_ADDR" property="roadAddr"/>
+		<result column="EQP_TY" property="eqpTy"/>
+		<result column="CR_DT" property="crDt"/>
+		<result column="CR_OPRTR_ID" property="crOprtrId"/>
+		<result column="USE_YN" property="useYn"/>
+		<result column="MNFCTR" property="mnfctr"/>
+		<result column="EQP_NM" property="eqpNm"/>
+		<result column="LAT" property="lat"/>
+		<result column="LNG" property="lng"/>
+		<collection property="cmCd" resultMap="cmCdForSelectEquipmentList"/>
+		<collection property="webOprtr" resultMap="webOprtrForSelectEquipmentList"/>
+	</resultMap>
+	
+	<resultMap type="MozCmCd" id="cmCdForSelectEquipmentDetail">
+		<result column="CD_NM" property="cdNm"/>
+	</resultMap>
+
+	<resultMap type="MozWebOprtr" id="webOprtrForSelectEquipmentDetail">
+		<result column="OPRTR_NM" property="oprtrNm"/>
+	</resultMap>
+	
+	<resultMap type="MozTfcEnfEqpFileInfo" id="eqpFileInfoForSelectFacilityDeatil">
+		<result column="FILE_ORG_NM" property="fileOrgNm"/>
+		<result column="EQP_FILE_NO" property="eqpFileNo"/>
+	</resultMap>
+	
+	<resultMap type="MozTfcEnfEqpMaster" id="selectEnfEqpMasterDetail">
+		<result column="TFC_ENF_EQP_ID" property="tfcEnfEqpId"/>
+		<result column="ROAD_ADDR" property="roadAddr"/>
+		<result column="LAT" property="lat"/>
+		<result column="LNG" property="lng"/>
+		<result column="EQP_TY" property="eqpTy"/>
+		<result column="CR_DT" property="crDt"/>
+		<result column="CR_OPRTR_ID" property="crOprtrId"/>
+		<result column="USE_YN" property="useYn"/>
+		<result column="MNFCTR" property="mnfctr"/>
+		<result column="STTS_INFO_GNR_CY" property="sttsInfoGnrCy"/>
+		<result column="FREIGHT_VH_LMT_SPD" property="freightVhLmtSpd"/>
+		<result column="NR_VH_LMT_SPD" property="nrVhLmtSpd"/>
+		<result column="ROAD_LN_QY" property="roadLnQy"/>
+		<result column="CR_OPRTR_DEPT" property="crOprtrDept"/>
+		<result column="TFC_ENF_EQP_INFO" property="tfcEnfEqpInfo"/>
+		<result column="TFC_ENF_EQP_IMAGEPATH" property="tfcEnfEqpImagepath"/>
+		<result column="TFC_ENF_EQP_IMAGENAME" property="tfcEnfEqpImagename"/>
+		<result column="TFC_ENF_EQP_IMAGEORGNAME" property="tfcEnfEqpImageorgn"/>
+		<result column="EQP_NM" property="eqpNm"/>
+		<result column="MODEL_NM" property="modelNm"/>
+		<result column="INSTL_YN" property="instlYn"/>
+		<result column="INSTL_DATE" property="instlDate"/>
+		<result column="INSTLER" property="instler"/>
+		<collection property="cmCd" resultMap="cmCdForSelectEquipmentDetail"/>
+		<collection property="webOprtr" resultMap="webOprtrForSelectEquipmentDetail"/>
+		<collection property="tfcEnfEqpFileInfoList" resultMap="eqpFileInfoForSelectFacilityDeatil"/>
+	</resultMap>
+    
+    <select id="selectEqpDupliCnt" parameterType="MozTfcEnfEqpMaster" resultType="int">
         SELECT  COUNT(*)    AS "cnt"
         FROM    MOZ_TFC_ENF_EQP_MASTER
         WHERE   TFC_ENF_EQP_ID = #{tfcEnfEqpId}
     </select>
 		
-    <select id="selectMngList" parameterType="com.moz.ates.traffic.common.entity.equipment.MozTfcEnfEqpMaster" resultType="com.moz.ates.traffic.common.entity.equipment.MozTfcEnfEqpMaster">
-        SELECT  TFC_ENF_EQP_ID
-                , ROAD_ADDR
-                , EQP_TY
-                , CR_DT
-                , CR_OPRTR_ID
-                , USE_YN
-                , MNFCTR
-        FROM    MOZ_TFC_ENF_EQP_MASTER
+    <select id="findAllMngList" parameterType="MozTfcEnfEqpMaster" resultType="MozTfcEnfEqpMaster">
+        SELECT 
+       		ROW_NUMBER() OVER(ORDER BY teem.CR_DT DESC) AS rnum
+        		, mteem.TFC_ENF_EQP_ID
+                , mteem.ROAD_ADDR
+                , mteem.EQP_TY
+                , mteem.CR_DT
+                , mteem.CR_OPRTR_ID
+                , mteem.USE_YN
+                , mteem.MNFCTR
+        FROM    MOZ_TFC_ENF_EQP_MASTER mteem
         WHERE   1=1
         <include refid="eqpMngList-Where"/>
-        ORDER BY CR_DT DESC
+        ORDER BY rnum
         LIMIT #{length} OFFSET #{start}
     </select>
     
-   	<select id="selectMngListCnt" parameterType="com.moz.ates.traffic.common.entity.equipment.MozTfcEnfEqpMaster" resultType="int">
+   	<select id="countMngListCnt" parameterType="MozTfcEnfEqpMaster" resultType="int">
         SELECT  COUNT(*)    AS "cnt"
         FROM    MOZ_TFC_ENF_EQP_MASTER
         WHERE   1=1
         <include refid="eqpMngList-Where"/>
     </select>
     
-    <select id="findAllMozTfcEnfEqpMaster" parameterType="com.moz.ates.traffic.common.entity.equipment.MozTfcEnfEqpMaster" resultType="com.moz.ates.traffic.common.entity.equipment.MozTfcEnfEqpMaster">
-        SELECT   ROW_NUMBER() OVER(ORDER BY CR_DT) AS rnum
-        		, TFC_ENF_EQP_ID
-                , ROAD_ADDR
-                , EQP_TY
-                , CR_DT
-                , CR_OPRTR_ID
-                , USE_YN
-                , MNFCTR
-        FROM    MOZ_TFC_ENF_EQP_MASTER
+    <select id="findAllMozTfcEnfEqpMaster" parameterType="MozTfcEnfEqpMaster" resultMap="selectEnfEqpMasterList">
+        SELECT   ROW_NUMBER() OVER(ORDER BY teem.CR_DT) AS rnum
+        		, teem.TFC_ENF_EQP_ID
+                , teem.ROAD_ADDR
+                , teem.EQP_TY
+                , teem.CR_DT
+                , teem.CR_OPRTR_ID
+                , teem.USE_YN
+                , teem.MNFCTR
+                , teem.EQP_NM
+                , teem.LAT
+                , teem.LNG
+                , cct.CD_NM
+                , wot.OPRTR_NM
+        FROM    MOZ_TFC_ENF_EQP_MASTER teem
+        INNER JOIN MOZ_CM_CD cct
+        	ON teem.EQP_TY = cct.CD_ID
+        INNER JOIN MOZ_WEB_OPRTR wot
+        	ON teem.CR_OPRTR_ID = wot.OPRTR_ID
         WHERE   1=1
         <include refid="eqpMngList-Where"/>
         ORDER BY rnum DESC
         LIMIT #{length} OFFSET #{start}
     </select>
     
-   	<select id="countMozTfcEnfEqpMaster" parameterType="com.moz.ates.traffic.common.entity.equipment.MozTfcEnfEqpMaster" resultType="int">
+   	<select id="countMozTfcEnfEqpMaster" parameterType="MozTfcEnfEqpMaster" resultType="int">
         SELECT  COUNT(*)    AS "cnt"
-        FROM    MOZ_TFC_ENF_EQP_MASTER
+        FROM    MOZ_TFC_ENF_EQP_MASTER teem
+        INNER JOIN MOZ_CM_CD cct
+        	ON teem.EQP_TY = cct.CD_ID
         WHERE   1=1
         <include refid="eqpMngList-Where"/>
     </select>
     
-    <select id="selectEqpDetail" parameterType="String" resultType="com.moz.ates.traffic.common.entity.equipment.MozTfcEnfEqpMaster">
-        SELECT  TFC_ENF_EQP_ID 
-                , ROAD_ADDR
-                , LAT
-                , LNG
-                , EQP_TY 
-                , CR_DT
-                , CR_OPRTR_ID
-                , USE_YN
-                , MNFCTR
-                , STTS_INFO_GNR_CY
-                , FREIGHT_VH_LMT_SPD
-                , NR_VH_LMT_SPD
-                , ROAD_LN_QY
-                , CR_OPRTR_DEPT
-                , TFC_ENF_EQP_INFO
-                , TFC_ENF_EQP_IMAGEPATH
-                , TFC_ENF_EQP_IMAGENAME           
-        FROM    MOZ_TFC_ENF_EQP_MASTER
-        WHERE   TFC_ENF_EQP_ID=#{tfcEnfEqpId}
+    <select id="findOneEqpDetail" parameterType="String" resultMap="selectEnfEqpMasterDetail">
+        SELECT  teem.TFC_ENF_EQP_ID 
+                , teem.ROAD_ADDR
+                , teem.LAT
+                , teem.LNG
+                , teem.EQP_TY 
+                , teem.CR_DT
+                , teem.CR_OPRTR_ID
+                , teem.USE_YN
+                , teem.MNFCTR
+                , teem.STTS_INFO_GNR_CY
+                , teem.FREIGHT_VH_LMT_SPD
+                , teem.NR_VH_LMT_SPD
+                , teem.ROAD_LN_QY
+                , teem.CR_OPRTR_DEPT
+                , teem.TFC_ENF_EQP_INFO
+                , teem.TFC_ENF_EQP_IMAGEPATH
+                , teem.TFC_ENF_EQP_IMAGENAME      
+                , teem.TFC_ENF_EQP_IMAGEORGNAME      
+                , teem.EQP_NM
+                , teem.MODEL_NM   
+                , teem.INSTL_YN
+                , teem.INSTL_DATE
+                , teem.INSTLER
+                , cct.CD_NM  
+                , wot.OPRTR_NM
+                , teefi.FILE_ORG_NM
+        		, teefi.EQP_FILE_NO
+        FROM    MOZ_TFC_ENF_EQP_MASTER teem
+        LEFT JOIN MOZ_CM_CD cct
+        	ON teem.EQP_TY = cct.CD_ID
+        LEFT JOIN MOZ_WEB_OPRTR wot
+        	ON teem.CR_OPRTR_ID = wot.OPRTR_ID
+        LEFT JOIN MOZ_TFC_ENF_EQP_FILE_INFO teefi
+        	ON teem.TFC_ENF_EQP_ID = teefi.TFC_ENF_EQP_ID
+        WHERE   teem.TFC_ENF_EQP_ID=#{tfcEnfEqpId}
     </select>
     
-    <insert id="insertEqp" parameterType="com.moz.ates.traffic.common.entity.equipment.MozTfcEnfEqpMaster">
+    <select id="findAllChartData" parameterType="ChartSearchDTO" resultType="map">
+    	SELECT 
+			GROUP_CONCAT(A.SEQ_CNT ORDER BY A.GRAPH_TIME) AS COUNT
+			, GROUP_CONCAT(A.GRAPH_TIME ORDER BY A.GRAPH_TIME) AS LABEL
+		FROM(
+			SELECT 
+				TIME_DATA.GRAPH_TIME
+				,COALESCE(GRAPH_DATA.SEQ_CNT,0) as SEQ_CNT
+			FROM(
+				<if test="timeType == 'monthly'">
+					SELECT 
+						DATE_FORMAT(m1, '%Y-%m') AS GRAPH_TIME
+					FROM(
+						SELECT 
+							(#{sDate} - INTERVAL DAYOFMONTH(#{sDate})-1 DAY) +INTERVAL m MONTH as m1
+						FROM(
+							SELECT @rownum:=@rownum+1 as m FROM
+							(SELECT 1 union SELECT 2 union SELECT 3 union SELECT 4) t1,
+							(SELECT 1 union SELECT 2 union SELECT 3 union SELECT 4) t2,
+							(SELECT 1 union SELECT 2 union SELECT 3 union SELECT 4) t3,
+							(SELECT 1 union SELECT 2 union SELECT 3 union SELECT 4) t4,
+							(SELECT @rownum:=-1) t0
+						) d1
+					) d2 
+					WHERE m1 <![CDATA[<=]]> #{eDate}
+					ORDER BY m1
+				</if>
+				<if test="timeType == 'daily'">
+					SELECT 
+						DATE_ADD(#{sDate}, INTERVAL seq.seq DAY) AS GRAPH_TIME
+					FROM (
+						SELECT 
+							(t3*100 + t2*10 + t1) AS seq
+						FROM
+							(SELECT 0 t1 UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t1,
+							(SELECT 0 t2 UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t2,
+							(SELECT 0 t3 UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t3
+					) AS seq
+					WHERE DATE_ADD(#{sDate}, INTERVAL seq.seq DAY) BETWEEN #{sDate} AND #{eDate}				
+				</if>
+				<if test="timeType == 'hourly'">
+					WITH RECURSIVE CTE AS (
+						SELECT 00 AS RNUM
+						UNION ALL
+						SELECT RNUM + 01 FROM CTE
+						WHERE RNUM <![CDATA[<]]> 23
+					)
+					SELECT IF(RNUM <![CDATA[<]]> 10, CONCAT('0',RNUM) , RNUM) AS GRAPH_TIME FROM CTE
+				</if>
+			)TIME_DATA
+			LEFT JOIN (
+				SELECT 
+					COUNT(TEEM.TFC_ENF_EQP_ID) AS SEQ_CNT
+					<if test="timeType == 'monthly'">
+						, DATE_FORMAT(TEEM.CR_DT, '%Y-%m') as TIME_DATA
+					</if>
+					<if test="timeType == 'daily'">
+						, DATE_FORMAT(TEEM.CR_DT, '%Y-%m-%d') as TIME_DATA
+					</if>
+					<if test="timeType == 'hourly'">
+						, DATE_FORMAT(TEEM.CR_DT, '%H') as TIME_DATA	
+					</if>
+				FROM  MOZ_TFC_ENF_EQP_MASTER TEEM
+				WHERE 1=1
+				<if test="timeType == 'monthly'">
+					AND DATE_FORMAT(TEEM.CR_DT, '%Y-%m') BETWEEN #{sDate} AND #{eDate}
+				</if>
+				<if test="timeType == 'daily'">
+					AND DATE_FORMAT(TEEM.CR_DT, '%Y-%m-%d') BETWEEN #{sDate} AND #{eDate}
+				</if>
+				<if test="timeType == 'hourly'">
+					AND DATE_FORMAT(TEEM.CR_DT, '%Y-%m-%d') = #{sDate}
+				</if>
+				AND TEEM.EQP_TY = #{cate}
+				GROUP BY TIME_DATA
+			) GRAPH_DATA on TIME_DATA.GRAPH_TIME = GRAPH_DATA.TIME_DATA
+			ORDER BY TIME_DATA.GRAPH_TIME ASC
+		)A
+    </select>
+    
+    <insert id="insertTfcEnfEqpMaster" parameterType="MozTfcEnfEqpMaster">
         INSERT INTO MOZ_TFC_ENF_EQP_MASTER
             (
                 TFC_ENF_EQP_ID
                 , ROAD_ADDR
+                , LAT
+                , LNG
+                , USE_YN
                 , EQP_TY
                 , CR_DT
                 , CR_OPRTR_ID
-                , USE_YN
                 , MNFCTR
                 , CR_OPRTR_DEPT
                 , TFC_ENF_EQP_INFO
                 , TFC_ENF_EQP_IMAGEPATH
                 , TFC_ENF_EQP_IMAGENAME
+                , EQP_NM
+                , MODEL_NM
+                , INSTL_DATE
+                , INSTLER
+                , INSTL_YN
             )
         VALUES
             (
                 #{tfcEnfEqpId}
                 , #{roadAddr}
+                , #{lat}
+                , #{lng}
+                , 'Y'
                 , #{eqpTy}
-                , #{crDt}
+                , NOW()
                 , #{crOprtrId}
-                , #{useYn}
                 , #{mnfctr}
                 , #{crOprtrDept}
                 , #{tfcEnfEqpInfo}
                 , #{tfcEnfEqpImagepath}
                 , #{tfcEnfEqpImageorgn}
+                , #{eqpNm}
+                , #{modelNm}
+                , #{instlDateString}
+                , #{instler}
+                , #{instlYn}
             )
     </insert>
     
-    <update id="updateEqp" parameterType="com.moz.ates.traffic.common.entity.equipment.MozTfcEnfEqpMaster">
+    <update id="updateEqp" parameterType="MozTfcEnfEqpMaster">
         UPDATE  MOZ_TFC_ENF_EQP_MASTER
         SET     ROAD_ADDR = #{roadAddr}
                 <if test="tfcEnfEqpImagepath != '' and tfcEnfEqpImagepath != null and tfcEnfEqpImageorgn != null and tfcEnfEqpImageorgn != '' " >
@@ -138,13 +334,31 @@
                 , MNFCTR = #{mnfctr}
                 , CR_OPRTR_DEPT = #{crOprtrDept}
                 , TFC_ENF_EQP_INFO = #{tfcEnfEqpInfo}
+                , EQP_NM = #{eqpNm}
+                , MODEL_NM = #{modelNm}
+                , INSTL_DATE = #{instlDateString}
+                , INSTLER = #{instler}
+                , INSTL_YN = #{instlYn}
         WHERE   TFC_ENF_EQP_ID = #{tfcEnfEqpId}
     </update>
     
-    <update id="deleteEqpImage" parameterType="com.moz.ates.traffic.common.entity.equipment.MozTfcEnfEqpMaster">
+    <update id="deleteEqpImage" parameterType="MozTfcEnfEqpMaster">
 	    UPDATE MOZ_TFC_ENF_EQP_MASTER
 	    SET    TFC_ENF_EQP_IMAGEPATH = #{tfcEnfEqpImagepath},
 	    	   TFC_ENF_EQP_IMAGENAME = #{tfcEnfEqpImageorgn}
 	    WHERE  TFC_ENF_EQP_ID = #{tfcEnfEqpId}
     </update>
+    
+    <delete id="deleteTfcEnfEqpMasterByTfcEnfEqpId" parameterType="String">
+   		DELETE FROM MOZ_TFC_ENF_EQP_MASTER
+        WHERE  TFC_ENF_EQP_ID = #{tfcEnfEqpId}
+    </delete>
+    
+    <select id="findOneEqpUseCnt" resultType="map">
+	    SELECT
+			COUNT(MTEEM.TFC_ENF_EQP_ID) AS 'TOTALCNT',
+			SUM(CASE WHEN MTEEM.USE_YN = 'Y' THEN 1 ELSE 0 END ) AS 'ONCNT'
+		FROM
+			MOZ_TFC_ENF_EQP_MASTER MTEEM
+    </select>
 </mapper>

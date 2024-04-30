@@ -1,6 +1,7 @@
 package com.moz.ates.traffic.common.entity.common;
 
 import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 
 public class CommonResponse<T> {

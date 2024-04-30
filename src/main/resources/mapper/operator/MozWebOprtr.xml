@@ -1,7 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.moz.ates.traffic.common.repository.operator.MozWebOprtrRepository">
-	<select id="selectUserById" parameterType="com.moz.ates.traffic.common.entity.operator.MozWebOprtr" resultType="com.moz.ates.traffic.common.entity.operator.MozWebOprtr">
+	<sql id="administList-Where">
+		<if test="searchType == 'all' and searchTxt != null and searchTxt != ''">
+			AND (OPRTR_ACCOUNT_ID LIKE CONCAT('%', #{searchTxt}, '%') 
+				OR OPRTR_ID LIKE CONCAT('%', #{searchTxt}, '%')
+				OR OPRTR_PNO LIKE CONCAT('%', #{searchTxt}, '%')
+				OR OPRTR_EMAIL LIKE CONCAT('%', #{searchTxt}, '%')
+				OR OPRTR_DEPT_NM LIKE CONCAT('%', #{searchTxt}, '%')
+				OR OPRTR_NM LIKE CONCAT('%', #{searchTxt}, '%'))
+		</if>
+		<if test="searchType == 'oprtrNm' and searchTxt != null and searchTxt != ''">
+			AND OPRTR_NM LIKE CONCAT('%', #{searchTxt}, '%') 
+		</if>
+		<if test="searchType == 'oprtrId' and searchTxt != null and searchTxt != ''">
+			AND OPRTR_ACCOUNT_ID LIKE CONCAT('%', #{searchTxt}, '%') 
+		</if>
+		<if test="searchType == 'oprtrPno' and searchTxt != null and searchTxt != ''">
+			AND OPRTR_PNO LIKE CONCAT('%', #{searchTxt}, '%') 
+		</if>
+		<if test="searchType == 'oprtrEmail' and searchTxt != null and searchTxt != ''">
+			AND OPRTR_EMAIL LIKE CONCAT('%', #{searchTxt}, '%') 
+		</if>
+		<if test="searchType == 'ogzn' and searchTxt != null and searchTxt != ''">
+			AND OPRTR_DEPT_NM LIKE CONCAT('%', #{searchTxt}, '%') 
+		</if>
+		<if test="oprtrStts != null and oprtrStts != ''">
+			AND OPRTR_STTS = #{oprtrStts}
+       	</if>
+		<choose>
+			<when test="oprtrPermissionCdArr != null">
+				AND OPRTR_PERMISSION IN
+				<foreach collection="oprtrPermissionCdArr" item="oprtrPermission" open="(" close=")" separator=",">
+					 #{oprtrPermission}
+				</foreach>
+			</when>
+			<otherwise>
+				<if test="oprtrPermission != null and oprtrPermission != ''">
+					AND OPRTR_PERMISSION = #{oprtrPermission}		
+				</if>
+			</otherwise>
+		</choose>
+	</sql>
+
+	<select id="findOneUserById" parameterType="MozWebOprtr" resultType="MozWebOprtr">
         SELECT  OPRTR_ACCOUNT_ID
                 , OPRTR_ACCOUNT_PW
                 , OPRTR_PERMISSION
@@ -9,25 +51,26 @@
         WHERE   OPRTR_ACCOUNT_ID = #{oprtrAccountId}
     </select>
 
-	<select id="selectUserByUserId" parameterType="com.moz.ates.traffic.common.entity.operator.MozWebOprtr" resultType="com.moz.ates.traffic.common.entity.operator.MozWebOprtr">
+	<select id="findOneUserByUserId" parameterType="MozWebOprtr" resultType="MozWebOprtr">
         SELECT  *
         FROM    MOZ_WEB_OPRTR
         WHERE   OPRTR_ACCOUNT_ID = #{oprtrAccountId}
     </select>
     
-    <select id="selectDupliChk" parameterType="com.moz.ates.traffic.common.entity.operator.MozWebOprtr" resultType="int">
+    <select id="countDupliChk" parameterType="MozWebOprtr" resultType="int">
+        SELECT  COUNT(*)    AS "cnt"
+        FROM    MOZ_WEB_OPRTR
+        WHERE   OPRTR_ACCOUNT_ID = #{oprtrAccountId}
+        OR (OPRTR_NM = #{oprtrNm} AND OPRTR_PNO = #{oprtrPno})
+    </select>
+    
+    <select id="countMozWebOprtrForDuplChk" parameterType="MozWebOprtr" resultType="int">
         SELECT  COUNT(*)    AS "cnt"
         FROM    MOZ_WEB_OPRTR
         WHERE   OPRTR_ACCOUNT_ID = #{oprtrAccountId}
     </select>
     
-    <select id="countMozWebOprtrForDuplChk" parameterType="com.moz.ates.traffic.common.entity.operator.MozWebOprtr" resultType="int">
-        SELECT  COUNT(*)    AS "cnt"
-        FROM    MOZ_WEB_OPRTR
-        WHERE   OPRTR_ACCOUNT_ID = #{oprtrAccountId}
-    </select>
-    
-    <select id="selectUserList" parameterType="com.moz.ates.traffic.common.entity.operator.MozWebOprtr" resultType="com.moz.ates.traffic.common.entity.operator.MozWebOprtr">
+    <select id="findAllUserList" parameterType="MozWebOprtr" resultType="MozWebOprtr">
         SELECT  OPRTR_ID            
                 , OPRTR_ACCOUNT_ID  
                 , OPRTR_EMAIL     
@@ -56,47 +99,46 @@
         LIMIT #{length} OFFSET #{start}
     </select>
     
-    <select id="findAllMozWebOprtr" parameterType="com.moz.ates.traffic.common.entity.operator.MozWebOprtr" resultType="com.moz.ates.traffic.common.entity.operator.MozWebOprtr">
+    <select id="findAllMozWebOprtr" parameterType="MozWebOprtr" resultType="MozWebOprtr">
         SELECT  ROW_NUMBER() OVER(ORDER BY OPRTR_REG_DT) AS rnum
         		, OPRTR_ID            
                 , OPRTR_ACCOUNT_ID  
+                , OPRTR_NM
+                , OPRTR_PNO
                 , OPRTR_EMAIL     
-                , OPRTR_REG_DT      
+                , OPRTR_REG_DT
+                , OPRTR_STTS
                 , OPRTR_PERMISSION  
                 , OPRTR_DEPT_NM     
+                , OPRTR_STTS     
         FROM    MOZ_WEB_OPRTR
-        WHERE   1=1
-        <if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
-            <![CDATA[
-                AND TO_CHAR(OPRTR_REG_DT, 'YYYY-MM-DD') >= #{sDate}
-            ]]>
-        </if>
-        <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
-            <![CDATA[
-                AND TO_CHAR(OPRTR_REG_DT, 'YYYY-MM-DD') <= #{eDate}
-            ]]>
-        </if>
-        <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
-            <![CDATA[
-                AND TO_CHAR(OPRTR_REG_DT, 'YYYY-MM-DD') >= #{sDate}
-                AND TO_CHAR(OPRTR_REG_DT, 'YYYY-MM-DD') <= #{eDate}
-            ]]>
-        </if>
+        <where>
+        	<include refid="administList-Where"/>
+        	<if test="loginUserPermission != 'OPC000'">
+				AND OPRTR_STTS != 'OSC003'
+        	</if>
+        </where>
         ORDER BY rnum DESC
         LIMIT #{length} OFFSET #{start}
     </select>
     
-    <select id="selectUserListCnt" parameterType="com.moz.ates.traffic.common.entity.operator.MozWebOprtr" resultType="int">
+    <select id="countUserListCnt" parameterType="MozWebOprtr" resultType="int">
         SELECT  COUNT(*)    AS "cnt"
         FROM    MOZ_WEB_OPRTR
     </select>
     
-    <select id="countMozWebOprtr" parameterType="com.moz.ates.traffic.common.entity.operator.MozWebOprtr" resultType="int">
+    <select id="countMozWebOprtr" parameterType="MozWebOprtr" resultType="int">
         SELECT  COUNT(*)    AS "cnt"
         FROM    MOZ_WEB_OPRTR
+        <where>
+        	<include refid="administList-Where"/>
+        	<if test="loginUserPermission != 'OPC000'">
+				AND OPRTR_STTS != 'OSC003'
+        	</if>
+        </where>
     </select>
     
-    <select id="selectUserDetail" parameterType="String" resultType="com.moz.ates.traffic.common.entity.operator.MozWebOprtr">
+    <select id="findOneUserDetail" parameterType="String" resultType="MozWebOprtr">
         SELECT  OPRTR_ID
                 , OPRTR_ACCOUNT_ID
                 , OPRTR_ACCOUNT_PW
@@ -104,7 +146,7 @@
                 , OPRTR_REG_DT
                 , OPRTR_PERMISSION
                 , OPRTR_DEPT_NM
-                , CRTR
+                , APVR
                 , OPRTR_PNO
                 , OPRTR_NM
                 , LAST_LOGIN_DT
@@ -115,26 +157,63 @@
         WHERE   OPRTR_ID = #{oprtrId}
     </select>
     
-    <select id="findOneMozWebOprtr" parameterType="String" resultType="com.moz.ates.traffic.common.entity.operator.MozWebOprtr">
-        SELECT  OPRTR_ID
-                , OPRTR_ACCOUNT_ID
-                , OPRTR_ACCOUNT_PW
-                , OPRTR_EMAIL
-                , OPRTR_REG_DT
-                , OPRTR_PERMISSION
-                , OPRTR_DEPT_NM
-                , CRTR
-                , OPRTR_PNO
-                , OPRTR_NM
-                , LAST_LOGIN_DT
-                , LOGIN_FAIL_CNT
-                , CONNECT_IP
-                , AUTH_ID
-        FROM    MOZ_WEB_OPRTR
-        WHERE   OPRTR_ID = #{oprtrId}
+    <select id="findOneMozWebOprtr" parameterType="String" resultType="MozWebOprtr">
+        SELECT 		 o.OPRTR_ID
+	                , o.OPRTR_ACCOUNT_ID
+	                , o.OPRTR_ACCOUNT_PW
+	                , o.OPRTR_EMAIL
+	                , o.OPRTR_REG_DT
+	                , o.OPRTR_DEPT_NM
+	                , o.OPRTR_STTS
+	                , o.APVR
+	                , o.OPRTR_PNO
+	                , o.OPRTR_NM
+	                , o.LAST_LOGIN_DT
+	                , o.LOGIN_FAIL_CNT
+	                , o.CONNECT_IP
+	                , o.OPRTR_PERMISSION
+	                , o.AUTH_ID
+	                , COALESCE(a.AUTH_NM, '-') AS AUTH_NM
+	                , c.CD_NM AS OPRTR_PERMISSION_NAME
+	                , c.CD_GROUP_ID AS OPRTR_PERMISSION_GROUP_CODE
+        FROM   		MOZ_WEB_OPRTR o
+        JOIN		MOZ_CM_CD c ON CD_ID = o.OPRTR_PERMISSION
+        LEFT JOIN 	MOZ_AUTH a ON o.AUTH_ID = a.AUTH_ID
+        WHERE   	OPRTR_ID = #{oprtrId}
     </select>
+
+    <insert id="insertUser" parameterType="MozWebOprtr">
+        INSERT INTO MOZ_WEB_OPRTR
+            (
+                OPRTR_ID,
+                OPRTR_ACCOUNT_ID,
+                OPRTR_ACCOUNT_PW,
+                OPRTR_REG_DT,
+                OPRTR_NM,
+                OPRTR_PNO,
+                OPRTR_PERMISSION,
+                OPRTR_DEPT_ID,
+                CR_DT,
+                OPRTR_STTS,
+                AUTH_Id
+            )
+        VALUES
+            (
+                #{oprtrId}
+                , #{oprtrAccountId}
+                , #{oprtrAccountPw}
+                , NOW()
+                , #{oprtrNm}
+                , #{oprtrPno}
+                , #{oprtrPermission}
+                , #{oprtrDeptId}
+                , NOW()
+                , #{oprtrStts}
+                , #{authId}
+            )
+    </insert>
     
-    <insert id="insertUser" parameterType="com.moz.ates.traffic.common.entity.operator.MozWebOprtr">
+    <insert id="saveMozWebOprtr" parameterType="MozWebOprtr">
         INSERT INTO MOZ_WEB_OPRTR
             (
                 OPRTR_ID,
@@ -147,7 +226,6 @@
                 OPRTR_PERMISSION,
                 OPRTR_DEPT_NM,
                 CR_DT,
-                CRTR,
                 AUTH_Id
             )
         VALUES
@@ -162,45 +240,19 @@
                 , #{oprtrPermission}
                 , #{oprtrDeptNm}
                 , NOW()
-                , #{crtr}
                 , #{authId}
             )
     </insert>
     
-    <insert id="saveMozWebOprtr" parameterType="com.moz.ates.traffic.common.entity.operator.MozWebOprtr">
-        INSERT INTO MOZ_WEB_OPRTR
-            (
-                OPRTR_ID,
-                OPRTR_ACCOUNT_ID,
-                OPRTR_ACCOUNT_PW,
-                OPRTR_EMAIL,
-                OPRTR_REG_DT,
-                OPRTR_NM,
-                OPRTR_PNO,
-                OPRTR_PERMISSION,
-                OPRTR_DEPT_NM,
-                CR_DT,
-                CRTR,
-                AUTH_Id
-            )
-        VALUES
-            (
-                #{oprtrId}
-                , #{oprtrAccountId}
-                , #{oprtrAccountPw}
-                , #{oprtrEmail}
-                , NOW()
-                , #{oprtrNm}
-                , #{oprtrPno}
-                , #{oprtrPermission}
-                , #{oprtrDeptNm}
-                , NOW()
-                , #{crtr}
-                , #{authId}
-            )
-    </insert>
+    <select id="findPasswordByOprtrId" parameterType="String" resultType="String">
+    	SELECT
+    		OPRTR_ACCOUNT_PW
+    	FROM MOZ_WEB_OPRTR
+    	WHERE
+    		OPRTR_ID = #{oprtrId}
+    </select>
     
-    <update id="updateUser" parameterType="com.moz.ates.traffic.common.entity.operator.MozWebOprtr">
+    <update id="updateUser" parameterType="MozWebOprtr">
         UPDATE	MOZ_WEB_OPRTR
         SET     OPRTR_EMAIL = #{oprtrEmail}
                 <if test="oprtrAccountPw != '' and oprtrAccountPw != null">
@@ -214,17 +266,78 @@
         WHERE   OPRTR_ID = #{oprtrId}
     </update>
     
-    <update id="updateMozWebOprtr" parameterType="com.moz.ates.traffic.common.entity.operator.MozWebOprtr">
+    <update id="updateMozWebOprtr" parameterType="MozWebOprtr">
         UPDATE	MOZ_WEB_OPRTR
         SET     OPRTR_EMAIL = #{oprtrEmail}
                 <if test="oprtrAccountPw != '' and oprtrAccountPw != null">
                     , OPRTR_ACCOUNT_PW = #{oprtrAccountPw}
                 </if>
                 , OPRTR_PERMISSION = #{oprtrPermission}
+                , OPRTR_STTS = #{oprtrStts}
                 , OPRTR_DEPT_NM = #{oprtrDeptNm}
                 , OPRTR_NM = #{oprtrNm}
                 , OPRTR_PNO = #{oprtrPno}
                 , AUTH_ID = #{authId}
         WHERE   OPRTR_ID = #{oprtrId}
+    </update>
+
+    <update id="updateMyInfo" parameterType="MozWebOprtr">
+        UPDATE	MOZ_WEB_OPRTR
+        SET     OPRTR_EMAIL = #{oprtrEmail}
+                , OPRTR_NM = #{oprtrNm}
+                , OPRTR_PNO = #{oprtrPno}
+        WHERE   OPRTR_ID = #{oprtrId}
+    </update>
+    
+    <select id="findOneByOprtrAccountId" parameterType="String" resultType="MozWebOprtrDTO">
+        SELECT  OPRTR_ID
+                , OPRTR_ACCOUNT_ID
+                , OPRTR_ACCOUNT_PW
+                , OPRTR_PERMISSION
+                , OPRTR_STTS
+                , OPRTR_NM
+                , AUTH_ID
+                , TMP_PW_ISSUED_YN
+        FROM    MOZ_WEB_OPRTR
+        WHERE   OPRTR_ACCOUNT_ID = #{oprtrAccountId}
+    </select>
+    
+    <select id="findOneWebOprtrByOprtrNmAndOprtrPno" parameterType="MozWebOprtr" resultType="MozWebOprtr">
+			SELECT
+				MWO.OPRTR_ACCOUNT_ID
+				, MWO.OPRTR_NM
+			FROM
+				MOZ_WEB_OPRTR MWO
+			WHERE
+				MWO.OPRTR_NM = #{oprtrNm}
+				AND MWO.OPRTR_PNO = #{oprtrPno}
+    </select>
+    
+    <select id="findOneWebOprtrByOprtrAccountIdAndOprtrNm" parameterType="MozWebOprtr" resultType="MozWebOprtr">
+			SELECT
+				MWO.OPRTR_ID
+				, MWO.OPRTR_NM
+				, MWO.OPRTR_PNO
+			FROM
+				MOZ_WEB_OPRTR MWO
+			WHERE
+				MWO.OPRTR_ACCOUNT_ID = #{oprtrAccountId}
+				AND MWO.OPRTR_NM = #{oprtrNm}
+    </select>
+    
+    <update id="updateOprtrAccountPw" parameterType="MozWebOprtr">
+			UPDATE
+				MOZ_WEB_OPRTR
+			SET
+				OPRTR_ACCOUNT_PW = #{oprtrAccountPw},
+				TMP_PW_ISSUED_YN = #{tmpPwIssuedYn}
+			WHERE
+				OPRTR_ID = #{oprtrId}
+    </update>
+    
+    <update id="deleteWebOprtr" parameterType="MozWebOprtr">
+    	UPDATE	MOZ_WEB_OPRTR
+		SET		OPRTR_STTS		= 'OSC003'
+    	WHERE	OPRTR_ID		= #{oprtrId}
     </update>
 </mapper>

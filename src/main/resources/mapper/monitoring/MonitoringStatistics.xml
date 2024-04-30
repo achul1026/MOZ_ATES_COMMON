@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.monitoring.MonitoringStatisticsRepository">
+
+    <select id="findEnforcementCountByTypeFromToday" parameterType="map" resultType="map">
+        SELECT
+            mcc.CD_NM as type ,
+            count(1) as typeCnt,
+            'today' as datePeriod
+        FROM
+            MOZ_TFC_ENF_MASTER mtem
+                inner join MOZ_VIO_INFO mvi on mtem.VIO_ID = mvi.VIO_ID
+                inner join MOZ_TFC_ENF_FINE_INFO mtefi on mtem.TFC_ENF_ID = mtefi.TFC_ENF_ID
+                inner join MOZ_TFC_LW_INFO mtli on mtefi.TFC_LAW_ID = mtli.TFC_LAW_ID
+                inner join MOZ_CM_CD mcc on mcc.CD_GROUP_ID = 'LAW_TYPE_CD' and mcc.CD_ID = mtli.LAW_TYPE
+        WHERE
+            mtem.TFC_ENF_DT >= CURRENT_DATE() and
+              mtem.DEL_YN != 'Y'
+        group by
+            mtli.LAW_TYPE
+    </select>
+
+    <select id="findEnforcementCountByTypeAndTimeFromToday" parameterType="map" resultType="map">
+        SELECT
+            mcc.CD_NM as type ,
+            CONCAT(DATE_FORMAT(mtem.TFC_ENF_DT , '%H'),':00') as time,
+            count(1) as typeCnt
+        FROM
+            MOZ_TFC_ENF_MASTER mtem
+                inner join MOZ_VIO_INFO mvi on mtem.VIO_ID = mvi.VIO_ID
+                inner join MOZ_TFC_ENF_FINE_INFO mtefi on mtem.TFC_ENF_ID = mtefi.TFC_ENF_ID
+                inner join MOZ_TFC_LW_INFO mtli on mtefi.TFC_LAW_ID = mtli.TFC_LAW_ID
+                inner join MOZ_CM_CD mcc on mcc.CD_GROUP_ID = 'LAW_TYPE_CD' and mcc.CD_ID = mtli.LAW_TYPE
+         WHERE
+            mtem.TFC_ENF_DT >= CURRENT_DATE()
+        group by
+            CONCAT(DATE_FORMAT(mtem.TFC_ENF_DT , '%H'),':00'),
+            mtli.LAW_TYPE
+        ORDER BY CONCAT(DATE_FORMAT(mtem.TFC_ENF_DT , '%H'),':00')
+    </select>
+
+    <select id="findEnforcementCountByTypeAndTimeFromMonthly" parameterType="map" resultType="map">
+        SELECT
+            mcc.CD_NM as type ,
+            concat(MONTH(mtem.TFC_ENF_DT),'/',YEAR(mtem.TFC_ENF_DT)) as time,
+            count(1) as typeCnt
+        FROM
+            MOZ_TFC_ENF_MASTER mtem
+                inner join MOZ_VIO_INFO mvi on mtem.VIO_ID = mvi.VIO_ID
+                inner join MOZ_TFC_ENF_FINE_INFO mtefi on mtem.TFC_ENF_ID = mtefi.TFC_ENF_ID
+                inner join MOZ_TFC_LW_INFO mtli on mtefi.TFC_LAW_ID = mtli.TFC_LAW_ID
+                inner join MOZ_CM_CD mcc on mcc.CD_GROUP_ID = 'LAW_TYPE_CD' and mcc.CD_ID = mtli.LAW_TYPE
+        group by
+            concat(MONTH(mtem.TFC_ENF_DT),'/',YEAR(mtem.TFC_ENF_DT)),
+            mtli.LAW_TYPE
+        ORDER BY concat(MONTH(mtem.TFC_ENF_DT),'/',YEAR(mtem.TFC_ENF_DT))
+        limit 12
+    </select>
+
+    <select id="findEnforcementCountByTypeAndTimeFromYearly" parameterType="map" resultType="map">
+        SELECT
+            mcc.CD_NM as type ,
+            CAST(YEAR(mtem.TFC_ENF_DT) as CHAR) as time,
+            count(1) as typeCnt
+        FROM
+            MOZ_TFC_ENF_MASTER mtem
+                inner join MOZ_VIO_INFO mvi on mtem.VIO_ID = mvi.VIO_ID
+                inner join MOZ_TFC_ENF_FINE_INFO mtefi on mtem.TFC_ENF_ID = mtefi.TFC_ENF_ID
+                inner join MOZ_TFC_LW_INFO mtli on mtefi.TFC_LAW_ID = mtli.TFC_LAW_ID
+                inner join MOZ_CM_CD mcc on mcc.CD_GROUP_ID = 'LAW_TYPE_CD' and mcc.CD_ID = mtli.LAW_TYPE
+        group by
+            CAST(YEAR(mtem.TFC_ENF_DT) as CHAR),
+            mtli.LAW_TYPE
+        ORDER BY CAST(YEAR(mtem.TFC_ENF_DT) as CHAR)
+        limit 10
+    </select>
+
+    <select id="findEnforcementCountByTypeFromYesterday" parameterType="map" resultType="map">
+        SELECT
+            mcc.CD_NM as type ,
+            count(1) as typeCnt,
+            'yesterday' as datePeriod
+        FROM
+            MOZ_TFC_ENF_MASTER mtem
+                inner join MOZ_VIO_INFO mvi on mtem.VIO_ID = mvi.VIO_ID
+                inner join MOZ_TFC_ENF_FINE_INFO mtefi on mtem.TFC_ENF_ID = mtefi.TFC_ENF_ID
+                inner join MOZ_TFC_LW_INFO mtli on mtefi.TFC_LAW_ID = mtli.TFC_LAW_ID
+                inner join MOZ_CM_CD mcc on mcc.CD_GROUP_ID = 'LAW_TYPE_CD' and mcc.CD_ID = mtli.LAW_TYPE
+        WHERE
+            DATE(mtem.TFC_ENF_DT) = DATE(NOW() - INTERVAL 1 DAY) and
+            mtem.DEL_YN != 'Y'
+        group by
+            mtli.LAW_TYPE
+    </select>
+
+    <select id="findEnforcementListRecentlyLimit10" parameterType="map" resultType="map">
+        SELECT
+            mtem.TFC_ENF_DT  as genDate,
+            mtem.TFC_ENF_ID as id,
+            mvi.VIO_NM as name,
+            mvi.DVR_LCEN_ID as drvLcenId,
+            mtem.ROAD_ADDR as roadName,
+            GROUP_CONCAT(mtli.LAW_ARTICLE_NO SEPARATOR ',' ) as type
+        FROM
+            MOZ_TFC_ENF_MASTER mtem
+                inner join MOZ_VIO_INFO mvi on mtem.VIO_ID = mvi.VIO_ID
+                inner join MOZ_TFC_ENF_FINE_INFO mtefi on mtem.TFC_ENF_ID = mtefi.TFC_ENF_ID
+                inner join MOZ_TFC_LW_INFO mtli on mtefi.TFC_LAW_ID = mtli.TFC_LAW_ID
+        where mtem.DEL_YN != 'Y'
+        group by
+            mtem.TFC_ENF_DT,
+            mtem.TFC_ENF_ID ,
+            mvi.VIO_NM ,
+            mvi.DVR_LCEN_ID ,
+            mtem.ROAD_ADDR
+        order by mtem.TFC_ENF_DT desc
+            LIMIT 10
+    </select>
+
+
+
+    <!-- Acccidents -->
+    <select id="findAccidentCountByTypeFromToday" parameterType="map" resultType="map">
+        SELECT
+            mcc.CD_NM as type ,
+            count(1) as typeCnt,
+            'today' as datePeriod
+        FROM
+            MOZ_TFC_ACDNT_MASTER mtam
+                inner join MOZ_CM_CD mcc on mcc.CD_GROUP_ID = 'ACCIDENT_TYPE' and mcc.CD_ID = mtam.ACDNT_TY_CD
+        WHERE
+            mtam.acdnt_dt >= CURRENT_DATE()
+        group by
+            mcc.CD_ID
+    </select>
+
+    <select id="findAccidentCountByTypeAndTimeFromToday" parameterType="map" resultType="map">
+        SELECT
+            mcc.CD_NM as type ,
+            CONCAT(DATE_FORMAT(mtam.ACDNT_DT , '%H'),':00') as time,
+            count(1) as typeCnt
+        FROM
+            MOZ_TFC_ACDNT_MASTER mtam
+                inner join MOZ_CM_CD mcc on mcc.CD_GROUP_ID = 'ACCIDENT_TYPE' and mcc.CD_ID = mtam.ACDNT_TY_CD
+        WHERE
+            mtam.ACDNT_DT >= CURRENT_DATE()
+        group by
+            CONCAT(DATE_FORMAT(mtam.ACDNT_DT , '%H'),':00'),
+            mcc.CD_ID
+        ORDER BY CONCAT(DATE_FORMAT(mtam.ACDNT_DT , '%H'),':00')
+    </select>
+
+    <select id="findAccidentCountByTypeAndTimeFromMonthly" parameterType="map" resultType="map">
+        SELECT
+            mcc.CD_NM as type ,
+            concat(MONTH(mtam.ACDNT_DT),'/',YEAR(mtam.ACDNT_DT)) as time,
+            count(1) as typeCnt
+        FROM
+            MOZ_TFC_ACDNT_MASTER mtam
+            inner join MOZ_CM_CD mcc on mcc.CD_GROUP_ID = 'ACCIDENT_TYPE' and mcc.CD_ID = mtam.ACDNT_TY_CD
+        group by
+            concat(MONTH(mtam.ACDNT_DT),'/',YEAR(mtam.ACDNT_DT)),
+            mcc.CD_ID
+        ORDER BY concat(MONTH(mtam.ACDNT_DT),'/',YEAR(mtam.ACDNT_DT))
+        limit 12
+    </select>
+
+    <select id="findAccidentCountByTypeAndTimeFromYearly" parameterType="map" resultType="map">
+        SELECT
+            mcc.CD_NM as type ,
+            CAST(YEAR(mtam.ACDNT_DT) as CHAR) as time,
+            count(1) as typeCnt
+        FROM
+            MOZ_TFC_ACDNT_MASTER mtam
+            inner join MOZ_CM_CD mcc on mcc.CD_GROUP_ID = 'ACCIDENT_TYPE' and mcc.CD_ID = mtam.ACDNT_TY_CD
+        group by
+            CAST(YEAR(mtam.ACDNT_DT) as CHAR),
+            mcc.CD_ID
+        ORDER BY CAST(YEAR(mtam.ACDNT_DT) as CHAR)
+        limit  10
+    </select>
+
+    <select id="findAccidentCountByTypeFromYesterday" parameterType="map" resultType="map">
+        SELECT
+            mcc.CD_NM as type ,
+            count(1) as typeCnt,
+            'yesterday' as datePeriod
+        FROM
+            MOZ_TFC_ACDNT_MASTER mtam
+                inner join MOZ_CM_CD mcc on mcc.CD_GROUP_ID = 'ACCIDENT_TYPE' and mcc.CD_ID = mtam.ACDNT_TY_CD
+        WHERE
+            DATE(mtam.acdnt_dt) = DATE(NOW() - INTERVAL 1 DAY)
+        group by
+            mcc.CD_ID
+    </select>
+
+    <select id="findAccidentListRecentlyLimit10" parameterType="map" resultType="map">
+        SELECT
+            mtam.TFC_ACDNT_ID as id,
+            mtam.ACDNT_DT as genDate,
+            mcc.CD_NM as type,
+            mtam.ROAD_ADDR as roadName,
+            mtam.POL_ID as polId,
+            mpi.POL_NM as polNm,
+            mpi.POL_LCEN_ID as polLcenId,
+            mtam.ACDNT_CHILD_YN as acdntChildYn
+        FROM
+            MOZ_TFC_ACDNT_MASTER mtam
+                inner join MOZ_CM_CD mcc on mcc.CD_GROUP_ID = 'ACCIDENT_TYPE' and mcc.CD_ID = mtam.ACDNT_TY_CD
+                inner join MOZ_POL_INFO mpi on mtam.POL_ID = mpi.POL_ID
+        group by
+            mtam.TFC_ACDNT_ID,
+            mtam.ACDNT_DT ,
+            mcc.CD_NM ,
+            mtam.ROAD_ADDR ,
+            mtam.POL_ID ,
+            mpi.POL_NM ,
+            mpi.POL_LCEN_ID ,
+            mtam.ACDNT_CHILD_YN
+        order by mtam.ACDNT_DT desc
+            LIMIT 10
+    </select>
+
+    <select id="findFineStatisticsByDate" parameterType="map" resultType="map">
+        SELECT
+            concat(MONTH(mfni.FIRST_FINE_NTC_DT),'/',YEAR(mfni.FIRST_FINE_NTC_DT)) as date,
+            SUM(mfpi.TOTAL_PRICE) AS totalAmount,
+            SUM(CASE WHEN mfpi.PYMNT_STTS  = 'Y' THEN mfpi.TOTAL_PRICE  ELSE 0 END) AS paidAmount,
+            SUM(CASE WHEN mfpi.PYMNT_STTS  = 'N' THEN mfpi.TOTAL_PRICE  ELSE 0 END) AS unpaidAmount
+        FROM
+            MOZ_FINE_PYMNT_INFO mfpi
+            inner join MOZ_FINE_NTC_INFO mfni on mfpi.FINE_NTC_ID = mfni.FINE_NTC_ID
+        <where>
+            <if test="ntcTy != '' and ntcTy != null">
+                mfni.NTC_TY = #{ntcTy}
+            </if>
+        </where>
+        GROUP BY
+            concat(MONTH(mfni.FIRST_FINE_NTC_DT),'/',YEAR(mfni.FIRST_FINE_NTC_DT))
+        ORDER BY
+            date
+        limit 12
+    </select>
+
+    <select id="findEnforcementCountMonthlyByEqpOrPol" resultType="map" parameterType="map">
+        SELECT
+            sum(CASE WHEN mtem.TFC_ENF_EQP_ID is null then 1 else 0 end) polCnt,
+            sum(CASE WHEN mtem.TFC_ENF_EQP_ID is not null then 1 else 0 end) cameraCnt,
+            concat(MONTH(mtem.TFC_ENF_DT),'/',YEAR(mtem.TFC_ENF_DT)) as date
+        FROM
+            MOZ_TFC_ENF_MASTER mtem
+        group by
+            concat(MONTH(mtem.TFC_ENF_DT),'/',YEAR(mtem.TFC_ENF_DT))
+        order by concat(MONTH(mtem.TFC_ENF_DT),'/',YEAR(mtem.TFC_ENF_DT)) asc
+            limit 12
+    </select>
+</mapper>

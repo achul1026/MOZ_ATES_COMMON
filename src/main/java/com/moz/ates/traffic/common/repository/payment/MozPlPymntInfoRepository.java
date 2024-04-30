@@ -9,7 +9,7 @@ import com.moz.ates.traffic.common.entity.payment.MozPlPymntInfo;
 @Mapper
 public interface MozPlPymntInfoRepository {
 	
-	public List<MozPlPymntInfo> selectPlacePaymentList(MozPlPymntInfo plPymntInfo);
+	public List<MozPlPymntInfo> findAllPlacePaymentList(MozPlPymntInfo plPymntInfo);
 	
 	public void saveMozPlPymntInfo(MozPlPymntInfo plPymntInfo);
 	

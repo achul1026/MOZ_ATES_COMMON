@@ -1,23 +1,80 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.moz.ates.traffic.common.repository.operator.MozAuthRepository">
-	<select	id="findAllMozAuth" parameterType="com.moz.ates.traffic.common.entity.operator.MozAuth" resultType="com.moz.ates.traffic.common.entity.operator.MozAuth">
+	<sql id="authList-Where">
+		<if test="searchType == 'all' and searchTxt != null and searchTxt != ''">
+			AND (ma.AUTH_NM LIKE CONCAT('%', #{searchTxt}, '%') 
+				OR ma.AUTH_DESC LIKE CONCAT('%', #{searchTxt}, '%'))
+		</if>
+		<if test="searchType == 'authNm' and searchTxt != null and searchTxt != ''">
+			AND ma.AUTH_NM LIKE CONCAT('%', #{searchTxt}, '%') 
+		</if>
+		<if test="searchType == 'authDesc' and searchTxt != null and searchTxt != ''">
+			AND ma.AUTH_DESC LIKE CONCAT('%', #{searchTxt}, '%') 
+		</if>
+	</sql>
+	
+	<select	id="findAllMozAuth" parameterType="MozAuth" resultType="MozAuth">
 		SELECT 
-			ma.AUTH_ID,
-			ma.AUTH_CD,
-			ma.AUTH_NM
+			ROW_NUMBER() OVER(ORDER BY CR_DT) AS rnum
+			, ma.AUTH_ID
+			, ma.AUTH_NM
+			, ma.AUTH_DESC
 		FROM MOZ_AUTH ma
+		<where>
+			<include refid="authList-Where"/>
+		</where>
+		ORDER BY rnum DESC
+		LIMIT #{length} OFFSET #{start}
 	</select>
 	
-	<insert id="insert" parameterType="com.moz.ates.traffic.common.entity.operator.MozAuth">
+	<select id="countMozAuth" parameterType="MozAuth" resultType="int">
+		SELECT
+			COUNT(*) AS cnt
+		FROM MOZ_AUTH ma 
+		<where>
+			<include refid="authList-Where"/>
+		</where> 
+	</select>
+	
+	<select id="findOneMozAuth" parameterType="MozAuth" resultType="MozAuth">
+		SELECT
+			MA.AUTH_ID ,
+			MA.AUTH_CD ,
+			MA.AUTH_NM ,
+			MA.AUTH_DESC 
+		FROM 
+			MOZ_AUTH MA 
+		WHERE 
+			MA.AUTH_ID = #{authId}
+	</select>
+	
+	<insert id="saveMozAuth" parameterType="MozAuth">
 		INSERT INTO MOZ_AUTH (
 			AUTH_ID,
 			AUTH_CD,
-			AUTH_NM
+			AUTH_NM,
+			CR_DT,
+			CRTR,
+			AUTH_DESC
 			) VALUES (
 			#{authId},
 			#{authCd},
-			#{authNm}
+			#{authNm},
+			NOW(),
+			#{crtr},
+			#{authDesc}
 			)
 	</insert>
+	
+	<update id="updateMozAuth" parameterType="MozAuth">
+		UPDATE
+			MOZ_AUTH
+		SET 
+			AUTH_CD = #{authCd},
+			AUTH_NM = #{authNm},
+			AUTH_DESC = #{authDesc}
+		WHERE
+			AUTH_ID = #{authId}
+	</update>
 </mapper>

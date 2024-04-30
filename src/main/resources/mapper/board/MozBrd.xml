@@ -4,38 +4,58 @@
 	
 	<sql id="noticeList-where">
         <if test="searchType == 'all' and searchTxt != '' and searchTxt != null">
-            AND (OPRTR_ID LIKE '%' ||  #{searchTxt} || '%' OR BOARD_TITLE LIKE '%' ||  #{searchTxt} || '%')
+            AND (bt.OPRTR_ID LIKE CONCAT('%', #{searchTxt}, '%') OR bt.BOARD_TITLE LIKE CONCAT('%', #{searchTxt}, '%'))
         </if>
         <if test="searchType == 'oprtrId' and searchTxt != '' and searchTxt != null">
-            AND OPRTR_ID LIKE '%' ||  #{searchTxt} || '%'
+            AND bt.OPRTR_ID LIKE CONCAT('%', #{searchTxt}, '%') 
         </if>
         <if test="searchType == 'boardTitle' and searchTxt != '' and searchTxt != null">
-            AND BOARD_TITLE LIKE '%' ||  #{searchTxt} || '%'
+            AND bt.BOARD_TITLE LIKE CONCAT('%', #{searchTxt}, '%') 
         </if>
-        <if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
-            <![CDATA[
-                AND TO_CHAR(CR_DT, 'YYYY-MM-DD') >= #{sDate}
-            ]]>
-        </if>
-        <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
-            <![CDATA[
-                AND TO_CHAR(CR_DT, 'YYYY-MM-DD') <= #{eDate}
-            ]]>
-        </if>
-        <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
-            <![CDATA[
-             	AND TO_CHAR(CR_DT, 'YYYY-MM-DD') >= #{sDate}
-                AND TO_CHAR(CR_DT, 'YYYY-MM-DD') <= #{eDate}
-            ]]>
-        </if>
-
+		<choose>
+        	<when test="dateSearchType =='postStrDt'">
+        		<if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
+		            <![CDATA[ AND bt.POST_STR_DT >= #{sDate} ]]>
+		        </if>
+		        <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
+		            <![CDATA[ AND bt.POST_STR_DT <= #{eDate} ]]>
+		        </if>
+		        <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
+		            <![CDATA[ AND bt.POST_STR_DT >= #{sDate} AND bt.POST_STR_DT <= #{eDate} ]]>
+		        </if>
+        	</when>
+        	<when test="dateSearchType == 'postEndDt'">
+        		<if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
+		            <![CDATA[ AND bt.POST_END_DT >= #{sDate} ]]>
+		        </if>
+		        <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
+		            <![CDATA[ AND bt.POST_END_DT <= #{eDate} ]]>
+		        </if>
+		        <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
+		            <![CDATA[ AND bt.POST_END_DT >= #{sDate} AND bt.POST_END_DT <= #{eDate} ]]>
+		        </if>
+        	</when>
+        	<otherwise>
+        		<if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
+		            <![CDATA[ AND (bt.POST_STR_DT >= #{sDate} OR bt.POST_END_DT >= #{sDate})]]>
+		        </if>
+		        <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
+		            <![CDATA[ AND (bt.POST_STR_DT <= #{eDate} OR EFTV_DE<= #{eDate} OR RVSN_DE<= #{eDate})]]>
+		        </if>
+		        <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
+		            <![CDATA[ AND (bt.POST_STR_DT >= #{sDate} AND bt.POST_STR_DT <= #{eDate}
+		            				OR bt.POST_STR_DT >= #{sDate} AND bt.POST_STR_DT <= #{eDate}]]>
+		        </if>
+        	</otherwise>
+        </choose>
     </sql>
 	
-	<resultMap type="com.moz.ates.traffic.common.entity.common.MozCmCd" id="cmCdForSelectNoticeList">
+	<resultMap type="MozCmCd" id="cmCdForSelectNoticeList">
 		<result column="CD_NM" property="cdNm"/>
 	</resultMap>
 	
-	<resultMap type="com.moz.ates.traffic.common.entity.board.MozBrd" id="faqForSelectNoticeList">
+	<resultMap type="MozBrd" id="faqForSelectNoticeList">
+		<result column="rnum" property="rnum"/>
 		<result column="BOARD_IDX" property="boardIdx"/>
 		<result column="BOARD_CD_ID" property="boardCdId"/>
 		<result column="OPRTR_ID" property="oprtrId"/>
@@ -43,15 +63,24 @@
 		<result column="BOARD_TITLE" property="boardTitle"/>
 		<result column="BOARD_CONTENTS" property="boardContents"/>
 		<result column="VIEW_CNT" property="viewCnt"/>
+		<result column="USE_YN" property="useYn"/>
+		<result column="POST_STR_DT" property="postStrDt"/>
+		<result column="POST_END_DT" property="postEndDt"/>
+		<result column="IMPRT_YN" property="imprtYn"/>
 		<result column="CR_DT" property="crDt"/>
 		<collection property="cmCd" resultMap="cmCdForSelectNoticeList"/>
 	</resultMap>
 	
-	<resultMap type="com.moz.ates.traffic.common.entity.common.MozCmCd" id="cmCdForSelectNoticeDetail">
+	<resultMap type="MozCmCd" id="cmCdForSelectNoticeDetail">
 		<result column="CD_NM" property="cdNm"/>
 	</resultMap>
+
+	<resultMap type="MozAtchFile" id="atchFileForSelectNoticeDetail">
+		<result column="FILE_ORG_NM" property="fileOrgNm"/>
+		<result column="FILE_IDX" property="fileIdx"/>
+	</resultMap>
 	
-	<resultMap type="com.moz.ates.traffic.common.entity.board.MozBrd" id="faqForSelectNoticeDetail">
+	<resultMap type="MozBrd" id="faqForSelectNoticeDetail">
 		<result column="BOARD_IDX" property="boardIdx"/>
 		<result column="BOARD_CD_ID" property="boardCdId"/>
 		<result column="OPRTR_ID" property="oprtrId"/>
@@ -59,19 +88,26 @@
 		<result column="BOARD_TITLE" property="boardTitle"/>
 		<result column="BOARD_CONTENTS" property="boardContents"/>
 		<result column="VIEW_CNT" property="viewCnt"/>
+		<result column="POPUP_YN" property="popupYn"/>
+		<result column="IMPRT_YN" property="imprtYn"/>
+		<result column="USE_YN" property="useYn"/>
+		<result column="POST_STR_DT" property="postStrDt"/>
+		<result column="POST_END_DT" property="postEndDt"/>
 		<result column="CR_DT" property="crDt"/>
 		<collection property="cmCd" resultMap="cmCdForSelectNoticeDetail"/>
+		<collection property="atchFileList" resultMap="atchFileForSelectNoticeDetail"/>
 	</resultMap>
 	
-    <select id="selectNoticeList" parameterType="com.moz.ates.traffic.common.entity.board.MozBrd" resultMap="faqForSelectNoticeList">
-        SELECT  BOARD_IDX
-                , BOARD_CD_ID
-                , OPRTR_ID
-                , WRTR_NM
-                , BOARD_TITLE
-                , BOARD_CONTENTS
-                , VIEW_CNT
+    <select id="findAllNoticeList" parameterType="MozBrd" resultMap="faqForSelectNoticeList">
+        SELECT  bt.BOARD_IDX
+                , bt.BOARD_CD_ID
+                , bt.OPRTR_ID
+                , bt.WRTR_NM
+                , bt.BOARD_TITLE
+                , bt.BOARD_CONTENTS
+                , bt.VIEW_CNT
                 , bt.CR_DT
+                , bt.IMPRT_YN
                 , cct.CD_NM
         FROM    MOZ_BRD bt,
         		 MOZ_CM_CD cct
@@ -82,41 +118,46 @@
                 LIMIT #{length} OFFSET #{start}
     </select>
     
-    <select id="selectNoticeListCnt" parameterType="com.moz.ates.traffic.common.entity.board.MozBrd" resultType="int">
+    <select id="countNoticeListCnt" parameterType="MozBrd" resultType="int">
         SELECT  COUNT(*) AS "cnt"
-        FROM    MOZ_BRD
+        FROM    MOZ_BRD bt
         WHERE   1=1
         <include refid="noticeList-where"/>
     </select>
     
-    <select id="findAllMozBrd" parameterType="com.moz.ates.traffic.common.entity.board.MozBrd" resultMap="faqForSelectNoticeList">
-        SELECT  ROW_NUMBER() OVER(ORDER BY CR_DT) AS rnum
-        		, BOARD_IDX
-                , BOARD_CD_ID
-                , OPRTR_ID
-                , WRTR_NM
-                , BOARD_TITLE
-                , BOARD_CONTENTS
-                , VIEW_CNT
+    <select id="findAllMozBrd" parameterType="MozBrd" resultMap="faqForSelectNoticeList">
+        SELECT  ROW_NUMBER() OVER(ORDER BY bt.CR_DT) AS rnum
+        		, bt.BOARD_IDX
+                , bt.BOARD_CD_ID
+                , bt.OPRTR_ID
+                , bt.WRTR_NM
+                , bt.BOARD_TITLE
+                , bt.BOARD_CONTENTS
+                , bt.VIEW_CNT
+                , bt.USE_YN
+                , bt.POST_STR_DT
+                , bt.POST_END_DT
+                , bt.IMPRT_YN
                 , bt.CR_DT
-                , cct.CD_NM
-        FROM    MOZ_BRD bt,
-        		 MOZ_CM_CD cct
-        WHERE   1=1
-        		AND bt.BOARD_CD_ID = cct.CD_ID
-                <include refid="noticeList-where"/>
-                ORDER BY rnum DESC
-                LIMIT #{length} OFFSET #{start}
+        FROM    MOZ_BRD bt
+        <where>
+	        <include refid="noticeList-where"/>
+	        AND bt.CATE_CD = #{cateCd}
+        </where>
+        ORDER BY rnum DESC
+        LIMIT #{length} OFFSET #{start}
     </select>
     
-    <select id="countMozBrd" parameterType="com.moz.ates.traffic.common.entity.board.MozBrd" resultType="int">
+    <select id="countMozBrd" parameterType="MozBrd" resultType="int">
         SELECT  COUNT(*) AS "cnt"
-        FROM    MOZ_BRD
-        WHERE   1=1
-        <include refid="noticeList-where"/>
+        FROM    MOZ_BRD bt
+        <where>
+	        <include refid="noticeList-where"/>
+	        AND bt.CATE_CD = #{cateCd}
+        </where>
     </select>
     
-    <select id="selectNoticeDetail" parameterType="String" resultMap="faqForSelectNoticeDetail">
+    <select id="findOneNoticeDetail" parameterType="String" resultMap="faqForSelectNoticeDetail">
         SELECT  bt.BOARD_IDX
                 , bt.BOARD_CD_ID
                 , bt.OPRTR_ID
@@ -125,15 +166,22 @@
                 , bt.BOARD_CONTENTS
                 , bt.VIEW_CNT
                 , bt.CR_DT
-                , cct.CD_NM
-        FROM    MOZ_BRD bt,
-                MOZ_CM_CD cct
-        WHERE   bt.BOARD_CD_ID = cct.CD_ID
-                AND bt.BOARD_IDX = #{boardIdx}
+                , bt.POPUP_YN
+                , bt.IMPRT_YN
+                , bt.USE_YN
+                , bt.POST_STR_DT
+                , bt.POST_END_DT
+                , aft.FILE_ORG_NM
+                , aft.FILE_IDX
+        FROM    MOZ_BRD bt
+        LEFT JOIN MOZ_ATCH_FILE aft
+        	ON bt.BOARD_IDX = aft.ATCH_IDX
+        WHERE 
+               bt.BOARD_IDX = #{boardIdx}
     </select>
 		
 	<!--  공지사항 등록  -->
-    <insert id="insertNotice" parameterType="com.moz.ates.traffic.common.entity.board.MozBrd">
+    <insert id="insertNotice" parameterType="MozBrd">
         INSERT INTO MOZ_BRD
             (
                 BOARD_IDX
@@ -156,35 +204,55 @@
             )
     </insert>
     
-    <insert id="saveMozBrd" parameterType="com.moz.ates.traffic.common.entity.board.MozBrd">
+    <insert id="saveMozBrd" parameterType="MozBrd">
         INSERT INTO MOZ_BRD
             (
                 BOARD_IDX
-                , BOARD_CD_ID
                 , BOARD_TITLE
                 , BOARD_CONTENTS
                 , VIEW_CNT
                 , CR_DT
                 , UPD_DT
+                , OPRTR_ID
+                , WRTR_NM
+                , POST_STR_DT
+                , POST_END_DT
+                , USE_YN
+                , POPUP_YN
+                , IMPRT_YN
+                , CATE_CD
             )
         VALUES
             (
-                BRD_SEQ.NEXTVAL
-                , #{boardCdId}
+                #{boardIdx}
                 , #{boardTitle}
                 , #{boardContents}
                 , '0'
                 , NOW()
                 , NOW()
+                , #{oprtrId}
+                , #{wrtrNm}
+                , #{postStrDtString}
+                , #{postEndDtString}
+                , #{useYn}
+                , #{popupYn}
+                , #{imprtYn}
+                , #{cateCd}
             )
     </insert>
     
-    <update id="updateNotice" parameterType="com.moz.ates.traffic.common.entity.board.MozBrd">
+    <update id="updateNotice" parameterType="MozBrd">
       	UPDATE  MOZ_BRD
         SET     BOARD_CD_ID=#{boardCdId}
                 , BOARD_TITLE=#{boardTitle}
                 , BOARD_CONTENTS=#{boardContents}
                 , UPD_DT=NOW()
+                , VIEW_CNT=#{viewCnt}
+                , POST_STR_DT=#{postStrDtString}
+                , POST_END_DT=#{postEndDtString}
+                , USE_YN=#{useYn}
+                , POPUP_YN=#{popupYn}
+                , IMPRT_YN=#{imprtYn}
         WHERE   BOARD_IDX=#{boardIdx}
 
     </update>
@@ -194,4 +262,81 @@
         WHERE       BOARD_IDX=#{boardIdx}
 
     </delete>
+    
+<!-- ************************* for PORTAL start -->
+		<select id="findAllByUseYn" resultType="MozBrd" parameterType="MozBrd">
+        SELECT  ROW_NUMBER() OVER(ORDER BY MB.CR_DT) AS rnum
+   				, MB.BOARD_IDX
+                , MB.BOARD_TITLE
+                , MB.VIEW_CNT
+                , MB.IMPRT_YN
+                , MB.WRTR_NM
+                , MB.CR_DT
+        FROM    MOZ_BRD MB
+        WHERE 1=1 	
+        <if test="useYn != null and useYn != ''">
+	        AND	USE_YN = #{useYn}
+        </if>
+        <if test="cateCd != null and cateCd != ''">
+	        AND	CATE_CD = #{cateCd}
+        </if>
+        <if test="searchTxt != '' and searchTxt != null">
+       	AND MB.BOARD_TITLE LIKE CONCAT('%', #{searchTxt}, '%')
+        </if>
+        <![CDATA[
+        AND 	(MB.POST_STR_DT <= CURDATE() OR MB.POST_STR_DT IS NULL)
+        AND   (MB.POST_END_DT >= CURDATE() OR MB.POST_END_DT IS NULL)
+        ]]>
+        ORDER BY 
+        		rnum DESC
+       	LIMIT #{length} OFFSET #{start}
+		</select>
+		
+		<select id="countByUseYn" resultType="int">
+        SELECT  COUNT(*)
+        FROM    MOZ_BRD MB
+        WHERE  	1 = 1
+        <if test="useYn != null and useYn != ''">
+	        AND	USE_YN = #{useYn}
+        </if>
+        <if test="cateCd != null and cateCd != ''">
+	        AND	CATE_CD = #{cateCd}
+        </if>
+        <if test="searchTxt != '' and searchTxt != null">
+       	AND MB.BOARD_TITLE LIKE CONCAT('%', #{searchTxt}, '%')
+        </if>
+        <![CDATA[
+        AND 	(MB.POST_STR_DT <= CURDATE() OR MB.POST_STR_DT IS NULL)
+        AND   (MB.POST_END_DT >= CURDATE() OR MB.POST_END_DT IS NULL)
+        ]]>
+		</select>
+		
+		<select id="findOneByBoardIdxAnduseYnAndCateCd" resultType="MozBrd" parameterType="MozBrd">
+	   	SELECT  
+             MB.BOARD_TITLE
+             , MB.BOARD_CONTENTS
+             , MB.VIEW_CNT
+             , MB.CR_DT
+             , MWO.OPRTR_NM 
+             , MWO.OPRTR_DEPT_NM 
+			FROM MOZ_BRD MB
+			INNER JOIN MOZ_WEB_OPRTR MWO ON MB.OPRTR_ID = MWO.OPRTR_ID
+      WHERE 
+      			MB.USE_YN = #{useYn}
+     	AND		MB.CATE_CD = #{cateCd}
+      <![CDATA[
+      AND 	(MB.POST_STR_DT <= CURDATE() OR MB.POST_STR_DT IS NULL)
+      AND   (MB.POST_END_DT >= CURDATE() OR MB.POST_END_DT IS NULL)
+      ]]>
+      AND		MB.BOARD_IDX = #{boardIdx}
+		</select>
+		
+		<!-- TODO :: useYn & 게시기간 & 카테고리 코드 조건 필요 -->
+		<update id="updateViewCnt">
+			UPDATE MOZ_BRD 
+			SET VIEW_CNT = VIEW_CNT + 1
+			WHERE BOARD_IDX = #{boardIdx}
+		</update>
+<!-- ************************* for PORTAL end -->
+
 </mapper>

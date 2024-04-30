@@ -2,4 +2,212 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.moz.ates.traffic.common.repository.equipment.MozTfcFacilityMasterRepository">
 
+	<resultMap type="mozWebOprtr" id="webOprtrForSelectFacilityList">
+		<result column="OPRTR_NM" property="oprtrNm"/>
+	</resultMap>
+	
+	<resultMap type="MozCmCd" id="cmCdForSelectFacilityList">
+		<result column="CD_NM" property="cdNm"/>
+	</resultMap>
+	
+	<resultMap type="MozTfcFacilityMaster" id="tfcFacilityMasterForSelectList">
+		<result column="rnum" property="rnum"/>
+		<result column="FACILITY_TY" property="facilityTy"/>
+		<result column="TFC_FACILITY_ID" property="tfcFacilityId"/>
+		<result column="FACILITY_STTS" property="facilityStts"/>
+		<result column="FACILITY_NM" property="facilityNm"/>
+		<result column="ROAD_ADDR" property="roadAddr"/>
+		<result column="CR_DT" property="crDt"/>
+		<result column="CRTR" property="crtr"/>
+		<result column="LNG" property="lng"/>
+		<result column="LAT" property="lat"/>
+		<collection property="webOprtr" resultMap="webOprtrForSelectFacilityList"/>
+		<collection property="cmCd" resultMap="cmCdForSelectFacilityList"/>
+	</resultMap>
+	
+	<resultMap type="mozWebOprtr" id="webOprtrForSelectFacilityDetail">
+		<result column="OPRTR_NM" property="oprtrNm"/>
+	</resultMap>
+	
+	<resultMap type="MozCmCd" id="cmCdForSelectFacilityDeatil">
+		<result column="CD_NM" property="cdNm"/>
+	</resultMap>
+	
+	<resultMap type="MozTfcFacilityFileInfo" id="tfcFacilityFileInfoForSelectFacilityDeatil">
+		<result column="FILE_ORG_NM" property="fileOrgNm"/>
+		<result column="TFC_FACILITY_FILE_NO" property="tfcFacilityFileNo"/>
+	</resultMap>
+	
+	<resultMap type="MozTfcFacilityMaster" id="tfcFacilityMasterForSelectDetail">
+		<result column="rnum" property="rnum"/>
+		<result column="FACILITY_TY" property="facilityTy"/>
+		<result column="TFC_FACILITY_ID" property="tfcFacilityId"/>
+		<result column="FACILITY_STTS" property="facilityStts"/>
+		<result column="FACILITY_NM" property="facilityNm"/>
+		<result column="ROAD_ADDR" property="roadAddr"/>
+		<result column="CR_DT" property="crDt"/>
+		<result column="CRTR" property="crtr"/>
+		<result column="MODEL_NM" property="modelNm"/>
+		<result column="MNFCTR" property="mnfctr"/>
+		<result column="INSTL_YN" property="instlYn"/>
+		<result column="INSTL_DATE" property="instlDate"/>
+		<result column="CR_OPRTR_DEPT" property="crOprtrDept"/>
+		<result column="FACILITY_DESC" property="facilityDesc"/>
+		<result column="INSTLER" property="instler"/>
+		<result column="LAT" property="lat"/>
+		<result column="LNG" property="lng"/>
+		<result column="CR_OPRTR_ID" property="crOprtrId"/>
+		<collection property="webOprtr" resultMap="webOprtrForSelectFacilityDetail"/>
+		<collection property="cmCd" resultMap="cmCdForSelectFacilityDeatil"/>
+		<collection property="tfcFacilityFileInfoList" resultMap="tfcFacilityFileInfoForSelectFacilityDeatil"/>
+	</resultMap>
+	
+	<select id="countMozTfcFacility" parameterType="MozTfcFacilityMaster" resultType="int">
+		SELECT  COUNT(*)    AS "cnt"
+        FROM    MOZ_TFC_FACILITY_MASTER tfm
+        LEFT JOIN MOZ_WEB_OPRTR wot
+        	ON tfm.CR_OPRTR_ID = wot.OPRTR_ID
+       	LEFT JOIN MOZ_CM_CD cct
+        	ON tfm.FACILITY_TY = cct.CD_ID
+        <where>
+       		<if test="searchTxt != null and searchTxt !=''">
+         		AND (tfm.ROAD_ADDR LIKE CONCAT('%', #{searchTxt}, '%')
+         				OR tfm.FACILITY_NM LIKE CONCAT('%', #{searchTxt}, '%'))
+         	</if>
+        </where>
+	</select>
+	
+	<select id="findAllMozFacility" parameterType="MozTfcFacilityMaster" resultMap="tfcFacilityMasterForSelectList">
+        SELECT ROW_NUMBER() OVER(ORDER BY tfm.CR_DT) AS rnum
+        	, tfm.FACILITY_TY
+        	, tfm.TFC_FACILITY_ID
+        	, tfm.FACILITY_STTS
+        	, tfm.CR_DT
+        	, tfm.CRTR
+        	, tfm.FACILITY_NM
+        	, tfm.LNG
+        	, tfm.LAT
+        	, tfm.ROAD_ADDR
+        	, wot.OPRTR_NM
+        	, cct.CD_NM
+		FROM MOZ_TFC_FACILITY_MASTER tfm
+		LEFT JOIN MOZ_WEB_OPRTR wot
+        	ON tfm.CR_OPRTR_ID = wot.OPRTR_ID
+       	LEFT JOIN MOZ_CM_CD cct
+        	ON tfm.FACILITY_TY = cct.CD_ID
+        <where>
+       		<if test="searchTxt != null and searchTxt !=''">
+         		AND (tfm.ROAD_ADDR LIKE CONCAT('%', #{searchTxt}, '%')
+         				OR tfm.FACILITY_NM LIKE CONCAT('%', #{searchTxt}, '%'))
+         	</if>
+        </where>
+		ORDER BY rnum DESC
+        LIMIT #{length} OFFSET #{start}
+	</select>
+	
+	<select id="findOneMozTfcFacilityBytfcFacilityId" parameterType="String" resultMap="tfcFacilityMasterForSelectDetail">
+		 SELECT tfm.FACILITY_TY
+        	, tfm.TFC_FACILITY_ID
+        	, tfm.FACILITY_STTS
+        	, tfm.CR_DT
+        	, tfm.CRTR
+        	, tfm.FACILITY_NM
+        	, tfm.ROAD_ADDR
+        	, tfm.MODEL_NM
+        	, tfm.MNFCTR
+        	, tfm.INSTL_YN
+        	, tfm.INSTL_DATE
+        	, tfm.CR_OPRTR_DEPT
+        	, tfm.INSTLER
+        	, tfm.FACILITY_DESC
+        	, tfm.LAT
+        	, tfm.LNG
+        	, tfm.CR_OPRTR_ID
+        	, wot.OPRTR_NM
+        	, cct.CD_NM
+        	, tffi.FILE_ORG_NM
+        	, tffi.TFC_FACILITY_FILE_NO
+		FROM MOZ_TFC_FACILITY_MASTER tfm
+		LEFT JOIN MOZ_WEB_OPRTR wot
+        	ON tfm.CR_OPRTR_ID = wot.OPRTR_ID
+       	LEFT JOIN MOZ_CM_CD cct
+        	ON tfm.FACILITY_TY = cct.CD_ID
+        LEFT JOIN MOZ_TFC_FACILITY_FILE_INFO tffi
+        	ON tfm.TFC_FACILITY_ID = tffi.TFC_FACILITY_ID
+        WHERE tfm.TFC_FACILITY_ID = #{tfcFacilityId}
+	</select>
+	
+	<insert id="insertTfcFacilityMaster" parameterType="MozTfcFacilityMaster">
+		INSERT INTO MOZ_TFC_FACILITY_MASTER
+            (
+                TFC_FACILITY_ID
+                , FACILITY_TY
+                , FACILITY_STTS
+                , FACILITY_DESC
+                , LAT
+                , LNG
+                , CR_DT
+                , CRTR
+                , FACILITY_NM
+                , ROAD_ADDR
+                , MODEL_NM
+                , MNFCTR
+                , INSTL_YN
+                , INSTL_DATE
+                , INSTLER
+                , CR_OPRTR_ID
+                , CR_OPRTR_DEPT
+            )
+        VALUES
+            (
+                #{tfcFacilityId}
+                , #{facilityTy}
+                , 'Y'
+                , #{facilityDesc}
+                , #{lat}
+                , #{lng}
+                , NOW()
+                , #{crtr}
+                , #{facilityNm}
+                , #{roadAddr}
+                , #{modelNm}
+                , #{mnfctr}
+                , #{instlYn}
+                , #{instlDateString}
+                , #{instler}
+                , #{crOprtrId}
+                , #{crOprtrDept}
+            )
+	</insert>
+	
+	<update id="updateMozTfcFacilityMaster" parameterType="MozTfcFacilityMaster">
+		 UPDATE  MOZ_TFC_FACILITY_MASTER
+        SET     ROAD_ADDR = #{roadAddr}
+                , FACILITY_TY = #{facilityTy}
+                , CR_OPRTR_ID = #{crOprtrId}
+                , MNFCTR = #{mnfctr}
+                , LAT = #{lat}
+                , LNG = #{lng}
+                , CR_OPRTR_DEPT = #{crOprtrDept}
+                , FACILITY_NM = #{facilityDesc}
+                , FACILITY_NM = #{facilityNm}
+                , MODEL_NM = #{modelNm}
+                , INSTL_DATE = #{instlDateString}
+                , INSTLER = #{instler}
+                , INSTL_YN = #{instlYn}
+                , FACILITY_DESC = #{facilityDesc}
+        WHERE   TFC_FACILITY_ID = #{tfcFacilityId}
+	</update>
+	
+	<update id="deleteFacilityImage" parameterType="MozTfcFacilityMaster">
+		UPDATE MOZ_TFC_FACILITY_MASTER
+	    SET    TFC_FACILITY_IMAGEPATH = #{tfcFacilityImagepath},
+	    	   TFC_FACILITY_IMAGENAME = #{tfcFacilityImagename}
+	    WHERE  TFC_FACILITY_ID = #{tfcFacilityId}
+	</update>
+	
+	<delete id="deleteTfcFacilityMasterByTfcFacilityId" parameterType="String">
+		DELETE FROM MOZ_TFC_FACILITY_MASTER
+        WHERE  TFC_FACILITY_ID = #{tfcFacilityId}
+	</delete>
 </mapper>

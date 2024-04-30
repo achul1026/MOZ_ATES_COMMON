@@ -2,8 +2,37 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.moz.ates.traffic.common.repository.common.MozCmCdRepository">
     
+    <sql id="cmCdList-Where">
+    	<if test="searchType == 'all' and searchTxt != null and searchTxt != ''">
+			AND (CD_ID LIKE CONCAT('%', #{searchTxt}, '%') 
+				OR CD_NM LIKE CONCAT('%', #{searchTxt}, '%') )
+		</if>
+		<if test="searchType == 'cdId' and searchTxt != null and searchTxt != ''">
+			AND CD_ID LIKE CONCAT('%', #{searchTxt}, '%') 
+		</if>
+		<if test="searchType == 'cdNm' and searchTxt != null and searchTxt != ''">
+			AND CD_NM LIKE CONCAT('%', #{searchTxt}, '%') 
+		</if>
+		<if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
+            <![CDATA[
+                AND DATE_FORMAT(CR_DT, '%Y-%M-%M') >= #{sDate}
+            ]]>
+        </if>
+        <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
+            <![CDATA[
+                AND DATE_FORMAT(CR_DT, '%Y-%M-%M') <= #{eDate}
+            ]]>
+        </if>
+        <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
+            <![CDATA[
+                AND DATE_FORMAT(CR_DT, '%Y-%M-%M') >= #{sDate}
+                AND DATE_FORMAT(CR_DT, '%Y-%M-%M') <= #{eDate}
+            ]]>
+        </if>
+    </sql>
+    
     <!--  공통 코드 조회  -->
-    <select id="selectCdList" parameterType="String" resultType="com.moz.ates.traffic.common.entity.common.MozCmCd">
+    <select id="findAllCdList" parameterType="String" resultType="MozCmCd">
         SELECT  CD_ID
                 , CD_GROUP_ID
                 , CD_NM
@@ -13,6 +42,141 @@
                 , CR_DT
         FROM    MOZ_CM_CD
         WHERE   CD_GROUP_ID=#{cdGroupId}
+        ORDER BY CD_ID
+    </select>
+    
+    <!--  공통 코드 페이징 조회  -->
+    <select id="findAllCdListByPagination" parameterType="MozCmCd" resultType="MozCmCd">
+        SELECT  
+			ROW_NUMBER() OVER(ORDER BY CD_ID) AS rnum
+        		,CD_ID
+                , CD_GROUP_ID
+                , CD_NM
+                , CD_DESC
+                , USE_YN
+                , CRTR
+                , CR_DT
+        FROM    MOZ_CM_CD
+        WHERE   CD_GROUP_ID = #{cdGroupId}
+        <if test="searchTxt != null and searchTxt != ''">
+        	AND CD_NM LIKE CONCAT('%', #{searchTxt}, '%')
+        </if>
+        ORDER BY rnum
+        LIMIT #{length} OFFSET #{start}
     </select>
 
+    <select id="countByCdGroupId" parameterType="MozCmCd" resultType="int">
+    	SELECT COUNT(1)
+        FROM    MOZ_CM_CD
+        WHERE   CD_GROUP_ID = #{cdGroupId} 
+        <if test="searchTxt != null and searchTxt != ''">
+        	AND CD_NM LIKE CONCAT('%', #{searchTxt}, '%')
+        </if>
+    </select>
+    
+    <select id="countMozCmCd" parameterType="MozCmCd" resultType="int">
+    	SELECT
+    		COUNT(*) AS cnt
+    	FROM MOZ_CM_CD cct
+    	<where>
+    		<include refid="cmCdList-Where"/>
+    		AND cct.CD_GROUP_ID IS NULL
+    	</where>
+    </select>
+    
+    <select id="findAllMozCmCd" parameterType="MozCmCd" resultType="MozCmCd">
+    	SELECT
+    		ROW_NUMBER() OVER(ORDER BY cct.CR_DT) AS rnum
+    		, cct.CD_GROUP_ID
+    		, cct.CD_ID
+    		, cct.CD_NM
+    	FROM MOZ_CM_CD cct
+    	<where>
+    		<include refid="cmCdList-Where"/>
+    		AND cct.CD_GROUP_ID IS NULL
+    	</where>
+    	ORDER BY rnum DESC
+    	LIMIT #{length} OFFSET #{start}
+    </select>
+    
+    <select id="findOneMozCmCd" parameterType="String" resultType="MozCmCd">
+    	SELECT
+    		CD_ID
+    		, CD_GROUP_ID
+    		, CD_NM
+    		, CD_DESC
+    	FROM MOZ_CM_CD
+    	WHERE CD_ID = #{cdId}
+    </select>
+	
+	<insert id="saveMozCmCd" parameterType="MozCmCd">
+        INSERT INTO MOZ_CM_CD	(
+								CD_ID,
+								CD_GROUP_ID,
+								CD_NM,
+								CD_DESC,
+								USE_YN,
+								CR_DT,
+								CRTR
+							)VALUES(
+								#{cdId},
+								#{cdGroupId},
+								#{cdNm},
+								#{cdDesc},
+								#{useYn},
+								NOW(),
+								#{crtr}
+							)
+    </insert>
+    
+    <delete id="deleteMozCmCdByCdIdOrCdGroupId" parameterType="String">
+    	DELETE FROM MOZ_CM_CD
+        WHERE	
+        	CD_ID = #{cdId}
+        	OR CD_GROUP_ID = #{cdId}
+    </delete>
+
+    <delete id="deleteMozCmCdByCdId" parameterType="MozCmCd">
+    	DELETE FROM MOZ_CM_CD
+        WHERE	
+        	CD_ID = #{cdId}
+    </delete>
+    
+    <update id="updateMozCmCd" parameterType="MozCmCd">
+    	UPDATE  MOZ_CM_CD
+        SET     CD_ID = #{cdId}
+                , CD_GROUP_ID = #{cdGroupId}
+                , CD_NM = #{cdNm}
+                , CD_DESC = #{cdDesc}
+        WHERE   CD_ID = #{cdIdOg}
+    </update>
+    
+    <select id="findAllSubCmcd" parameterType="String" resultType="MozCmCd">
+    	SELECT
+    		CD_ID
+    		, CD_GROUP_ID
+    		, CD_NM
+    		, CD_DESC
+    		, USE_YN
+    	FROM MOZ_CM_CD
+    	WHERE CD_GROUP_ID = #{cdId}
+    	ORDER BY CD_ID
+    </select>
+    
+    <select id="countMozCmCdByCdIdForSave" parameterType="MozCmCd" resultType="int">
+			SELECT COUNT(*)
+			FROM MOZ_CM_CD MCC 
+			WHERE MCC.CD_ID = #{cdId}
+    </select>
+    
+    <select id="countMozCmCdByCdIdForUpdate" parameterType="MozCmCd" resultType="int">
+			SELECT COUNT(*)
+			FROM  (
+					SELECT CD_ID
+					FROM MOZ_CM_CD 
+					WHERE CD_ID != #{cdIdOg}
+					) MCC
+			WHERE MCC.CD_ID = #{cdId}
+    </select>
+    
 </mapper>

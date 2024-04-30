@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.board.MozTfcSftyEdctnRepository">
+	<sql id="sftyEdu-Where">
+		<if test="searchType == 'all' and searchTxt != null and searchTxt != ''">
+			AND (tse.POST_TTL LIKE CONCAT('%', #{searchTxt}, '%')
+				OR wot.OPRTR_ACCOUNT_ID LIKE CONCAT('%', #{searchTxt}, '%'))
+		</if>
+		<if test="searchType == 'title' and searchTxt != null and searchTxt != ''">
+			AND tse.POST_TTL LIKE CONCAT('%', #{searchTxt}, '%') 
+		</if>
+		<if test="searchType == 'crtr' and searchTxt != null and searchTxt != ''">
+			AND wot.OPRTR_ACCOUNT_ID LIKE CONCAT('%', #{searchTxt}, '%') 
+		</if>
+	</sql>
+	
+	<resultMap type="MozWebOprtr" id="oprtrForSelectList">
+		<result column="OPRTR_NM" property="oprtrNm"/>
+		<result column="OPRTR_DEPT_NM" property="oprtrDeptNm"/>
+		<result column="OPRTR_ACCOUNT_ID" property="oprtrAccountId"/>
+	</resultMap>
+	
+	<resultMap type="MozTfcSftyEdctn" id="sftyEduForSelectList">
+		<result column="rnum" property="rnum"/>
+		<result column="TFC_SFTY_EDCTN_ID" property="tfcSftyEdctnId"/>
+		<result column="POST_TTL" property="postTtl"/>
+		<result column="POST_STR_DE" property="postStrDe"/>
+		<result column="POST_END_DE" property="postEndDe"/>
+		<result column="EXP_YN" property="expYn"/>
+		<result column="VIEW_CNT" property="viewCnt"/>	
+		<collection property="webOprtr" resultMap="oprtrForSelectList"/>
+	</resultMap>
+	
+	<resultMap type="MozAtchFile" id="atchFileForSelectDetail">
+		<result column="FILE_ORG_NM" property="fileOrgNm"/>
+		<result column="FILE_IDX" property="fileIdx"/>
+	</resultMap>
+	
+	<resultMap type="MozTfcSftyEdctn" id="sftyEduForSelectDetail">
+		<result column="TFC_SFTY_EDCTN_ID" property="tfcSftyEdctnId"/>
+		<result column="POST_TTL" property="postTtl"/>
+		<result column="POST_CN" property="postCn"/>
+		<result column="POST_STR_DE" property="postStrDe"/>
+		<result column="POST_END_DE" property="postEndDe"/>
+		<result column="EXP_YN" property="expYn"/>
+		<result column="VIEW_CNT" property="viewCnt"/>
+		<result column="CR_DT" property="crDt"/>
+		<collection property="webOprtr" resultMap="oprtrForSelectList"/>
+		<collection property="atchFile" resultMap="atchFileForSelectDetail"/>
+	</resultMap>
+	
+	<select id="countMozTfcSftyEdctn" parameterType="MozTfcSftyEdctn" resultType="int">
+		SELECT COUNT(*) AS 'cnt'
+		FROM MOZ_TFC_SFTY_EDCTN tse
+		LEFT JOIN MOZ_WEB_OPRTR wot
+			ON tse.CRTR = wot.OPRTR_ID
+		<where>
+			<include refid="sftyEdu-Where"/>
+		</where>
+	</select>
+	
+	<select id="findAllMozTfcSftyEdctn" parameterType="MozTfcSftyEdctn" resultMap="sftyEduForSelectList">
+		SELECT
+			ROW_NUMBER() OVER(ORDER BY tse.CR_DT) AS rnum
+			, tse.TFC_SFTY_EDCTN_ID
+			, tse.POST_TTL
+			, tse.POST_STR_DE
+			, tse.POST_END_DE
+			, tse.EXP_YN
+			, tse.VIEW_CNT
+			, wot.OPRTR_ACCOUNT_ID
+		FROM MOZ_TFC_SFTY_EDCTN tse	
+		LEFT JOIN MOZ_WEB_OPRTR wot
+			ON tse.CRTR = wot.OPRTR_ID
+		<where>
+			<include refid="sftyEdu-Where"/>
+		</where>
+		ORDER BY rnum DESC
+		LIMIT #{length} OFFSET #{start}
+	</select>
+	
+	<select id="findOneMozTfcSftyEdctnByTfcSftyEdctnId" parameterType="String" resultMap="sftyEduForSelectDetail">
+		SELECT
+			tse.TFC_SFTY_EDCTN_ID
+			, tse.POST_TTL
+			, tse.POST_CN
+			, tse.POST_STR_DE
+			, tse.POST_END_DE
+			, tse.EXP_YN
+			, aft.FILE_ORG_NM
+			, aft.FILE_IDX
+		FROM MOZ_TFC_SFTY_EDCTN tse	
+		LEFT JOIN MOZ_ATCH_FILE aft
+			ON tse.TFC_SFTY_EDCTN_ID = aft.ATCH_IDX
+		<where>
+			tse.TFC_SFTY_EDCTN_ID = #{tfcSftyEdctnId}
+		</where>
+	</select>
+	
+	<insert id="insertMozTfcSftyEdctn" parameterType="MozTfcSftyEdctn">
+		INSERT INTO MOZ_TFC_SFTY_EDCTN 	(
+										TFC_SFTY_EDCTN_ID,
+										POST_TTL,
+										POST_CN,
+										POST_STR_DE,
+										POST_END_DE,
+										EXP_YN,
+										VIEW_CNT,
+										CR_DT,
+										CRTR
+									   )VALUES(
+										#{tfcSftyEdctnId},
+										#{postTtl},
+										#{postCn},
+										#{postStrDeString},
+										#{postEndDeString},
+										#{expYn},
+										#{viewCnt},
+										NOW(),
+										#{crtr}
+									   )
+	</insert>
+	
+	<delete id="deleteMozTfcSftyEdctnByTfcSftyEdctnId" parameterType="String">
+		DELETE
+		FROM MOZ_TFC_SFTY_EDCTN
+		WHERE
+			TFC_SFTY_EDCTN_ID = #{tfcSftyEdctnId}
+	</delete>
+	
+	<update id="updateMozTfcSftyEdctn" parameterType="MozTfcSftyEdctn">
+		UPDATE  MOZ_TFC_SFTY_EDCTN
+        SET     POST_TTL = #{postTtl}
+                , POST_CN = #{postCn}
+                , POST_STR_DE = #{postStrDeString}
+                , POST_END_DE = #{postEndDeString}
+                , EXP_YN = #{expYn}
+                , UPD_DT = NOW()
+                , UPDR = #{updr}
+        WHERE   TFC_SFTY_EDCTN_ID = #{tfcSftyEdctnId}
+	</update>
+	
+	
+ <select id="countAllByExpYnAndPostStrDeAndPostEndDe" parameterType="MozTfcSftyEdctn" resultType="int">
+	SELECT 
+		COUNT(*) 
+	FROM 
+		MOZ_TFC_SFTY_EDCTN MTSE 
+	WHERE 
+		MTSE.EXP_YN = #{expYn}
+	<![CDATA[
+	AND (MTSE.POST_STR_DE <= CURDATE() OR MTSE.POST_STR_DE IS NULL)
+	AND (MTSE.POST_END_DE >= CURDATE() OR MTSE.POST_END_DE IS NULL)
+	]]>
+	<if test="searchTxt != null and searchTxt != ''">
+		AND MTSE.POST_TTL LIKE CONCAT('%', #{searchTxt}, '%') 
+	</if>
+ </select>
+	
+ <select id="findAllByExpYnAndPostStrDeAndPostEndDe" parameterType="MozTfcSftyEdctn" resultType="MozTfcSftyEdctn">
+	SELECT 
+		ROW_NUMBER() OVER(ORDER BY MTSE.CR_DT) AS rnum
+		, MTSE.TFC_SFTY_EDCTN_ID 
+		, MTSE.POST_TTL 
+		, MTSE.CR_DT 
+		, MTSE.VIEW_CNT 
+	FROM MOZ_TFC_SFTY_EDCTN MTSE 
+	WHERE MTSE.EXP_YN = #{expYn}
+	<![CDATA[
+	AND (MTSE.POST_STR_DE <= CURDATE() OR MTSE.POST_STR_DE IS NULL)
+	AND (MTSE.POST_END_DE >= CURDATE() OR MTSE.POST_END_DE IS NULL)
+	]]>
+	<if test="searchTxt != null and searchTxt != ''">
+		AND MTSE.POST_TTL LIKE CONCAT('%', #{searchTxt}, '%') 
+	</if>
+	ORDER BY rnum DESC 
+	LIMIT #{length} OFFSET #{start}
+ </select>
+
+	<update id="updateViewCntByExpYnAndPostStrDeAndPostEndDe" parameterType="MozTfcSftyEdctn">
+		UPDATE MOZ_TFC_SFTY_EDCTN
+		SET VIEW_CNT = VIEW_CNT + 1
+		WHERE EXP_YN = #{expYn}
+		<![CDATA[
+		AND (POST_STR_DE <= CURDATE() OR POST_STR_DE IS NULL)
+		AND (POST_END_DE >= CURDATE() OR POST_END_DE IS NULL)
+		]]>
+		AND TFC_SFTY_EDCTN_ID = #{tfcSftyEdctnId}
+	</update>	
+
+ <select id="findOneByExpYnAndPostStrDeAndPostEndDe" parameterType="MozTfcSftyEdctn" resultMap="sftyEduForSelectDetail">
+	SELECT 
+		MTSE.POST_TTL 
+		,MTSE.POST_CN 
+		, MTSE.VIEW_CNT 
+		, MTSE.CR_DT
+		, MWO.OPRTR_NM 
+		, MWO.OPRTR_DEPT_NM 
+	FROM MOZ_TFC_SFTY_EDCTN MTSE 
+	INNER JOIN MOZ_WEB_OPRTR MWO ON MTSE.CRTR = MWO.OPRTR_ID
+	WHERE MTSE.EXP_YN = #{expYn}
+	<![CDATA[
+	AND (MTSE.POST_STR_DE <= CURDATE() OR MTSE.POST_STR_DE IS NULL)
+	AND (MTSE.POST_END_DE >= CURDATE() OR MTSE.POST_END_DE IS NULL)
+	]]>
+	AND MTSE.TFC_SFTY_EDCTN_ID = #{tfcSftyEdctnId}
+ </select>
+ 
+</mapper>

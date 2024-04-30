@@ -4,7 +4,8 @@ import lombok.Data;
 
 @Data
 public class SearchOption {
-	
+	private int page = 1;
+
 	private int start = 0;
 	private int length = 10;
 
@@ -13,5 +14,11 @@ public class SearchOption {
 	private String searchType;
 	private String searchTxt;
 	
+	private String otherType;
+	
+	private Long yearFilter;
+	
 	private int rnum;
+	
+	private String chartYn = "N";
 }

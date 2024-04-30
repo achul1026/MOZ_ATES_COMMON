@@ -2,57 +2,107 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.moz.ates.traffic.common.repository.payment.MozPlPymntInfoRepository">
 	
-	  <sql id="penaltyPlaceList-Where">
-        <if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
-            <![CDATA[
-                AND TO_CHAR(CR_DT, 'YYYY-MM-DD') >= #{sDate}
-            ]]>
+	 <sql id="penaltyPlaceList-Where">
+	  	<if test="searchType == 'all' and searchTxt != '' and searchTxt != null">
+            AND (ppl.PLACE_PYMNT_NM LIKE CONCAT('%', #{searchTxt}, '%')
+            		OR ppl.PLACE_PYMNT_ADDR LIKE CONCAT('%', #{searchTxt}, '%')
+            		OR ppl.PLACE_PYMNT_CNTC LIKE CONCAT('%', #{searchTxt}, '%'))
         </if>
-        <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
-            <![CDATA[
-                AND TO_CHAR(CR_DT, 'YYYY-MM-DD') <= #{eDate}
-            ]]>
+        <if test="searchType == 'pymntLctnNm' and searchTxt != '' and searchTxt != null">
+            AND ppl.PLACE_PYMNT_NM LIKE CONCAT('%', #{searchTxt}, '%')
         </if>
-        <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
-            <![CDATA[
-             	AND TO_CHAR(CR_DT, 'YYYY-MM-DD') >= #{sDate}
-                AND TO_CHAR(CR_DT, 'YYYY-MM-DD') <= #{eDate}
-            ]]>
+        <if test="searchType == 'pymntLctnAddr' and searchTxt != '' and searchTxt != null">
+            AND ppl.PLACE_PYMNT_ADDR LIKE CONCAT('%', #{searchTxt}, '%')
+        </if>
+        <if test="searchType == 'cntct' and searchTxt != '' and searchTxt != null">
+            AND ppl.PLACE_PYMNT_CNTC LIKE CONCAT('%', #{searchTxt}, '%')
         </if>
     </sql>
     
-    <select id="findAllPenaltyPlaceList" parameterType="com.moz.ates.traffic.common.entity.payment.MozPlPymntInfo" resultType="com.moz.ates.traffic.common.entity.payment.MozPlPymntInfo">
-        SELECT  ROW_NUMBER() OVER(ORDER BY CR_DT) AS rnum
-        		, PLACE_PYMNT_ID
-                , PLACE_PYMNT_NM
-                , PLACE_PYMNT_ADDR
-                , PLACE_PYMNT_RPRSV_NM
-        FROM    MOZ_PL_PYMNT_INFO
+    <resultMap type="MozCmCd" id="cmCdForSelectPenaltyList">
+		<result column="CD_NM" property="cdNm"/>
+	</resultMap>
+
+	<resultMap type="MozPlPymntInfo" id="selectPenaltyPlaceList">
+		<result column="rnum" property="rnum"/>
+		<result column="PLACE_PYMNT_ID" property="placePymntId"/>
+		<result column="PLACE_PYMNT_NM" property="placePymntNm"/>
+		<result column="PLACE_PYMNT_ADDR" property="placePymntAddr"/>
+		<result column="PLACE_PYMNT_RPRSV_NM" property="placePymntRprsvNm"/>
+		<result column="PLACE_PYMNT_TYPE" property="placePymntType"/>
+		<result column="PLACE_PYMNT_CNTC" property="placePymntCntc"/>
+		<result column="OPER_STR_TM" property="operStrTm"/>
+		<result column="OPER_END_TM" property="operEndTm"/>
+		<result column="CLSD_DT" property="clsdDt"/>
+		<collection property="cmCd" resultMap="cmCdForSelectPenaltyList"/>
+	</resultMap>	
+	
+	<resultMap type="MozCmCd" id="cmCdForSelectPenaltyDetail">
+		<result column="CD_NM" property="cdNm"/>
+	</resultMap>
+
+	<resultMap type="MozPlPymntInfo" id="selectPenaltyPlaceDetail">
+		<result column="rnum" property="rnum"/>
+		<result column="PLACE_PYMNT_ID" property="placePymntId"/>
+		<result column="PLACE_PYMNT_NM" property="placePymntNm"/>
+		<result column="PLACE_PYMNT_ADDR" property="placePymntAddr"/>
+		<result column="PLACE_PYMNT_RPRSV_NM" property="placePymntRprsvNm"/>
+		<result column="PLACE_PYMNT_TYPE" property="placePymntType"/>
+		<result column="PLACE_PYMNT_CNTC" property="placePymntCntc"/>
+		<result column="OPER_STR_TM" property="operStrTm"/>
+		<result column="OPER_END_TM" property="operEndTm"/>
+		<result column="CLSD_DT" property="clsdDt"/>
+		<collection property="cmCd" resultMap="cmCdForSelectPenaltyDetail"/>
+	</resultMap>	
+    
+    <select id="findAllPenaltyPlaceList" parameterType="MozPlPymntInfo" resultMap="selectPenaltyPlaceList">
+        SELECT  ROW_NUMBER() OVER(ORDER BY ppl.CR_DT) AS rnum
+        		, ppl.PLACE_PYMNT_ID
+                , ppl.PLACE_PYMNT_NM
+                , ppl.PLACE_PYMNT_ADDR
+                , ppl.PLACE_PYMNT_RPRSV_NM
+                , ppl.PLACE_PYMNT_TYPE
+                , ppl.PLACE_PYMNT_CNTC
+                , ppl.OPER_STR_TM
+                , ppl.OPER_END_TM
+                , ppl.CLSD_DT
+<!--                 , cct.CD_NM -->
+        FROM    MOZ_PL_PYMNT_INFO ppl
+<!--         INNER JOIN MOZ_CM_CD cct -->
+<!--         	ON ppl.PLACE_PYMNT_TYPE = cct.CD_ID -->
         WHERE   1=1
         <include refid="penaltyPlaceList-Where"/>
         ORDER BY rnum DESC
         LIMIT #{length} OFFSET #{start}
     </select>
     
-    <select id="countPenaltyPlaceList" parameterType="com.moz.ates.traffic.common.entity.payment.MozPlPymntInfo" resultType="int">
+    <select id="countPenaltyPlaceList" parameterType="MozPlPymntInfo" resultType="int">
         SELECT  COUNT(*)    AS "cnt"
         FROM    MOZ_PL_PYMNT_INFO
         WHERE   1=1
     </select>
     
-    <select id="findOnePenaltyPlaceDetail" parameterType="String" resultType="com.moz.ates.traffic.common.entity.payment.MozPlPymntInfo">
-        SELECT  PLACE_PYMNT_ID
-                , PLACE_PYMNT_NM
-                , PLACE_PYMNT_ADDR
-                , PLACE_PYMNT_RPRSV_NM
-                , CR_DT
-                , CRTR
-        FROM    MOZ_PL_PYMNT_INFO
-        WHERE   PLACE_PYMNT_ID = #{placePymntId}
+    <select id="findOnePenaltyPlaceDetail" parameterType="String" resultMap="selectPenaltyPlaceDetail">
+        SELECT  ppl.PLACE_PYMNT_ID
+                , ppl.PLACE_PYMNT_NM
+                , ppl.PLACE_PYMNT_ADDR
+                , ppl.PLACE_PYMNT_RPRSV_NM
+                , ppl.PLACE_PYMNT_TYPE
+                , ppl.PLACE_PYMNT_CNTC
+                , ppl.OPER_STR_TM
+                , ppl.OPER_END_TM
+                , ppl.CLSD_DT
+                , ppl.CR_DT
+                , ppl.CRTR
+<!--                 , cct.CD_NM -->
+        FROM    MOZ_PL_PYMNT_INFO ppl
+<!--         INNER JOIN MOZ_CM_CD cct -->
+<!--         	ON ppl.PLACE_PYMNT_TYPE = cct.CD_ID -->
+        WHERE   ppl.PLACE_PYMNT_ID = #{placePymntId}
     </select>
     
    	<!-- 납부지 조회 -->
-	<select id="selectPlacePaymentList" parameterType="com.moz.ates.traffic.common.entity.payment.MozPlPymntInfo" resultType="com.moz.ates.traffic.common.entity.payment.MozPlPymntInfo">
+	<select id="findAllPlacePaymentList" parameterType="MozPlPymntInfo" resultType="MozPlPymntInfo">
 		SELECT 	PLACE_PYMNT_ID			AS "placePymntId",
 				PLACE_PYMNT_NM			AS "placePymntNm",
 				PLACE_PYMNT_ADDR		AS "placePymntAddr",
@@ -63,29 +113,44 @@
 		</if>
 	</select>
     
-   	<update id="updatePenaltyPlace" parameterType="com.moz.ates.traffic.common.entity.payment.MozPlPymntInfo">
+   	<update id="updatePenaltyPlace" parameterType="MozPlPymntInfo">
         UPDATE  MOZ_PL_PYMNT_INFO
         SET     PLACE_PYMNT_NM = #{placePymntNm}
+        		, PLACE_PYMNT_TYPE = #{placePymntType}
                 , PLACE_PYMNT_ADDR = #{placePymntAddr}
+                , PLACE_PYMNT_CNTC = #{placePymntCntc}
+                , OPER_STR_TM = #{operStrTm}
+                , OPER_END_TM = #{operEndTm}
+                , CLSD_DT = #{clsdDt}
                 , PLACE_PYMNT_RPRSV_NM = #{placePymntRprsvNm}
         WHERE   PLACE_PYMNT_ID = #{placePymntId}
     </update>
 	
-	<insert id="saveMozPlPymntInfo" parameterType="com.moz.ates.traffic.common.entity.payment.MozPlPymntInfo">
+	<insert id="saveMozPlPymntInfo" parameterType="MozPlPymntInfo">
         INSERT INTO MOZ_PL_PYMNT_INFO
             (
                 PLACE_PYMNT_ID
                 , PLACE_PYMNT_NM
+                , PLACE_PYMNT_TYPE
                 , PLACE_PYMNT_ADDR
+                , PLACE_PYMNT_CNTC
+                , OPER_STR_TM
+                , OPER_END_TM
+                , CLSD_DT
                 , PLACE_PYMNT_RPRSV_NM
                 , CR_DT
                 , CRTR
             )
         VALUES
             (
-                PLACE_SEQ.NEXTVAL
+                #{placePymntId}
                , #{placePymntNm}
+               , #{placePymntType}
                , #{placePymntAddr}
+               , #{placePymntCntc}
+               , #{operStrTm}
+               , #{operEndTm}
+               , #{clsdDt}
                , #{placePymntRprsvNm}
                , NOW()
                , #{crtr}

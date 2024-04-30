@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.accident.MozTfcAcdntTrgtInfoRepository">
+	
+	<resultMap type="MozCmCd" id="cmCdForSelectDetail">
+		<result column="CD_NM" property="cdNm"/>
+	</resultMap>
+	
+	<resultMap type="MozTfcAcdntTrgtPnrInfo" id="tfcAcdntTrgtPnrInfoForSelectDetail">
+		<result column="ACDNT_TRGT_PNR_ID" property="acdntTrgtPnrId"/>
+		<result column="PNR_DVR_LCEN_ID" property="pnrDvrLcenId"/>
+		<result column="DVR_LCEN_TY" property="dvrLcenTy"/>
+		<result column="PNR_NM" property="pnrNm"/>
+		<result column="PNR_BRTH" property="pnrBrth"/>
+		<result column="PNR_ADDR" property="pnrAddr"/>
+		<result column="PNR_PNO" property="pnrPno"/>
+		<result column="PNR_EMAIL" property="pnrEmail"/>
+		<result column="DRV_YN" property="drvYn"/>
+		<result column="PNR_DMG_CD" property="pnrDmgCd"/>		
+		<result column="PNR_DMG_DESC" property="pnrDmgDesc"/>
+		<result column="PNR_DRVR_RLTN_CD" property="pnrDrvrRltnCd"/>
+		<result column="PNR_DEAD_YN" property="pnrDeadYn"/>
+		<result column="PNR_DMG_CD" property="pnrDmgCd"/>
+	</resultMap>
+	
+	<resultMap type="MozTfcAcdntTrgtInfo" id="tfcAcdntTrgtInfoSelectDetail">
+		<result column="DVR_LCEN_ID" property="dvrLcenId"/>
+		<result column="ACDNT_TRGT_ID" property="acdntTrgtId"/>
+		<result column="ACDNT_TRGT_CD" property="acdntTrgtCd"/>
+		<result column="VH_TY" property="vhTy"/>
+		<result column="VH_REG_NO" property="vhRegNo"/>
+		<result column="ACDNT_DMG_CD" property="acdntDmgCd"/>
+		<result column="DV_YN" property="dvYn"/>
+		<result column="ACDNT_DMG_CD" property="acdntDmgCd"/>
+		<result column="ACDNT_TRGT_PNO" property="acdntTrgtPno"/>
+		<result column="ACDNT_TRGT_NM" property="acdntTrgtNm"/>
+		<result column="DEAD_YN" property="deadYn"/>
+		<result column="ACDNT_TRGT_BRTH" property="acdntTrgtBrth"/>
+		<collection property="cmCd" resultMap="cmCdForSelectDetail"/>
+		<collection property="tfcAcdntTrgtPnrInfo" resultMap="tfcAcdntTrgtPnrInfoForSelectDetail"/>
+	</resultMap>
+	
+	<select id="findAllTfcAcdntTrgtByTfcAcdntId" parameterType="String" resultMap="tfcAcdntTrgtInfoSelectDetail">
+		SELECT 
+			tati.DVR_LCEN_ID 
+			, tati.ACDNT_TRGT_ID
+			, tati.ACDNT_TRGT_CD 
+			, tati.VH_TY 
+			, tati.VH_REG_NO 
+			, tati.DV_YN 
+			, tati.ACDNT_DMG_CD 
+			, tati.ACDNT_TRGT_PNO 
+			, tati.ACDNT_TRGT_NM
+			, tati.ACDNT_TRGT_BRTH 
+			, tati.DEAD_YN 
+			, tatpi.ACDNT_TRGT_PNR_ID
+			, tatpi.PNR_NM
+			, tatpi.PNR_PNO
+			, tatpi.PNR_ADDR
+			, tatpi.PNR_BRTH
+			, tatpi.PNR_EMAIL
+			, tatpi.DRV_YN
+			, tatpi.PNR_DEAD_YN
+			, tatpi.PNR_DVR_LCEN_ID
+			, tatpi.DVR_LCEN_TY
+			, tatpi.PNR_DRVR_RLTN_CD
+			, tatpi.PNR_DMG_DESC
+			, tatpi.PNR_DMG_CD
+		FROM MOZ_TFC_ACDNT_TRGT_INFO tati
+		LEFT JOIN MOZ_TFC_ACDNT_TRGT_PNR_INFO tatpi	
+			ON tati.ACDNT_TRGT_ID = tatpi.ACDNT_TRGT_ID 
+		WHERE tati.TFC_ACDNT_ID = #{tfcAcdntId}
+	</select>
+	
+	<insert id="saveMozTfcAcdntTrgtInfo" parameterType="MozTfcAcdntTrgtInfo">
+		INSERT INTO MOZATES.MOZ_TFC_ACDNT_TRGT_INFO (
+			ACDNT_TRGT_ID,
+			TFC_ACDNT_ID,
+			DVR_LCEN_ID,
+			ACDNT_TRGT_CD,
+			VH_TY,
+			VH_REG_NO,
+			DV_YN,
+			ACDNT_DMG_CD,
+			ACDNT_TRGT_PNO,
+			ACDNT_TRGT_BRTH,
+			ACDNT_TRGT_NM,
+			ACDNT_TRGT_SORT_NO,
+			CR_DT,
+			CRTR,
+			DEAD_YN
+		) VALUES ( 
+			#{acdntTrgtId},
+			#{tfcAcdntId},
+			#{dvrLcenId},
+			#{acdntTrgtCd},
+			#{vhTy},
+			#{vhRegNo},
+			#{dvYn},
+			#{acdntDmgCd},
+			#{acdntTrgtPno},
+			#{acdntTrgtBrth},
+			#{acdntTrgtNm},
+			#{acdntTrgtSortNo},
+			now(),
+			#{crtr},
+			#{deadYn}
+		)
+	</insert>
+	
+	<update id="updateMozTfcAcdntTrgtInfo" parameterType="MozTfcAcdntTrgtInfo">
+		UPDATE  MOZ_TFC_ACDNT_TRGT_INFO
+        SET     ACDNT_TRGT_CD=#{acdntTrgtCd}
+        		, DVR_LCEN_ID=#{dvrLcenId}
+                , VH_REG_NO=#{vhRegNo}
+                , VH_TY=#{vhTy}
+                , DV_YN=#{dvYn}
+                , ACDNT_DMG_CD=#{acdntDmgCd}
+                , ACDNT_TRGT_PNO=#{acdntTrgtPno}
+                , ACDNT_TRGT_BRTH=#{acdntTrgtBrth}
+                , ACDNT_TRGT_NM=#{acdntTrgtNm}
+                , DEAD_YN=#{deadYn}
+        WHERE   ACDNT_TRGT_ID=#{acdntTrgtId}
+	</update>
+	
+	<delete id="deleteMozTfcAcdntTrgtInfoByAcdntTrgtId" parameterType="String">
+		DELETE FROM MOZ_TFC_ACDNT_TRGT_INFO
+		WHERE ACDNT_TRGT_ID=#{acdntTrgtId}
+	</delete>
+	
+	<select id="findAllTfcAcdntTrgtByTfcAcdntIdOrderByAcdntTrgtSortNo" parameterType="String" resultType="MozTfcAcdntTrgtInfo">
+     SELECT 
+	     	MTATI.ACDNT_TRGT_ID
+	     	, MTATI.ACDNT_TRGT_CD
+	     	, MTATI.DVR_LCEN_ID 
+	     	, MTATI.VH_TY 
+	     	, MTATI.VH_REG_NO 
+	     	, MTATI.DV_YN 
+		 		, MTATI.ACDNT_TRGT_PNO 
+		 		, MTATI.ACDNT_TRGT_BRTH 
+		 		, MTATI.ACDNT_TRGT_NM 
+		 		, MTATI.DEAD_YN 
+		 		, TRGTCD.CD_NM AS ACDNT_TRGT_CD_NM
+		 		, DMGCD.CD_NM AS ACDNT_DMG_CD_NM
+     FROM 
+     	MOZ_TFC_ACDNT_TRGT_INFO MTATI 
+	     LEFT JOIN MOZ_CM_CD TRGTCD ON MTATI.ACDNT_TRGT_CD = TRGTCD.CD_ID 
+	     LEFT JOIN MOZ_CM_CD DMGCD ON MTATI.ACDNT_DMG_CD = DMGCD.CD_ID 
+     WHERE 
+     	MTATI.TFC_ACDNT_ID = #{tfcAcdntId}
+     ORDER BY MTATI.ACDNT_TRGT_SORT_NO
+	</select>
+	
+	
+	<select id="findAllTfcAcdntTrgtByDvrLcenId" parameterType="String" resultType="MozTfcAcdntTrgtInfo">
+		SELECT 
+			MTATI.TFC_ACDNT_ID,
+			MTATI.DVR_LCEN_ID,
+			MTATI.VH_TY,
+			MTATI.VH_REG_NO,
+			MTATI.DV_YN,
+			MTATI.ACDNT_TRGT_PNO,
+			MTATI.ACDNT_TRGT_NM,
+			MTATI.ACDNT_TRGT_BRTH,
+			MTAM.ROAD_ADDR,
+			MTAM.ACDNT_DT
+		FROM 
+		MOZ_TFC_ACDNT_TRGT_INFO MTATI
+		INNER JOIN MOZ_TFC_ACDNT_MASTER MTAM
+		ON MTAM.TFC_ACDNT_ID = MTATI.TFC_ACDNT_ID
+		WHERE MTATI.DVR_LCEN_ID = #{dvrLcenId}
+		AND MTAM.DEL_YN = 'N'
+	</select>
+</mapper>

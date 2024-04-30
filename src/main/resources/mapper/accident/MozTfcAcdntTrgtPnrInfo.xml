@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.accident.MozTfcAcdntTrgtPnrInfoRepository">	
+	<select id="findAllTfcAcdntPnrInfoByTfcAcdntId" parameterType="String" resultType="MozTfcAcdntTrgtPnrInfo">
+		SELECT
+			tatpi.ACDNT_TRGT_PNR_ID
+			, tatpi.PNR_DVR_LCEN_ID
+			, tatpi.PNR_NM
+			, tatpi.PNR_PNO
+			, tatpi.PNR_DMG_CD
+			, tatpi.PNR_DMG_DESC
+			, tatpi.PNR_DRVR_RLTN_CD
+		FROM MOZ_TFC_ACDNT_TRGT_PNR_INFO tatpi
+		WHERE tatpi.TFC_ACDNT_ID = #{tfcAcdntId}
+	</select>
+	
+	<!-- 탑승자 정보 등록 -->
+	<insert id="insertTrgtPnrAcdntInfo" parameterType="MozTfcAcdntTrgtPnrInfo">
+		INSERT INTO MOZ_TFC_ACDNT_PNR_INFO
+			(
+				DVR_ID,
+				TFC_ACDNT_ID,
+				DVR_LCEN_ID,
+				PNR_NM,
+				PNR_BRTH,
+				PNR_ADDR,
+				PNR_PNO,
+				PNR_EMAIL,
+				DV_YN,
+				DVR_LCEN_TY,
+				CR_DT,
+				CRTR,
+				PNR_DMG_CD,
+				PNR_DMG_DESC,
+				PNR_DRVR_RLTN_CD,
+				VHCL_NO,
+				DEATH_STATUS
+			)VALUES(
+				#{dvrId},
+				#{tfcAcdntId},
+				#{dvrLcenId},
+				#{pnrNm},
+				#{pnrBrth},
+				#{pnrAddr},
+				#{pnrPno},
+				#{pnrEmail},
+				#{dvYn},
+				#{dvrLcenTy},
+				NOW(),
+				#{crtr},
+				#{pnrDmgCd},
+				#{pnrDmgDesc},
+				#{pnrDrvrRltnCd},
+				#{vhclNo},
+				#{deathStatus}
+			)
+	</insert>
+	
+	<update id="updateMozTfcAcdntTrgtPnrInfo" parameterType="MozTfcAcdntTrgtPnrInfo">
+		UPDATE  MOZ_TFC_ACDNT_TRGT_PNR_INFO
+        SET     PNR_SORT_NO=#{pnrSortNo}
+        		, DRV_YN=#{drvYn}
+        		, PNR_DVR_LCEN_ID=#{pnrDvrLcenId}
+        		, DVR_LCEN_TY=#{dvrLcenTy}
+        		, PNR_NM=#{pnrNm}
+        		, PNR_ADDR=#{pnrAddr}
+        		, PNR_BRTH=#{pnrBrth}
+        		, PNR_EMAIL=#{pnrEmail}
+                , PNR_PNO=#{pnrPno}
+                , PNR_DMG_CD=#{pnrDmgCd}
+                , PNR_DMG_DESC=#{pnrDmgDesc}
+                , PNR_DRVR_RLTN_CD=#{pnrDrvrRltnCd}
+                , PNR_DEAD_YN=#{pnrDeadYn}
+        WHERE   ACDNT_TRGT_PNR_ID=#{acdntTrgtPnrId}
+	</update>
+	
+	<insert id="saveMozTfcAcdntTrgtPnrInfo" parameterType="MozTfcAcdntTrgtPnrInfo">
+		INSERT INTO MOZATES.MOZ_TFC_ACDNT_TRGT_PNR_INFO (
+			ACDNT_TRGT_PNR_ID,
+			ACDNT_TRGT_ID,
+			TFC_ACDNT_ID,
+			PNR_DVR_LCEN_ID,
+			DVR_LCEN_TY,
+			PNR_NM,
+			PNR_ADDR,
+			PNR_BRTH,
+			PNR_PNO,
+			PNR_EMAIL,
+			PNR_DMG_CD,
+			PNR_DMG_DESC,
+			PNR_SORT_NO,
+			CR_DT,
+			CRTR,
+			PNR_DRVR_RLTN_CD,
+			DRV_YN,
+			PNR_DEAD_YN
+		) VALUES ( 
+			#{acdntTrgtPnrId},
+			#{acdntTrgtId},
+			#{tfcAcdntId},
+			#{pnrDvrLcenId},
+			#{dvrLcenTy},
+			#{pnrNm},
+			#{pnrAddr},
+			#{pnrBrth},
+			#{pnrPno},
+			#{pnrEmail},
+			#{pnrDmgCd},
+			#{pnrDmgDesc},
+			#{pnrSortNo},
+			now(),
+			#{crtr},
+			#{pnrDrvrRltnCd},
+			#{drvYn},
+			#{pnrDeadYn}
+		)
+	</insert>
+	
+	<delete id="deleteMozTfcAcdntPnrInfoByAcdntTrgtPnrId" parameterType="String">
+		DELETE FROM MOZ_TFC_ACDNT_TRGT_PNR_INFO
+		WHERE ACDNT_TRGT_PNR_ID=#{acdntTrgtPnrId}
+	</delete>
+	
+	<select id="findAllTfcAcdntTrgtInfoByTfcAcdntIdOrderByPnrSortNo" parameterType="String" resultType="MozTfcAcdntTrgtPnrInfo">
+      SELECT 
+      	MTATPI.ACDNT_TRGT_ID 
+      	, MTATPI.PNR_DVR_LCEN_ID 
+      	, MTATPI.DVR_LCEN_TY 
+      	, MTATPI.PNR_NM 
+      	, MTATPI.PNR_ADDR 
+      	, MTATPI.PNR_BRTH 
+      	, MTATPI.PNR_PNO 
+      	, MTATPI.PNR_SORT_NO 
+      	, MTATPI.PNR_DMG_DESC 
+      	, MTATPI.DRV_YN 
+      	, MTATPI.PNR_DEAD_YN 
+  		, DMGCD.CD_NM AS PNR_DMG_CD_NM
+  		, RLTNCD.CD_NM AS PNR_DRVR_RLTN_CD_NM
+      FROM MOZ_TFC_ACDNT_TRGT_PNR_INFO MTATPI 
+	     LEFT JOIN MOZ_CM_CD DMGCD ON MTATPI.PNR_DMG_CD = DMGCD.CD_ID 
+	     LEFT JOIN MOZ_CM_CD RLTNCD ON MTATPI.PNR_DRVR_RLTN_CD = RLTNCD.CD_ID 
+      WHERE MTATPI.TFC_ACDNT_ID = #{tfcAcdntId}
+      ORDER BY MTATPI.PNR_SORT_NO 
+	</select>
+</mapper>

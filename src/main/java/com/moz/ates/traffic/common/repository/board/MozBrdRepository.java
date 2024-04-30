@@ -9,11 +9,11 @@ import com.moz.ates.traffic.common.entity.board.MozBrd;
 @Mapper
 public interface MozBrdRepository {
 	
-	public List<MozBrd> selectNoticeList(MozBrd brd);
+	public List<MozBrd> findAllNoticeList(MozBrd brd);
 	
-	public int selectNoticeListCnt(MozBrd brd);
+	public int countNoticeListCnt(MozBrd brd);
 	
-	public MozBrd selectNoticeDetail(String boardIdx);
+	public MozBrd findOneNoticeDetail(String boardIdx);
 	
 	public void insertNotice(MozBrd brd);
 	
@@ -48,4 +48,48 @@ public interface MozBrdRepository {
      * @return : 
      */
 	public void saveMozBrd(MozBrd brd);
+	
+	
+//************************* for Portal start
+	/**
+	  * @Method Name : findAllByUseYn
+	  * @Date : 2024. 2. 23.
+	  * @Author : IK.MOON
+	  * @Method Brief : 공지사항 리스트 조회
+	  * @param brd
+	  * @return
+	  */
+	public List<MozBrd> findAllByUseYn(MozBrd brd);
+	
+	/**
+	  * @Method Name : countByUseYn
+	  * @Date : 2024. 2. 23.
+	  * @Author : IK.MOON
+	  * @Method Brief : 공지사항 count 조회
+	  * @param brd
+	  * @return
+	  */
+	public int countByUseYn(MozBrd brd);
+	
+	/**
+	  * @Method Name : findOneByBoardIdx
+	  * @Date : 2024. 2. 23.
+	  * @Author : IK.MOON
+	  * @Method Brief : 공지사항 상세 조회
+	  * @param boardIdx
+	  * @return
+	  */
+	public MozBrd findOneByBoardIdxAnduseYnAndCateCd(MozBrd mozBrd);
+	
+	/**
+	  * @Method Name : updateViewCnt
+	  * @Date : 2024. 2. 23.
+	  * @Author : IK.MOON
+	  * @Method Brief : 공지사항 조회수 증가
+	  * @param boardIdx
+	  */
+	public void updateViewCnt(String boardIdx);
+	
+//************************* for Portal end
+	
 }

@@ -9,8 +9,6 @@ import com.moz.ates.traffic.common.entity.board.MozFaq;
 @Mapper
 public interface MozFaqRepository {
 	
-	public List<MozFaq> selectFaqListForPortal(MozFaq faq);
-	
 	public void deleteFaq(String faqIdx);
 
     /**
@@ -72,4 +70,48 @@ public interface MozFaqRepository {
      * @return : 
      */
 	public void deleteMozFaq(String faqIdx);
+	
+	
+// ************************* for PORTAL start
+	
+	/**
+	  * @Method Name : findAllByDelYn
+	  * @Date : 2024. 2. 21.
+	  * @Author : IK.MOON
+	  * @Method Brief : FAQ 리스트 조회
+	  * @param mozFaq
+	  * @return
+	  */
+	public List<MozFaq> findAllByDelYn(MozFaq mozFaq);
+	
+	/**
+	  * @Method Name : countAllBtDelYn
+	  * @Date : 2024. 2. 21.
+	  * @Author : IK.MOON
+	  * @Method Brief : FAQ 리스트 개수 조회
+	  * @param mozFaq
+	  * @return
+	  */
+	public int countAllBtDelYn(MozFaq mozFaq);
+
+	/**
+	  * @Method Name : findOneByDelYnAndFaqIdx
+	  * @Date : 2024. 2. 23.
+	  * @Author : IK.MOON
+	  * @Method Brief : FAQ 상세 조회
+	  * @param mozFaq
+	  * @return
+	  */
+	public MozFaq findOneByDelYnAndFaqIdx(MozFaq mozFaq);
+	
+	/**
+	  * @Method Name : updateViewCnt
+	  * @Date : 2024. 2. 23.
+	  * @Author : IK.MOON
+	  * @Method Brief : FAQ 조회수 증가
+	  * @param mozFaq
+	  */
+	public void updateViewCnt(MozFaq mozFaq);
+//************************* for PORTAL end
+	
 }

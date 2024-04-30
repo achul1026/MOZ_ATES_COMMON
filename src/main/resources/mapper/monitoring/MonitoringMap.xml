@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.monitoring.MonitoringMapRepository">
+    
+    <select id="findAllFacilityByFacilityTy" parameterType="map" resultType="map">
+        SELECT
+            mcc.CD_ID,
+            mcc.CD_NM,
+            mtfm.FACILITY_TY,
+            mtfm.FACILITY_NM,
+            mtfm.FACILITY_STTS,
+            mtfm.LAT,
+            mtfm.LNG,
+            mtfm.ROAD_ADDR
+        FROM
+            MOZ_TFC_FACILITY_MASTER mtfm
+                inner join MOZ_CM_CD mcc on CD_GROUP_ID  = 'TRAFFIC_FACILITY_TYPE' and mtfm.FACILITY_TY = mcc.CD_ID
+        where mtfm.LNG is not null and mtfm.LAT is not null
+          <if test="facilityTy != null and facilityTy != ''">
+            and mtfm.FACILITY_TY = #{facilityTy}
+          </if>
+    </select>
+
+    <select id="findAllEquipmentByEquipmentTy" parameterType="map" resultType="map">
+		SELECT 
+		     MCC.CD_ID,
+		     MCC.CD_NM,
+		     MTEEM.EQP_TY,
+		     MTEEM.EQP_NM,
+		     MTEEM.USE_YN,
+		     MTEEM.LAT,
+		     MTEEM.LNG,
+		     MTEEM.ROAD_ADDR
+		FROM MOZ_TFC_ENF_EQP_MASTER MTEEM
+		INNER JOIN MOZ_CM_CD MCC ON CD_GROUP_ID  = 'EQUIPMENT_TYPE' AND MTEEM.EQP_TY = MCC.CD_ID
+		WHERE MTEEM.LNG IS NOT NULL AND MTEEM.LAT IS NOT NULL
+          <if test="eqpTy != null and eqpTy != ''">
+            AND MTEEM.EQP_TY = #{eqpTy}
+          </if>
+          <if test="useYn != null and useYn != ''">
+          	AND MTEEM.USE_YN = #{useYn}
+          </if>
+    </select>
+
+    <select id="findAllEnforcementByDate" parameterType="map" resultType="map">
+        SELECT
+        	mtem.TFC_ENF_ID,
+        	mtem.ROAD_ADDR,
+            mcc.CD_ID,
+            mcc.CD_NM,
+            CAST(mtem.LAT as CHAR) as LAT,
+            CAST(mtem.LNG as CHAR) as LNG,
+            1 as CNT
+        FROM
+            MOZ_TFC_ENF_MASTER mtem
+                inner join MOZ_VIO_INFO mvi on mtem.VIO_ID = mvi.VIO_ID
+                inner join MOZ_TFC_ENF_FINE_INFO mtefi on mtem.TFC_ENF_ID = mtefi.TFC_ENF_ID
+                inner join MOZ_TFC_LW_INFO mtli on mtefi.TFC_LAW_ID = mtli.TFC_LAW_ID
+                inner join MOZ_CM_CD mcc on mcc.CD_GROUP_ID = 'LAW_TYPE_CD' and mcc.CD_ID = mtli.LAW_TYPE
+        WHERE
+            mtem.DEL_YN != 'Y'
+            and mtem.lat is not null and mtem.lng is not null
+            <choose>
+                <when test="(startDate != null and startDate != '') and (endDate != null and endDate != '')">
+                    and mtem.TFC_ENF_DT between concat(#{startDate},' 00:00:00') and concat(#{endDate},' 23:59:59')
+                </when>
+                <otherwise>
+                    and mtem.TFC_ENF_DT >= CURRENT_DATE()
+                </otherwise>
+            </choose>
+    </select>
+
+    <select id="findAllAccidentByDate" parameterType="map" resultType="map">
+        SELECT
+        mtam.TFC_ACDNT_ID,
+        CAST(mtam.LAT as CHAR) as LAT,
+        CAST(mtam.LNG as CHAR) as LNG,
+        mtam.ROAD_ADDR ,
+        mtam.ACDNT_TY_CD ,
+        count(mtatpi.ACDNT_TRGT_PNR_ID) as ACDNT_PNR_CNT
+        FROM
+        MOZ_TFC_ACDNT_MASTER mtam
+        left join MOZ_TFC_ACDNT_TRGT_PNR_INFO mtatpi on mtam.TFC_ACDNT_ID = mtatpi.TFC_ACDNT_ID
+        where
+        mtam.LNG is not NULL and mtam.LAT is not NULL
+        <choose>
+            <when test="(startDate != null and startDate != '') and (endDate != null and endDate != '')">
+                and  mtam.ACDNT_DT between concat(#{startDate},' 00:00:00') and concat(#{endDate},' 23:59:59')
+            </when>
+            <otherwise>
+                and mtam.ACDNT_DT >= CURRENT_DATE()
+            </otherwise>
+        </choose>
+        group by
+        mtam.TFC_ACDNT_ID,
+        mtam.LAT,
+        mtam.LNG,
+        mtam.ROAD_ADDR ,
+        mtam.ACDNT_TY_CD
+    </select>
+    
+    <!-- 어드민 대시보드 모니터링용 -->
+    <select id="findAllAccidentByDateForAdminDashboard" parameterType="map" resultType="map">
+        SELECT
+        mtam.TFC_ACDNT_ID,
+        CAST(mtam.LAT as CHAR) as LAT,
+        CAST(mtam.LNG as CHAR) as LNG,
+        mtam.ROAD_ADDR ,
+        mtam.ACDNT_TY_CD,
+        mcc.CD_ID,
+        mcc.CD_NM,
+        count(mtatpi.ACDNT_TRGT_PNR_ID) as ACDNT_PNR_CNT
+        FROM
+        MOZ_TFC_ACDNT_MASTER mtam
+        left join MOZ_TFC_ACDNT_TRGT_PNR_INFO mtatpi on mtam.TFC_ACDNT_ID = mtatpi.TFC_ACDNT_ID
+        inner join MOZ_CM_CD mcc on mcc.CD_GROUP_ID = 'ACCIDENT_TYPE' and mcc.CD_ID = mtam.ACDNT_TY_CD
+        where
+        mtam.LNG is not NULL and mtam.LAT is not NULL
+        <choose>
+            <when test="(startDate != null and startDate != '') and (endDate != null and endDate != '')">
+                and  mtam.ACDNT_DT between concat(#{startDate},' 00:00:00') and concat(#{endDate},' 23:59:59')
+            </when>
+            <otherwise>
+                and mtam.ACDNT_DT >= CURRENT_DATE()
+            </otherwise>
+        </choose>
+        group by
+        mtam.TFC_ACDNT_ID,
+        mtam.LAT,
+        mtam.LNG,
+        mtam.ROAD_ADDR ,
+        mtam.ACDNT_TY_CD
+    </select>
+
+    <select id="findAccidentListRecentlyLimit10" parameterType="map" resultType="map">
+        SELECT
+            mtam.TFC_ACDNT_ID as id,
+            mtam.ACDNT_DT as genDate,
+            mcc.CD_NM as type,
+            mtam.ROAD_ADDR as roadName,
+            mtam.POL_ID as polId,
+            mpi.POL_NM as polNm,
+            mpi.POL_LCEN_ID as polLcenId,
+            mtam.ACDNT_CHILD_YN as acdntChildYn,
+            CAST(mtam.LAT as CHAR) as LAT,
+            CAST(mtam.LNG as CHAR) as LNG
+        FROM
+            MOZ_TFC_ACDNT_MASTER mtam
+                inner join MOZ_CM_CD mcc on mcc.CD_GROUP_ID = 'ACCIDENT_TYPE' and mcc.CD_ID = mtam.ACDNT_TY_CD
+                inner join MOZ_POL_INFO mpi on mtam.POL_ID = mpi.POL_ID
+        where
+            mtam.LAT is not null and mtam.LNG  is not null
+        group by
+            mtam.TFC_ACDNT_ID,
+            mtam.ACDNT_DT ,
+            mcc.CD_NM ,
+            mtam.ROAD_ADDR ,
+            mtam.POL_ID ,
+            mpi.POL_NM ,
+            mpi.POL_LCEN_ID ,
+            mtam.ACDNT_CHILD_YN,
+            mtam.LAT,
+            mtam.LNG
+        order by mtam.ACDNT_DT desc
+            LIMIT 10
+    </select>
+</mapper>

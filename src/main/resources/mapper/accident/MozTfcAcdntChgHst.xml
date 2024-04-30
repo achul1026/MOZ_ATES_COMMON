@@ -2,44 +2,66 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.moz.ates.traffic.common.repository.accident.MozTfcAcdntChgHstRepository">
 	<sql id="acdntLogList-Where">
+		<if test="searchType == 'all' and searchTxt != null and searchTxt != ''">
+			AND (tacht.HST_ID LIKE CONCAT('%', #{searchTxt}, '%')
+				OR wot.OPRTR_NM LIKE CONCAT('%', #{searchTxt}, '%')
+				OR pit.POL_NM LIKE CONCAT('%', #{searchTxt}, '%'))
+		</if>
+		<if test="searchType == 'requestId' and searchTxt != null and searchTxt != ''">
+			AND tacht.HST_ID LIKE CONCAT('%', #{searchTxt}, '%') 
+		</if>
+		<if test="searchType == 'crtr' and searchTxt != null and searchTxt != ''">
+			AND (wot.OPRTR_NM LIKE CONCAT('%', #{searchTxt}, '%')
+				OR pit.POL_NM LIKE CONCAT('%', #{searchTxt}, '%'))
+		</if>
 		<if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
             <![CDATA[
-                AND TO_CHAR(tacht.CR_DT, 'YYYY-MM-DD') >= #{sDate}
+                AND DATE_FORMAT(tacht.CR_DT, '%Y-%m-%d') >= #{sDate}
             ]]>
         </if>
         <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
             <![CDATA[
-                AND TO_CHAR(tacht.CR_DT, 'YYYY-MM-DD') <= #{eDate}
+                AND DATE_FORMAT(tacht.CR_DT, '%Y-%m-%d') <= #{eDate}
             ]]>
         </if>
         <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
             <![CDATA[
-                AND TO_CHAR(tacht.CR_DT, 'YYYY-MM-DD') >= #{sDate}
-                AND TO_CHAR(tacht.CR_DT, 'YYYY-MM-DD') <= #{eDate}
+                AND DATE_FORMAT(tacht.CR_DT, '%Y-%m-%d') >= #{sDate}
+                AND DATE_FORMAT(tacht.CR_DT, '%Y-%m-%d') <= #{eDate}
             ]]>
         </if>
     </sql>   
 	
-	<resultMap type="com.moz.ates.traffic.common.entity.common.MozCmCd" id="cmCdForSelectLogList">
+	<resultMap type="MozCmCd" id="cmCdForSelectLogList">
 		<result column="CD_NM" property="cdNm"/>
 	</resultMap>
 	
-	<resultMap type="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntChgHst" id="tfcAcdntChgHst">
+	<resultMap type="MozWebOprtr" id="webOprtrForSelectLogList">
+		<result column="OPRTR_NM" property="oprtrNm"/>
+	</resultMap>
+	
+	<resultMap type="MozPolInfo" id="polInfoForSelectLogList">
+		<result column="POL_NM" property="polNm"/>
+	</resultMap>
+	
+	<resultMap type="MozTfcAcdntChgHst" id="tfcAcdntChgHst">
 		<result column="rnum" property="rnum"/>
 		<result column="HST_ID" property="hstId"/>
 		<result column="TFC_ACDNT_ID" property="tfcAcdntId"/>
-		<result column="OPRTR_ID" property="oprtrId"/>
+		<result column="ACDNT_REG_TY" property="acdntRegTy"/>
 		<result column="ACDNT_PRC_CD" property="acdntPrcCd"/>
 		<result column="CMNT" property="cmnt"/>
 		<result column="CR_DT" property="crDt"/>
 		<result column="CRTR" property="crtr"/>
 		<collection property="cmCd" resultMap="cmCdForSelectLogList"/>
+		<collection property="webOprtr" resultMap="webOprtrForSelectLogList"/>
+		<collection property="polInfo" resultMap="polInfoForSelectLogList"/>
 	</resultMap>
 	
-	<select id="selectLogList" parameterType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntChgHst" resultMap="tfcAcdntChgHst">
+	<select id="selectLogList" parameterType="MozTfcAcdntChgHst" resultMap="tfcAcdntChgHst">
         SELECT  tacht.HST_ID
                 , tacht.TFC_ACDNT_ID
-                , tacht.OPRTR_ID
+                , tacht.ACDNT_REG_TY
                 , tacht.ACDNT_PRC_CD
                 , tacht.CMNT
                 , tacht.CR_DT
@@ -53,7 +75,7 @@
 		LIMIT #{length} OFFSET #{start}
     </select>
 
-    <select id="selectLogListCnt" parameterType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntChgHst" resultType="int">
+    <select id="selectLogListCnt" parameterType="MozTfcAcdntChgHst" resultType="int">
         SELECT  COUNT(*)    AS "cnt"
         FROM    MOZ_TFC_ACDNT_CHG_HST tacht
                 LEFT JOIN MOZ_CM_CD cct ON (tacht.ACDNT_PRC_CD=cct.CD_ID)
@@ -61,46 +83,79 @@
         <include refid="acdntLogList-Where"/>
     </select>
     
-    <select id="findAllMozTfcAcdntChgHst" parameterType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntChgHst" resultMap="tfcAcdntChgHst">
+    <select id="findAllMozTfcAcdntChgHst" parameterType="MozTfcAcdntChgHst" resultMap="tfcAcdntChgHst">
         SELECT  ROW_NUMBER() OVER(ORDER BY tacht.CR_DT) AS rnum
         		, tacht.HST_ID
                 , tacht.TFC_ACDNT_ID
-                , tacht.OPRTR_ID
+                , tacht.ACDNT_REG_TY
                 , tacht.ACDNT_PRC_CD
                 , tacht.CMNT
                 , tacht.CR_DT
                 , tacht.CRTR
-                , cct.CD_NM
+                , wot.OPRTR_NM
+                , pit.POL_NM
         FROM    MOZ_TFC_ACDNT_CHG_HST tacht
-                LEFT JOIN MOZ_CM_CD cct ON (tacht.ACDNT_PRC_CD=cct.CD_ID)
-        WHERE   1=1
-        <include refid="acdntLogList-Where"/>
+        LEFT JOIN MOZ_WEB_OPRTR wot
+       		ON tacht.CRTR = wot.OPRTR_ID
+       	LEFT JOIN MOZ_POL_INFO pit
+       		ON tacht.CRTR = pit.POL_ID
+        <where>
+	        <include refid="acdntLogList-Where"/>
+        </where>
         ORDER BY rnum DESC
 		LIMIT #{length} OFFSET #{start}
     </select>
 
-    <select id="countMozTfcAcdntChgHst" parameterType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntChgHst" resultType="int">
+    <select id="countMozTfcAcdntChgHst" parameterType="MozTfcAcdntChgHst" resultType="int">
         SELECT  COUNT(*)    AS "cnt"
         FROM    MOZ_TFC_ACDNT_CHG_HST tacht
-                LEFT JOIN MOZ_CM_CD cct ON (tacht.ACDNT_PRC_CD=cct.CD_ID)
-        WHERE   1=1
-        <include refid="acdntLogList-Where"/>
+		LEFT JOIN MOZ_CM_CD cct 
+			ON tacht.ACDNT_PRC_CD = cct.CD_ID
+        LEFT JOIN MOZ_WEB_OPRTR wot
+       		ON tacht.CRTR = wot.OPRTR_ID
+       	LEFT JOIN MOZ_POL_INFO pit
+       		ON tacht.CRTR = pit.POL_ID
+        <where>
+	        <include refid="acdntLogList-Where"/>
+        </where>
+    </select>
+    
+    <select id="findOneTfcAcdntChgHst" parameterType="String" resultMap="tfcAcdntChgHst">
+    	SELECT
+    		tacht.HST_ID
+    		, tacht.CR_DT
+    		, tacht.ACDNT_PRC_CD
+    		, tacht.ACDNT_REG_TY
+            , tacht.ACDNT_PRC_CD
+    		, tacht.CRTR
+    		, tacht.CMNT
+    		, tacht.CRTR_IP_ADDR
+    		, wot.OPRTR_NM
+            , pit.POL_NM
+    	FROM MOZ_TFC_ACDNT_CHG_HST tacht
+    	LEFT JOIN MOZ_WEB_OPRTR wot
+       		ON tacht.CRTR = wot.OPRTR_ID
+       	LEFT JOIN MOZ_POL_INFO pit
+       		ON tacht.CRTR = pit.POL_ID
+    	WHERE HST_ID = #{hstId}
     </select>
     
     <!-- 사고 정보 로그 등록 -->
-	<insert id="insertTfcAcdntHstInfo" parameterType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntChgHst">
+	<insert id="saveMozTfcAcdntChgHst" parameterType="MozTfcAcdntChgHst">
 		INSERT INTO MOZ_TFC_ACDNT_CHG_HST 	(
-											HST_ID,
-											TFC_ACDNT_ID,
-											ACDNT_PRC_CD,
-											CR_DT,
-											CRTR
-										   )VALUES(
-											#{hstId},
-											#{tfcAcdntId},
-											#{acdntPrcCd},
-											NOW(),
-											#{crtr}
-										   )
+			HST_ID,
+			TFC_ACDNT_ID,
+			ACDNT_REG_TY,
+			ACDNT_PRC_CD,
+			CR_DT,
+			CRTR
+		   )VALUES(
+			#{hstId},
+			#{tfcAcdntId},
+			#{acdntRegTy},
+			#{acdntPrcCd},
+			NOW(),
+			#{crtr}
+	   )
 	</insert>
 </mapper>

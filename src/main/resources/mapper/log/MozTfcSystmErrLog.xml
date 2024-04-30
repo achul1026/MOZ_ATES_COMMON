@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.log.MozTfcSystmErrLogRepository">
+	<sql id="systmErrLog-Where">
+		<if test="searchType == 'all' and searchTxt != null and searchTxt != ''">
+			AND (sel.SYSTM_ERR_LOG_ID LIKE CONCAT('%', #{searchTxt}, '%') 
+				OR sel.LOG_CNTN LIKE CONCAT('%', #{searchTxt}, '%'))
+		</if>
+		<if test="searchType == 'logId' and searchTxt != null and searchTxt != ''">
+			AND sel.SYSTM_ERR_LOG_ID LIKE CONCAT('%', #{searchTxt}, '%') 
+		</if>
+		<if test="searchType == 'content' and searchTxt != null and searchTxt != ''">
+			AND sel.LOG_CNTN LIKE CONCAT('%', #{searchTxt}, '%') 
+		</if>
+		<if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
+            <![CDATA[ AND sel.CR_DT >= #{sDate}]]>
+        </if>
+        <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
+            <![CDATA[ AND sel.CR_DT <= #{eDate} ]]>
+        </if>
+        <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
+            <![CDATA[ AND sel.CR_DT >= #{sDate} AND sel.CR_DT <= #{eDate} ]]>
+        </if>
+	</sql>
+	
+	<resultMap type="MozCmCd" id="cmCdForSelectLogList">
+		<result column="CD_NM" property="cdNm"/>
+	</resultMap>
+	
+	<resultMap type="MozTfcSystmErrLog" id="systmErrLogForSelectList">
+		<result column="rnum" property="rnum"/>
+		<result column="LOG_CATE_CD" property="logCateCd"/>
+		<result column="SYSTM_ERR_LOG_ID" property="systmErrLogId"/>
+		<result column="LOG_CNTN" property="logCntn"/>
+		<result column="CR_DT" property="crDt"/>
+		<result column="LOG_RSLT" property="logRslt"/>
+		<collection property="cmCd" resultMap="cmCdForSelectLogList"/>
+	</resultMap>
+	
+	<select id="countMozTfcSystmErrLog" parameterType="MozTfcSystmErrLog" resultType="int">
+		SELECT COUNT(*) AS 'cnt'
+		FROM MOZ_TFC_SYSTM_ERR_LOG sel
+		LEFT JOIN MOZ_CM_CD cct 
+			ON (sel.LOG_CATE_CD=cct.CD_ID)
+		<where>
+			<include refid="systmErrLog-Where"/>
+		</where>
+	</select>
+	
+	<select id="findAllMozTfcSystmErrLogList" parameterType="MozTfcSystmErrLog" resultMap="systmErrLogForSelectList">
+		SELECT 
+			ROW_NUMBER() OVER(ORDER BY sel.CR_DT) AS rnum
+			, sel.LOG_CATE_CD
+			, sel.SYSTM_ERR_LOG_ID
+			, sel.LOG_CNTN
+			, sel.CR_DT
+			, sel.LOG_RSLT
+			, cct.CD_NM
+		FROM MOZ_TFC_SYSTM_ERR_LOG sel
+		LEFT JOIN MOZ_CM_CD cct 
+			ON (sel.LOG_CATE_CD=cct.CD_ID)
+		<where>
+			<include refid="systmErrLog-Where"/>
+		</where>
+		ORDER BY rnum DESC
+		LIMIT #{length} OFFSET #{start}
+	</select>
+	
+	<select id="findOneMozTfcSystmErrLog" parameterType="String" resultType="map">
+		SELECT
+			sel.SYSTM_ERR_LOG_ID AS 'logId'
+			, sel.CR_DT AS 'crDt'
+			, sel.LOG_CATE_CD AS 'logCateCd'
+			, sel.LOG_RSLT AS 'logRslt'
+			, wot.OPRTR_ACCOUNT_ID AS 'crtr'
+			, sel.CRTR_IP_ADDR AS 'crtrIpAddr'
+			, sel.LOG_CNTN AS 'logCntn'
+		FROM MOZ_TFC_SYSTM_ERR_LOG sel
+		LEFT JOIN MOZ_WEB_OPRTR wot
+			ON sel.CRTR = wot.OPRTR_ID
+		WHERE sel.SYSTM_ERR_LOG_ID = #{logId}
+	</select>
+	
+	<insert id="saveMozTfcSystmErrLog" parameterType="MozTfcSystmErrLog">
+		INSERT INTO MOZ_TFC_SYSTM_ERR_LOG (
+			SYSTM_ERR_LOG_ID,
+			LOG_CATE_CD,
+			LOG_CNTN,
+			LOG_RSLT,
+			CR_DT,
+			CRTR,
+			CRTR_IP_ADDR
+		) VALUES (
+			#{systmErrLogId},
+			#{logCateCd},
+			#{logCntn},
+			#{logRslt},
+			NOW(),
+			#{crtr},
+			#{crtrIpAddr}
+		)
+	</insert>
+</mapper>

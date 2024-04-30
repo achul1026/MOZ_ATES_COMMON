@@ -27,4 +27,14 @@ public interface MozTfcEnfEqpLogRepository {
      * @return : 
      */
 	public int countMozTfcEnfEqpLog(MozTfcEnfEqpLog tfcEnfEqpLog);
+
+	/**
+     * @brief : 단속장비 로그 상세 조회
+     * @details : 단속장비 로그 상세 조회 
+     * @author : KC.KIM
+     * @date : 2024.02.23
+     * @param : logId
+     * @return : 
+     */
+	public MozTfcEnfEqpLog findOneMozTfcEnfEqpLog(String logId);
 }

@@ -4,70 +4,138 @@
 	
 	<sql id="enfLawList-Where">
         <if test="searchType == 'all' and searchTxt != '' and searchTxt != null">
-            AND (LAW_ARTICLE_NO LIKE '%' ||  #{searchTxt} || '%' OR LAW_NM LIKE '%' ||  #{searchTxt} || '%' OR CRTR LIKE '%' ||  #{searchTxt} || '%')
+            AND (LAW_ARTICLE_NO LIKE CONCAT('%', #{searchTxt}, '%')  OR LAW_NM LIKE CONCAT('%', #{searchTxt}, '%') OR CRTR LIKE CONCAT('%', #{searchTxt}, '%'))
         </if>
         <if test="searchType == 'lawArticl' and searchTxt != '' and searchTxt != null">
-            AND LAW_ARTICLE_NO LIKE '%' ||  #{searchTxt} || '%'
+            AND LAW_ARTICLE_NO LIKE CONCAT('%', #{searchTxt}, '%') 
         </if>
         <if test="searchType == 'lawNm' and searchTxt != '' and searchTxt != null">
-            AND LAW_NM LIKE '%' ||  #{searchTxt} || '%'
+            AND LAW_NM LIKE CONCAT('%', #{searchTxt}, '%') 
         </if>
         <if test="searchType == 'crtr' and searchTxt != '' and searchTxt != null">
-            AND CRTR LIKE '%' ||  #{searchTxt} || '%'
+            AND CRTR LIKE CONCAT('%', #{searchTxt}, '%') 
         </if>
-        <if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
-            <![CDATA[
-                AND TO_CHAR(CR_DT, 'YYYY-MM-DD') >= #{sDate}
-            ]]>
-        </if>
-        <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
-            <![CDATA[
-                AND TO_CHAR(CR_DT, 'YYYY-MM-DD') <= #{eDate}
-            ]]>
-        </if>
-        <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
-            <![CDATA[
-                AND TO_CHAR(CR_DT, 'YYYY-MM-DD') >= #{sDate}
-                AND TO_CHAR(CR_DT, 'YYYY-MM-DD') <= #{eDate}
-            ]]>
-        </if>
+        <choose>
+        	<when test="dateSearchType =='prmgtn'">
+        		<if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
+		            <![CDATA[ AND PRMGTN_DE >= #{sDate} ]]>
+		        </if>
+		        <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
+		            <![CDATA[ AND PRMGTN_DE<= #{eDate} ]]>
+		        </if>
+		        <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
+		            <![CDATA[ AND PRMGTN_DE >= #{sDate} AND PRMGTN_DE <= #{eDate} ]]>
+		        </if>
+        	</when>
+        	<when test="dateSearchType == 'eftv'">
+        		<if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
+		            <![CDATA[ AND EFTV_DE >= #{sDate} ]]>
+		        </if>
+		        <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
+		            <![CDATA[ AND EFTV_DE<= #{eDate} ]]>
+		        </if>
+		        <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
+		            <![CDATA[ AND EFTV_DE >= #{sDate} AND EFTV_DE <= #{eDate} ]]>
+		        </if>
+        	</when>
+        	<when test="dateSearchType == 'rvsn'">
+        		<if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
+		            <![CDATA[ AND RVSN_DE >= #{sDate} ]]>
+		        </if>
+		        <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
+		            <![CDATA[ AND RVSN_DE<= #{eDate} ]]>
+		        </if>
+		        <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
+		            <![CDATA[ AND RVSN_DE >= #{sDate} AND RVSN_DE <= #{eDate} ]]>
+		        </if>
+        	</when>
+        	<otherwise>
+        		<if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
+		            <![CDATA[ AND (PRMGTN_DE >= #{sDate} OR EFTV_DE >= #{sDate} OR RVSN_DE >= #{sDate})]]>
+		        </if>
+		        <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
+		            <![CDATA[ AND (PRMGTN_DE<= #{eDate} OR EFTV_DE<= #{eDate} OR RVSN_DE<= #{eDate})]]>
+		        </if>
+		        <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
+		            <![CDATA[ AND (PRMGTN_DE >= #{sDate} AND PRMGTN_DE <= #{eDate}
+		            				OR EFTV_DE >= #{sDate} AND EFTV_DE <= #{eDate}
+		            				OR RVSN_DE >= #{sDate} AND RVSN_DE <= #{eDate}) ]]>
+		        </if>
+        	</otherwise>
+        </choose>
     </sql>
 	
-	<select id="findAllLawListsByTfcLwInfo" resultType="com.moz.ates.traffic.common.entity.law.MozTfcLwInfo" parameterType="com.moz.ates.traffic.common.entity.law.MozTfcLwInfo">
-        SELECT   TFC_LAW_ID
+	<select id="findAllLawListsByTfcLwInfo" resultType="MozTfcLwInfo" parameterType="MozTfcLwInfo">
+        SELECT   
+        		ROW_NUMBER() OVER(ORDER BY CR_DT) AS rnum
+        		, TFC_LAW_ID
                 , LAW_NM
                 , LAW_ARTICLE_NO
                 , LAW_DESC
                 , CR_DT
                 , CRTR
+                , PRMGTN_DE
+                , EFTV_DE
+                , RVSN_DE
         FROM    MOZ_TFC_LW_INFO
         WHERE   1=1
         <include refid="enfLawList-Where"/>
-        ORDER BY CR_DT DESC
+        ORDER BY rnum DESC
         LIMIT #{length} OFFSET #{start}
     </select>
     
-    <select id="countLawListsByTfcLwInfo" parameterType="com.moz.ates.traffic.common.entity.law.MozTfcLwInfo" resultType="int">
+   	<select id="findAllLawListsIsNotNullFineInfo" resultType="MozTfcLwInfo">
+		SELECT
+			MTLI.TFC_LAW_ID ,
+			MTLI.LAW_NM
+		FROM
+			MOZ_TFC_LW_INFO MTLI
+		INNER JOIN 
+		        (
+			SELECT
+				DISTINCT TFC_LAW_ID
+			FROM
+				MOZ_TFC_LW_FINE_INFO
+		        	) MTLFI ON
+			MTLFI.TFC_LAW_ID = MTLI.TFC_LAW_ID
+		ORDER BY
+			MTLI.CR_DT DESC
+    </select>
+    
+    <select id="countLawListsByTfcLwInfo" parameterType="MozTfcLwInfo" resultType="int">
         SELECT  COUNT(*) AS "cnt"
         FROM    MOZ_TFC_LW_INFO
         WHERE   1=1
         <include refid="enfLawList-Where"/>
     </select>
     
-    <select id="findOneLawDetail" parameterType="String" resultType="com.moz.ates.traffic.common.entity.law.MozTfcLwInfo">
-        SELECT   TFC_LAW_ID
-                 , LAW_NM
-                 , LAW_ARTICLE_NO
-                 , LAW_DESC
-                 , CR_DT
-                 , CRTR
-        FROM    MOZ_TFC_LW_INFO
-        WHERE   TFC_LAW_ID = #{tfcLawId}
-
+    <select id="findOneLawDetail" parameterType="String" resultType="MozTfcLwInfo">
+		SELECT 			
+		    MTLI.TFC_LAW_ID,
+		    MTLI.LAW_NM,
+		    MTLI.LAW_ARTICLE_NO,
+		    MTLI.LAW_DESC,
+		    MTLI.CR_DT,
+		    MTLI.CRTR,
+		    MTLI.PRMGTN_DE,
+		    MTLI.EFTV_DE,
+		    MTLI.RVSN_DE,
+		    MTLI.REPEAL_YN,
+		    MTLI.REPEAL_DE,
+		    A.CD_NM AS LAW_TYPE,
+		    B.CD_NM AS LAW_CHAPTER
+		FROM    
+		    MOZ_TFC_LW_INFO MTLI
+		LEFT OUTER JOIN 
+		    MOZ_CM_CD A ON A.CD_ID = MTLI.LAW_TYPE AND A.CD_GROUP_ID = 'LAW_TYPE_CD'
+		LEFT OUTER JOIN 
+		    MOZ_CM_CD B ON B.CD_ID = MTLI.LAW_CHAPTER AND B.CD_GROUP_ID = 'LAW_CHTR_CD'
+		WHERE   
+		    MTLI.TFC_LAW_ID = #{tfcLawId}
     </select>
     
    	<!-- 법률 조회 -->
-	<select id="selectTrafficLawsList" parameterType="com.moz.ates.traffic.common.entity.law.MozTfcLwInfo" resultType="com.moz.ates.traffic.common.entity.law.MozTfcLwInfo">
+	<select id="findAllTrafficLawsList" parameterType="MozTfcLwInfo" resultType="MozTfcLwInfo">
 		SELECT 	TFC_LAW_ID
 				, LAW_NM
 				, LAW_ARTICLE_NO
@@ -75,33 +143,55 @@
 		FROM	MOZ_TFC_LW_INFO
 	</select>
     
-	<insert id="insertMozTfcLwInfo" parameterType="com.moz.ates.traffic.common.entity.law.MozTfcLwInfo">
-        INSERT INTO MOZ_TFC_LW_INFO
-            (
-                TFC_LAW_ID
-                , LAW_NM
-                , LAW_ARTICLE_NO
-                , LAW_DESC
-                , CR_DT
-                , CRTR
-            )
-        VALUES
-            (
-                LAW_SEQ.NEXTVAL
-               , #{lawNm}
-               , #{lawArticleNo}
-               , #{lawDesc}
-               , NOW()
-               , 'auto'
-            )
+	<insert id="insertMozTfcLwInfo" parameterType="MozTfcLwInfo">
+		INSERT INTO MOZATES.MOZ_TFC_LW_INFO ( 
+			TFC_LAW_ID,
+			LAW_NM,
+			LAW_ARTICLE_NO,
+			LAW_DESC,
+			LAW_TYPE,
+			LAW_CHAPTER,
+			CR_DT,
+			CRTR,
+			PRMGTN_DE,
+			EFTV_DE,
+			RVSN_DE,
+			REPEAL_YN
+		) VALUES (
+            #{tfcLawId}
+           , #{lawNm}
+           , #{lawArticleNo}
+           , #{lawDesc}
+           , #{lawType}
+           , #{lawChapter}
+           , NOW()
+           , #{crtr}
+           , #{prmgtnDe}
+           , #{eftvDe}
+           , NOW()
+           , 'N'
+        )
     </insert>
     
-     <update id="updateMozTfcLwInfoByTfcLawId" parameterType="com.moz.ates.traffic.common.entity.law.MozTfcLwInfo">
+     <update id="updateMozTfcLwInfoByTfcLawId" parameterType="MozTfcLwInfo">
         UPDATE  MOZ_TFC_LW_INFO
-        SET     LAW_NM=#{lawNm}
+        SET     
+        	LAW_CHAPTER=#{lawChapter}
+       	 		, LAW_TYPE=#{lawType}
+        		, LAW_NM=#{lawNm}
                 , LAW_ARTICLE_NO=#{lawArticleNo}
                 , LAW_DESC=#{lawDesc}
-        WHERE   TFC_LAW_ID=#{tfcLawId}
+                , PRMGTN_DE=#{prmgtnDe}
+                , EFTV_DE=#{eftvDe}
+        WHERE   TFC_LAW_ID = #{tfcLawId}
+    </update>
+
+     <update id="updateRepealYnByTfcLawId" parameterType="MozTfcLwInfo">
+        UPDATE  MOZ_TFC_LW_INFO
+        SET     
+        		REPEAL_YN = #{repealYn},
+        		REPEAL_DE = #{repealDe}
+        WHERE   TFC_LAW_ID = #{tfcLawId}
     </update>
     
     <delete id="deleteMozTfcLwInfoByTfcLawId" parameterType="String">
@@ -109,5 +199,60 @@
         WHERE
         	TFC_LAW_ID=#{tfcLawId}
     </delete>
+    
+<!-- ************************* for PORTAL start -->
+	<select id="countAllMozTfcLwInfo" parameterType="MozTfcLwInfo" resultType="int">
+		SELECT COUNT(*)
+		FROM MOZ_TFC_LW_INFO MTLI 
+		<where>
+	    <if test="searchTxt != '' and searchTxt != null">
+	        AND MTLI.LAW_NM LIKE CONCAT('%', #{searchTxt}, '%') 
+	    </if>
+		</where>
+	</select>
+	
+	<select id="findAllMozTfcLwInfo" parameterType="MozTfcLwInfo" resultType="MozTfcLwInfo">
+		SELECT   
+				ROW_NUMBER() OVER(ORDER BY CR_DT) AS rnum
+				, TFC_LAW_ID
+        , LAW_NM
+        , LAW_ARTICLE_NO
+        , EFTV_DE
+		FROM    MOZ_TFC_LW_INFO MTLI
+		<where>
+	    <if test="searchTxt != '' and searchTxt != null">
+	        AND MTLI.LAW_NM LIKE CONCAT('%', #{searchTxt}, '%') 
+	    </if>
+		</where>
+		ORDER BY rnum DESC
+		LIMIT #{length} OFFSET #{start}
+	</select>
+	
+	<select id="findOneMozTfcLwInfoByTfcLwId" parameterType="MozTfcLwInfo" resultType="MozTfcLwInfo">
+		SELECT 
+			MTLI.LAW_ARTICLE_NO 
+			, MTLI.LAW_NM 
+			, MTLI.PRMGTN_DE
+			, MTLI.EFTV_DE 
+			, MTLI.LAW_DESC 
+		FROM MOZ_TFC_LW_INFO MTLI 
+		WHERE MTLI.TFC_LAW_ID = #{tfcLawId}
+	</select>
+	
+	<select id="findAllMozTfcLwInfoByTfcEnfId" parameterType="String" resultType="MozTfcLwInfo">
+		SELECT 
+			MTLI.LAW_ARTICLE_NO 
+			, MCC.CD_NM 
+		FROM 
+			MOZ_TFC_LW_INFO MTLI 
+			INNER JOIN MOZ_TFC_LW_FINE_INFO MTLFI ON MTLI.TFC_LAW_ID = MTLFI.TFC_LAW_ID 
+			INNER JOIN MOZ_TFC_ENF_FINE_INFO MTEFI ON MTLFI.TFC_LAW_FINE_ID = MTEFI.TFC_LAW_FINE_ID 
+			INNER JOIN MOZ_FINE_NTC_INFO MFNI ON MTEFI.TFC_ENF_ID = MFNI.TFC_ENF_ID 
+			INNER JOIN MOZ_CM_CD MCC ON MTLI.LAW_TYPE = MCC.CD_ID 
+		WHERE 
+			MFNI.TFC_ENF_ID = #{tfcEnfId}
+		ORDER BY MTLI.LAW_ARTICLE_NO ASC
+	</select>
+<!-- ************************* for PORTAL end -->
     
 </mapper>

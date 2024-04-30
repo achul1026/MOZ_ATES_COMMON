@@ -4,54 +4,83 @@
 	
 	<sql id="objectionList-Where">
         <if test="searchType == 'all' and searchTxt != '' and searchTxt != null">
-            AND (POST_TTL LIKE '%' ||  #{searchTxt} || '%' OR WRTR_EMAIL LIKE '%' ||  #{searchTxt} || '%')
+            AND (ort.POST_TTL LIKE CONCAT('%', #{searchTxt}, '%') 
+            	 OR ort.WRTR_NM LIKE CONCAT('%', #{searchTxt}, '%'))
         </if>
-        <if test="searchType == 'POST_TTL' and searchTxt != '' and searchTxt != null">
-            AND POST_TTL LIKE '%' ||  #{searchTxt} || '%'
+        <if test="searchType == 'wrtrNm' and searchTxt != '' and searchTxt != null">
+            AND ort.WRTR_NM LIKE CONCAT('%', #{searchTxt}, '%')
         </if>
-        <if test="searchType == 'wrtrEmail' and searchTxt != '' and searchTxt != null">
-            AND WRTR_EMAIL LIKE '%' ||  #{searchTxt} || '%'
+        <if test="searchType == 'title' and searchTxt != '' and searchTxt != null">
+            AND ort.POST_TTL LIKE CONCAT('%', #{searchTxt}, '%')
         </if>
         <if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
             <![CDATA[
-                AND TO_CHAR(ORT.CR_DT, 'YYYY-MM-DD') >= #{sDate}
+                AND DATE_FORMAT(ort.CR_DT, '%Y-%m-%d') >= #{sDate}
             ]]>
         </if>
         <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
             <![CDATA[
-                AND TO_CHAR(ORT.CR_DT, 'YYYY-MM-DD') <= #{eDate}
+                AND DATE_FORMAT(ort.CR_DT, '%Y-%m-%d') <= #{eDate}
             ]]>
         </if>
         <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
             <![CDATA[
-             	AND TO_CHAR(ORT.CR_DT, 'YYYY-MM-DD') >= #{sDate}
-                AND TO_CHAR(ORT.CR_DT, 'YYYY-MM-DD') <= #{eDate}
+             	AND DATE_FORMAT(ort.CR_DT, '%Y-%m-%d') >= #{sDate}
+                AND DATE_FORMAT(ort.CR_DT, '%Y-%m-%d') <= #{eDate}
             ]]>
         </if>
     </sql>
 
-	<resultMap type="com.moz.ates.traffic.common.entity.common.MozCmCd" id="cmCdForSelectObjectionList">
+	<resultMap type="MozCmCd" id="cmCdForSelectObjectionList">
 		<result column="CD_NM" property="cdNm"/>
 	</resultMap>
 	
-	<resultMap type="com.moz.ates.traffic.common.entity.board.MozObjReg" id="objRegForSelectObjectionList">
+	<resultMap type="MozWebOprtr" id="webOprtrForSelectObjectionList">
+		<result column="OPRTR_ACCOUNT_ID" property="oprtrAccountId"/>
+	</resultMap>
+	
+	<resultMap type="MozFineNtcInfo" id="fineNtcInfoForSelectObjectionList">
+		<result column="TFC_ENF_ID" property="tfcEnfId"/>
+	</resultMap>
+	
+	<resultMap type="MozObjReg" id="objRegForSelectObjectionList">
+		<result column="rnum" property="rnum"/>
 		<result column="OBJ_IDX" property="objIdx"/>
-		<result column="WRTR_EMAIL" property="wrtrEmail"/>
+		<result column="WRTR_NM" property="wrtrNm"/>
 		<result column="POST_TTL" property="postTtl"/>
 		<result column="CR_DT" property="crDt"/>
 		<result column="ANS_STTS" property="ansStts"/>
+		<result column="OPRTR_ID" property="oprtrId"/>
+		<result column="ANS_CR_DT" property="ansCrDt"/>
+		<result column="ANS_UPD_DT" property="ansUpdDt"/>
 		<collection property="cmCd" resultMap="cmCdForSelectObjectionList"/>
+		<collection property="webOprtr" resultMap="webOprtrForSelectObjectionList"/>
+		<collection property="fineNtcInfo" resultMap="fineNtcInfoForSelectObjectionList"/>
 	</resultMap>
 	
-	<resultMap type="com.moz.ates.traffic.common.entity.common.MozCmCd" id="cmCdForselectObjectionDetail">
+	
+	<resultMap type="MozCmCd" id="cmCdForselectObjectionDetail">
 		<result column="CD_NM" property="cdNm"/>
 	</resultMap>
 	
-	<resultMap type="com.moz.ates.traffic.common.entity.board.MozObjReg" id="objRegForselectObjectionDetail">
+	<resultMap type="MozAtchFile" id="atchFileForSelectObjectionDetail">
+		<result column="file_org_nm" property="fileOrgNm"/>
+	</resultMap>
+	
+	<resultMap type="MozWebOprtr" id="webOprtrForSelectObjectionDetail">
+		<result column="OPRTR_DEPT_NM" property="oprtrDeptNm"/>
+	</resultMap>
+	
+	<resultMap type="MozFineNtcInfo" id="fineNtcInfoForSelectObjectionDetail">
+		<result column="FINE_NTC_ID" property="fineNtcId"/>
+		<result column="TFC_ENF_ID" property="tfcEnfId"/>
+	</resultMap>
+	
+	<resultMap type="MozObjReg" id="objRegForselectObjectionDetail">
 		<result column="rnum" property="rnum"/>
 		<result column="OBJ_IDX" property="objIdx"/>
 		<result column="TFC_ENF_ID" property="tfcEnfId"/>
-		<result column="WRTR_EMAIL" property="wrtrEmail"/>
+		<result column="WRTR_NM" property="wrtrNm"/>
 		<result column="POST_TTL" property="postTtl"/>
 		<result column="POST_CN" property="postCn"/>
 		<result column="CR_DT" property="crDt"/>
@@ -61,80 +90,181 @@
 		<result column="ANS_CONTENTS" property="ansContents"/>
 		<result column="ANS_CR_DT" property="ansCrDt"/>
 		<collection property="cmCd" resultMap="cmCdForselectObjectionDetail"/>
+		<collection property="atchFile" resultMap="atchFileForSelectObjectionDetail"/>
+		<collection property="webOprtr" resultMap="webOprtrForSelectObjectionDetail"/>
+		<collection property="fineNtcInfo" resultMap="fineNtcInfoForSelectObjectionDetail"/>
 	</resultMap>
 	
-    <select id="findAllMozObjReg" parameterType="com.moz.ates.traffic.common.entity.board.MozObjReg" resultMap="objRegForSelectObjectionList">
+    <select id="findAllMozObjReg" parameterType="MozObjReg" resultMap="objRegForSelectObjectionList">
         SELECT  ROW_NUMBER() OVER(ORDER BY ort.CR_DT) AS rnum
-        		, OBJ_IDX
+        		, ort.OBJ_IDX
                 , cct.CD_NM
-                , WRTR_EMAIL
-                , POST_TTL
+                , ort.WRTR_NM
+                , ort.POST_TTL
                 , ort.CR_DT
-                , ANS_STTS
-        FROM	MOZ_OBJ_REG ort , MOZ_CM_CD cct
-        WHERE ort.CATE_CD =cct.CD_ID			
-        <include refid="objectionList-Where"/> 
+                , ort.ANS_STTS
+                , ort.OPRTR_ID
+                , ort.ANS_CR_DT
+                , ort.ANS_UPD_DT
+                , wot.OPRTR_ACCOUNT_ID
+        FROM	MOZ_OBJ_REG ort 
+        INNER JOIN MOZ_CM_CD cct
+        	ON ort.CATE_CD = cct.CD_ID
+        LEFT JOIN MOZ_WEB_OPRTR wot
+        	ON ort.OPRTR_ID = wot.OPRTR_ID
+        <where>
+	        <include refid="objectionList-Where"/> 
+        </where>
 		ORDER BY rnum DESC
         LIMIT #{length} OFFSET #{start}
     </select>
     
-    <select id="countMozObjReg" parameterType="com.moz.ates.traffic.common.entity.board.MozObjReg" resultType="int">
+    <select id="countMozObjReg" parameterType="MozObjReg" resultType="int">
         SELECT  COUNT(*)    AS "cnt"
-        FROM	MOZ_OBJ_REG ort , MOZ_CM_CD cct
-        WHERE   ort.CATE_CD =cct.CD_ID
-        <include refid="objectionList-Where"/>
+        FROM	MOZ_OBJ_REG ort 
+        INNER JOIN MOZ_CM_CD cct
+        	ON ort.CATE_CD =cct.CD_ID
+        LEFT JOIN MOZ_WEB_OPRTR wot
+        	ON ort.OPRTR_ID = wot.OPRTR_ID
+        <where>
+	        <include refid="objectionList-Where"/>
+        </where>        
     </select>
 
     <select id="findOneMozObjReg" parameterType="String" resultMap="objRegForselectObjectionDetail">
-        SELECT  OBJ_IDX
-                , cct.CD_NM
-                , TFC_ENF_ID
-                , WRTR_EMAIL
-                , POST_TTL
-                , POST_CN
+        SELECT  ort.OBJ_IDX
+                , ort.TFC_ENF_ID
+                , ort.WRTR_NM
+                , ort.POST_TTL
+                , ort.POST_CN
                 , ort.CR_DT
-                , OPRTR_ID
-                , ANS_EMAIL
-                , ANS_STTS
-                , ANS_CONTENTS
-                , ANS_CR_DT
+                , ort.OPRTR_ID
+                , ort.ANS_EMAIL
+                , ort.ANS_STTS
+                , ort.ANS_CONTENTS
+                , ort.ANS_CR_DT
+                , cct.CD_NM
+                , aft.FILE_ORG_NM
         FROM	MOZ_OBJ_REG ort
-                , MOZ_CM_CD cct
-        WHERE   ort.CATE_CD =cct.CD_ID
-                AND OBJ_IDX = #{objIdx}
+        INNER JOIN MOZ_CM_CD cct
+        	ON ort.CATE_CD = cct.CD_ID
+        LEFT JOIN MOZ_ATCH_FILE aft
+			ON ort.OBJ_IDX = aft.ATCH_IDX
+        WHERE  ort.OBJ_IDX = #{objIdx}
+                
     </select>
     
-    <!-- 이의제기 등록 -->
-	<insert id="insertObjectionInfo" parameterType="com.moz.ates.traffic.common.entity.board.MozObjReg">
-		INSERT INTO MOZ_OBJ_REG
-			(
-				OBJ_IDX,
-				TFC_ENF_ID,
-				CATE_CD,
-				WRTR_EMAIL,
-				POST_TTL,
-				POST_CN,
-				CR_DT
-			)VALUES(
-				OBJ_REG_SEQ.NEXTVAL,
-				#{tfcEnfId},
-				#{cateCd},
-				#{wrtrEmail},
-				#{postTtl},
-				#{postCn},
-				NOW()
-			)
-		
-	</insert>
-    
-   	<update id="updateObjAns" parameterType="com.moz.ates.traffic.common.entity.board.MozObjReg">
+   	<update id="updateObjAns" parameterType="MozObjReg">
         UPDATE MOZ_OBJ_REG ORT 
-        SET OPRTR_ID = 'admin'
-       		,ANS_EMAIL = #{ansEmail}
+        SET OPRTR_ID = #{oprtrId}
      		,ANS_STTS = 'Y'
       	  	,ANS_CONTENTS = #{ansContents}
 			,ANS_CR_DT = NOW() 
       	  	,ANS_UPD_DT = NOW() 
         WHERE OBJ_IDX = #{objIdx}
     </update>
+    
+<!-- ************************* for PORTAL start -->
+
+	<select id="countAllMozObjRegJoinMozFineNtcInfoAndMozCmCd" parameterType="MozObjReg" resultType="int">
+		SELECT COUNT(*)
+		FROM MOZ_OBJ_REG MOR 
+			INNER JOIN MOZ_FINE_NTC_INFO MFNI ON MOR.TFC_ENF_ID = MFNI.TFC_ENF_ID 
+			INNER JOIN MOZ_CM_CD MCC ON MOR.CATE_CD = MCC.CD_ID
+		WHERE 1=1
+			<if test="cateCd != '' and cateCd != null and cateCd != 'all' and searchTxt != '' and searchTxt != null">
+				AND MOR.POST_TTL LIKE CONCAT('%', #{searchTxt}, '%')
+				AND MOR.CATE_CD = #{cateCd}
+			</if>
+			<if test="cateCd == 'all' and searchTxt != '' and searchTxt != null">
+				AND MOR.POST_TTL LIKE CONCAT('%', #{searchTxt}, '%')
+			</if>
+	</select>
+	
+	<select id="findAllMozObjRegJoinMozFineNtcInfoAndMozCmCd" parameterType="MozObjReg" resultMap="objRegForSelectObjectionList">
+		SELECT 
+			ROW_NUMBER() OVER(ORDER BY MOR.CR_DT) AS rnum
+			, MOR.OBJ_IDX 
+			, MOR.CR_DT 
+			, MOR.ANS_STTS 
+			, CONCAT(LEFT(MFNI.TFC_ENF_ID, 3), REPEAT('*', LENGTH(MFNI.TFC_ENF_ID) - 3)) AS TFC_ENF_ID
+			, MCC.CD_NM 
+		FROM MOZ_OBJ_REG MOR 
+			INNER JOIN MOZ_FINE_NTC_INFO MFNI ON MOR.TFC_ENF_ID = MFNI.TFC_ENF_ID 
+			INNER JOIN MOZ_CM_CD MCC ON MOR.CATE_CD = MCC.CD_ID 
+		WHERE 1=1
+			<if test="cateCd != '' and cateCd != null and cateCd != 'all' and searchTxt != '' and searchTxt != null">
+				AND MOR.POST_TTL LIKE CONCAT('%', #{searchTxt}, '%')
+				AND MOR.CATE_CD = #{cateCd}
+			</if>
+			<if test="cateCd == 'all' and searchTxt != '' and searchTxt != null">
+				AND MOR.POST_TTL LIKE CONCAT('%', #{searchTxt}, '%')
+			</if>
+		ORDER BY rnum DESC
+		LIMIT #{length} OFFSET #{start}
+	</select>
+	
+	<select id="findOnePostPwbyObjIdx" parameterType="MozObjReg" resultType="String">
+		SELECT MOR.POST_PW 
+		FROM MOZ_OBJ_REG MOR 
+		WHERE MOR.OBJ_IDX = #{objIdx}
+	</select>
+	
+	<select id="findOneMozObjRegJoinMozFineNtcInfoAndMozWebOprtrAndMozCmCdByObjIdx" parameterType="MozObjReg" resultMap="objRegForselectObjectionDetail">
+		SELECT 
+			MOR.CR_DT 
+			, MOR.POST_TTL 
+			, MOR.POST_CN 
+			, MOR.ANS_STTS 
+			, MOR.ANS_CR_DT 
+			, MOR.ANS_CONTENTS 
+			, MFNI.TFC_ENF_ID
+			, MWO.OPRTR_DEPT_NM 
+			, MCC.CD_NM 
+		FROM MOZ_OBJ_REG MOR 
+		INNER JOIN MOZ_FINE_NTC_INFO MFNI ON MOR.TFC_ENF_ID = MFNI.TFC_ENF_ID 
+		INNER JOIN MOZ_CM_CD MCC ON MOR.CATE_CD = MCC.CD_ID 
+		LEFT JOIN MOZ_WEB_OPRTR MWO ON MOR.OPRTR_ID = MWO.OPRTR_ID 
+		WHERE MOR.OBJ_IDX = #{objIdx}
+	</select>
+
+	<insert id="saveMozObjReg" parameterType="MozObjReg">
+		INSERT INTO MOZ_OBJ_REG
+			(
+				OBJ_IDX,
+				TFC_ENF_ID,
+				CATE_CD,
+				WRTR_NM,
+				WRTR_PNO ,
+				POST_TTL,
+				POST_CN,
+				POST_PW,
+				CR_DT
+			)VALUES(
+				#{objIdx},
+				#{tfcEnfId},
+				#{cateCd},
+				#{wrtrNm},
+				#{wrtrPno},
+				#{postTtl},
+				#{postCn},
+				#{postPw},
+				NOW()
+			)
+	</insert>
+
+	<update id="updateMojObjRegPost" parameterType="MozObjReg">
+		UPDATE MOZ_OBJ_REG 
+		SET 
+			POST_TTL = #{postTtl}
+			, POST_CN = #{postCn}
+			, WRTR_NM = #{wrtrNm}
+			, WRTR_PNO = #{wrtrPno}
+			, POST_PW = #{postPw}
+			, CATE_CD = #{cateCd}
+		WHERE OBJ_IDX = #{objIdx}
+	</update>
+
+<!-- ************************* for PORTAL end -->
+
 </mapper>

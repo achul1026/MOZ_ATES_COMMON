@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.equipment.MozTfcFacilityFileInfoRepository">
+	<select id="findOneMozTfcFacilityFileInfoByTfcFacilityFileNo" parameterType="String" resultType="MozTfcFacilityFileInfo">
+		SELECT
+			TFC_FACILITY_FILE_NO
+			,TFC_FACILITY_ID
+			,FILE_PATH
+		FROM MOZ_TFC_FACILITY_FILE_INFO
+		WHERE TFC_FACILITY_FILE_NO = #{tfcFacilityFileNo}
+	</select>
+	
+	<insert id="insertMozTfcFacilityFileInfo" parameterType="MozTfcFacilityFileInfo">
+		INSERT INTO MOZ_TFC_FACILITY_FILE_INFO (
+			TFC_FACILITY_FILE_NO,
+			TFC_FACILITY_ID,
+			FILE_PATH,
+			FILE_ORG_NM,
+			FILE_NM,
+			FILE_SIZE,
+			FILE_EXT,
+			CR_DT,
+			CRTR
+		)VALUES(
+			#{tfcFacilityFileNo},
+			#{tfcFacilityId},
+			#{filePath},
+			#{fileOrgNm},
+			#{fileNm},
+			#{fileSize},
+			#{fileExt},
+			now(),
+			#{crtr}
+		)
+	</insert>
+	
+	<delete id="deleteMozTfcFacilityFileInfoByTfcFacilityFileNo" parameterType="String">
+		DELETE FROM MOZ_TFC_FACILITY_FILE_INFO
+		WHERE TFC_FACILITY_FILE_NO = #{tfcFacilityFileNo}
+	</delete>
+	
+	<delete id="deleteMozTfcFacilityFileInfoByTfcFacilityId" parameterType="String">
+		DELETE FROM MOZ_TFC_FACILITY_FILE_INFO
+		WHERE TFC_FACILITY_ID = #{tfcFacilityId}
+	</delete>
+</mapper>

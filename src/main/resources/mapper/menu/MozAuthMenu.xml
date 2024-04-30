@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.moz.ates.traffic.common.repository.menu.MozAuthMenuRepository">
-	<insert id="saveMozAuthMenu" parameterType="com.moz.ates.traffic.common.entity.menu.MozAuthMenu">
+	<insert id="saveMozAuthMenu" parameterType="MozAuthMenu">
 	INSERT INTO MOZ_AUTH_MENU (
 		AUTH_MENU_ID,
 		MENU_ID,
@@ -24,5 +24,144 @@
 		#{crtr}
 		)
 	
-	</insert>   
+	</insert>
+	
+	<select id="findAllByMenuId" parameterType="MozAuthMenu" resultType="MozAuthMenu">
+		SELECT
+			mam.AUTH_ID,
+			mam.MENU_ID,
+			mam.AUTH_MENU_ID,
+			mam.CREATE_YN,
+			mam.READ_YN,
+			mam.UPDATE_YN,
+			mam.DELETE_YN 
+		FROM
+			MOZ_AUTH_MENU mam
+		WHERE
+			mam.MENU_ID = #{menuId}
+	</select>
+	
+	<delete id="deleteAuthMenu" parameterType="MozAuthMenu">
+		DELETE
+		FROM
+			MOZ_AUTH_MENU
+		WHERE
+			AUTH_MENU_ID = #{authMenuId}
+	</delete>
+	
+	<select id="findAllMenuAndAuth" parameterType="MozAuth" resultType="MozMenu">
+				WITH RECURSIVE MENU_INFO AS (
+		SELECT 
+							PARENT_MENU.MENU_ID ,
+							PARENT_MENU.MENU_URL , 
+							PARENT_MENU.MENU_URL_PATTRN , 
+							PARENT_MENU.MENU_NM_ENG , 
+							PARENT_MENU.MENU_NM_POR , 
+							PARENT_MENU.PARENT_MENU_ID , 
+							PARENT_MENU.MAIN_SORT_NO ,
+							PARENT_MENU.SUB_SORT_NO ,
+							PARENT_MENU.MENU_ABV , 
+							PARENT_MENU.USE_YN, 
+							1 AS MENU_LEVEL
+		FROM
+			MOZ_MENU PARENT_MENU
+		WHERE
+			PARENT_MENU.PARENT_MENU_ID IS NULL
+			AND PARENT_MENU.USE_YN = 'Y'
+		UNION ALL
+		SELECT 
+							SUB_MENU.MENU_ID ,
+							SUB_MENU.MENU_URL , 
+							SUB_MENU.MENU_URL_PATTRN , 
+							SUB_MENU.MENU_NM_ENG , 
+							SUB_MENU.MENU_NM_POR ,
+							SUB_MENU.PARENT_MENU_ID , 
+							SUB_MENU.MAIN_SORT_NO,
+							SUB_MENU.SUB_SORT_NO, 
+							SUB_MENU.MENU_ABV, 
+							SUB_MENU.USE_YN, 
+							MI.MENU_LEVEL + 1
+		FROM
+			MOZ_MENU SUB_MENU
+		INNER JOIN MENU_INFO MI ON
+			SUB_MENU.PARENT_MENU_ID = MI.MENU_ID
+		WHERE
+			SUB_MENU.USE_YN = 'Y'
+				)
+				SELECT 
+						DISTINCT MI.MENU_ID ,
+						MI.MENU_URL , 
+						MI.MENU_URL_PATTRN , 
+						MI.MENU_NM_ENG , 
+						MI.MENU_NM_POR ,  
+						MI.PARENT_MENU_ID , 
+						MI.MAIN_SORT_NO ,
+						MI.SUB_SORT_NO , 
+						MI.MENU_ABV , 
+						MI.USE_YN , 
+						MI.MENU_LEVEL 
+					<if test="authId != null">
+						, MAM.READ_YN
+						, MAM.CREATE_YN
+						, MAM.UPDATE_YN
+						, MAM.DELETE_YN
+						, MAM.AUTH_MENU_ID 
+					</if>
+		FROM
+			MENU_INFO MI
+		<if test="authId != null">
+			INNER JOIN MOZ_AUTH_MENU MAM ON
+				MI.MENU_ID = MAM.MENU_ID
+			WHERE
+				MAM.AUTH_ID = #{authId}
+		</if>
+		ORDER BY
+			MI.MAIN_SORT_NO,
+			MI.SUB_SORT_NO,
+			MI.MENU_LEVEL
+	</select>
+	
+	<update id="updateMozAuthMenu" parameterType="MozAuthMenu">
+		UPDATE 
+			MOZ_AUTH_MENU 
+		SET 
+			CREATE_YN = #{createYn},
+			READ_YN = #{readYn},
+			UPDATE_YN = #{updateYn},
+			DELETE_YN = #{deleteYn}
+		WHERE 
+			AUTH_MENU_ID = #{authMenuId}
+	</update>
+	
+	<select id="findMozAuthMenuAndUrlPatternBAnyYn" parameterType="MozAuthMenu" resultType="MozAuthMenu">
+		SELECT 
+			MAM.MENU_ID AS MENU_ID,
+			MM.MENU_URL_PATTRN AS MENU_URL_PATTRN, 
+			MAM.READ_YN,
+			MAM.CREATE_YN,
+			MAM.UPDATE_YN,
+			MAM.DELETE_YN
+		FROM MOZ_AUTH_MENU MAM 
+		INNER JOIN MOZ_MENU MM ON MAM.MENU_ID = MM.MENU_ID 
+		<where>
+			AND MAM.AUTH_ID = #{authId}
+			AND (MM.PARENT_MENU_ID IS NOT NULL OR MM.MENU_URL_PATTRN  = '/dashboard') 
+			<if test="useYn != null and useYn != ''">
+				MM.USE_YN  = #{useYn}
+			</if>
+			<if test="createYn != null and createYn != ''">
+				AND MAM.CREATE_YN = #{createYn}
+			</if>
+			<if test="readYn != null and readYn != ''">
+				AND MAM.READ_YN = #{readYn}
+			</if>
+			<if test="updateYn != null and updateYn != ''">
+				AND MAM.UPDATE_YN = #{updateYn}
+			</if>
+			<if test="deleteYn != null and deleteYn != ''">
+				AND MAM.DELETE_YN = #{deleteYn}
+			</if>
+		</where>
+	</select>
+	
 </mapper>

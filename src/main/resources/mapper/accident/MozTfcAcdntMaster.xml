@@ -3,44 +3,72 @@
 <mapper namespace="com.moz.ates.traffic.common.repository.accident.MozTfcAcdntMasterRepository">
 	
 	<sql id="acdntMngList-Where">
+		<if test="searchType == 'all' and searchTxt != null and searchTxt != ''">
+			AND (tamt.TFC_ACDNT_ID LIKE CONCAT('%', #{searchTxt}, '%') 
+				OR mtatt.ACDNT_TRGT_NM LIKE CONCAT('%', #{searchTxt}, '%') 
+				OR pot.POL_NM LIKE CONCAT('%', #{searchTxt}, '%'))
+		</if>
+		<if test="searchType == 'acdntId' and searchTxt != null and searchTxt != ''">
+			AND tamt.TFC_ACDNT_ID LIKE CONCAT('%', #{searchTxt}, '%') 
+		</if>
+		<if test="searchType == 'vioNm' and searchTxt != null and searchTxt != ''">
+			AND mtatt.ACDNT_TRGT_NM LIKE CONCAT('%', #{searchTxt}, '%') 
+		</if>		
+		<if test="searchType == 'polNm' and searchTxt != null and searchTxt != ''">
+			AND pot.POL_NM LIKE CONCAT('%', #{searchTxt}, '%') 
+		</if>
 		<if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
             <![CDATA[
-                AND TO_CHAR(tamt.ACDNT_DT, 'YYYY-MM-DD') >= #{sDate}
+                AND DATE_FORMAT(tamt.ACDNT_DT, '%Y-%m-%d') >= #{sDate}
             ]]>
         </if>
         <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
             <![CDATA[
-                AND TO_CHAR(tamt.ACDNT_DT, 'YYYY-MM-DD') <= #{eDate}
+                AND DATE_FORMAT(tamt.ACDNT_DT, '%Y-%m-%d') <= #{eDate}
             ]]>
         </if>
         <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
             <![CDATA[
-                AND TO_CHAR(tamt.ACDNT_DT, 'YYYY-MM-DD') >= #{sDate}
-                AND TO_CHAR(tamt.ACDNT_DT, 'YYYY-MM-DD') <= #{eDate}
+                AND DATE_FORMAT(tamt.ACDNT_DT, '%Y-%m-%d') >= #{sDate}
+                AND DATE_FORMAT(tamt.ACDNT_DT, '%Y-%m-%d') <= #{eDate}
             ]]>
         </if>
     </sql>
     
-    <resultMap type="com.moz.ates.traffic.common.entity.driver.MozVioInfo" id="vioInfoForSelectMngDetail">
+    <resultMap type="MozVioInfo" id="vioInfoForSelectMngDetail">
 		<result column="VIO_NM" property="vioNm"/>
 	</resultMap>
 	
-	<resultMap type="com.moz.ates.traffic.common.entity.common.MozCmCd" id="cmCdForSelectMngDetail">
+	<resultMap type="MozCmCd" id="cmCdForSelectMngDetail">
 		<result column="CD_NM" property="cdNm"/>
 	</resultMap>
+	
+	<resultMap type="MozPolInfo" id="polInfoForSelectMngDetail">
+		<result column="POL_NM" property="polNm"/>
+		<result column="POL_DEPT_NM" property="polDeptNm"/>
+	</resultMap>
 
-	<resultMap type="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster" id="selectMngDetailForTfcAcdntMaster">
+	<resultMap type="MozTfcAcdntMaster" id="selectMngDetailForTfcAcdntMaster">
+		<result column="rnum" property="rnum"/>
 		<result column="TFC_ACDNT_ID" property="tfcAcdntId"/>
 		<result column="VH_REG_NO" property="vhRegNo"/>
 		<result column="ACDNT_DT" property="acdntDt"/>
 		<result column="LAST_ACDNT_PRC_CD" property="lastAcdntPrcCd"/>
 		<result column="ROAD_ADDR" property="roadAddr"/>
 		<result column="POL_ID" property="polId"/>
+		<result column="LAT" property="lat"/>
+		<result column="LNG" property="lng"/>
+		<result column="ACDNT_TY_CD" property="acdntTyCd"/>
+		<result column="ACDNT_TY_DTLS" property="acdntTyDtls"/>
+		<result column="TRGT_NM" property="trgtNm"/>
+		<result column="ACDNT_REPORT" property="acdntReport"/>
+		<result column="ACDNT_CHILD_YN" property="acdntChildYn"/>
+		<result column="TRGT_COUNT" property="trgtCount"/>
 		<collection property="cmCd" resultMap="cmCdForSelectMngDetail"/>
-		<collection property="vioInfo" resultMap="vioInfoForSelectMngDetail"/>
+		<collection property="polInfo" resultMap="polInfoForSelectMngDetail"/>
 	</resultMap>
 	
-	<select id="selectAcdntList" resultType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster" parameterType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster">
+	<select id="findAllAcdntList" resultType="MozTfcAcdntMaster" parameterType="MozTfcAcdntMaster">
         SELECT TFC_ACDNT_ID
         		, ACDNT_DT
         		, ROAD_ADDR
@@ -51,7 +79,7 @@
         LIMIT #{length} OFFSET #{start}
     </select>
     
-    <select id="selectAccidentInfo" resultType="com.moz.ates.traffic.common.entity.common.AccidentDomain">
+    <select id="findOneAccidentInfo" resultType="AccidentDomain">
 		SELECT
 			ROAD_ADDR 
 			, LAT
@@ -60,26 +88,26 @@
 		WHERE TFC_ACDNT_ID = #{tfcAcdntId}
 	</select>
 	
-	<select id="selectAcdntDupliCnt" parameterType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster" resultType="int">
+	<select id="countAcdntDupliCnt" parameterType="MozTfcAcdntMaster" resultType="int">
         SELECT  COUNT(*)    AS "cnt"
         FROM    MOZ_TFC_ACDNT_MASTER
         WHERE   TFC_ACDNT_ID = #{tfcAcdntId}
     </select>
     
-    <select id="countTfcAcdntMaster" parameterType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster" resultType="int">
+    <select id="countTfcAcdntMaster" parameterType="MozTfcAcdntMaster" resultType="int">
         SELECT  COUNT(*)    AS "cnt"
         FROM    MOZ_TFC_ACDNT_MASTER
         WHERE   TFC_ACDNT_ID = #{tfcAcdntId}
     </select>
     
-    <select id="selectMngList" parameterType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster" resultType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster">
+    <select id="findAllMngList" parameterType="MozTfcAcdntMaster" resultType="MozTfcAcdntMaster">
         SELECT  tamt.TFC_ACDNT_ID
                 , vit.VIO_NM
                 , tamt.VH_REG_NO
                 , tamt.ACDNT_DT
                 , tamt.ROAD_ADDR
         FROM    MOZ_TFC_ACDNT_MASTER tamt
-                LEFT JOIN MOZ_CM_CD cct ON (cct.CD_ID = tamt.LAST_ACDNT_PRC_CD)
+                LEFT JOIN MOZ_CM_CD cct ON (cct.CD_ID = tamt.ACDNT_TY_CD)
                 LEFT JOIN MOZ_TFC_ENF_MASTER temt ON (temt.TFC_ACDNT_ID = tamt.TFC_ACDNT_ID)
                 LEFT JOIN MOZ_VIO_INFO vit ON (temt.VIO_ID = vit.VIO_ID)
         WHERE   1=1
@@ -88,60 +116,185 @@
         LIMIT #{length} OFFSET #{start}
     </select>
     
-    <select id="selectMngListCnt" parameterType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster" resultType="int">
+    <select id="countMngListCnt" parameterType="MozTfcAcdntMaster" resultType="int">
         SELECT  COUNT(*)    AS "cnt"
         FROM    MOZ_TFC_ACDNT_MASTER tamt
-                LEFT JOIN MOZ_CM_CD cct ON (cct.CD_ID = tamt.LAST_ACDNT_PRC_CD)
+                LEFT JOIN MOZ_CM_CD cct ON (cct.CD_ID = tamt.ACDNT_TY_CD)
                 LEFT JOIN MOZ_TFC_ENF_MASTER temt ON (temt.TFC_ACDNT_ID = tamt.TFC_ACDNT_ID)
-                LEFT JOIN MOZ_VIO_INFO vit ON (temt.VIO_ID = vit.VIO_ID)
        	WHERE   1=1
         <include refid="acdntMngList-Where"/>
     </select>
     
-    <select id="findAllMozTfcAcdntMaster" parameterType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster" resultType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster">
-        SELECT  ROW_NUMBER() OVER(ORDER BY tamt.ACDNT_DT) AS rnum
+    <select id="findAllMozTfcAcdntMaster" parameterType="MozTfcAcdntMaster" resultMap="selectMngDetailForTfcAcdntMaster">
+       SELECT  ROW_NUMBER() OVER(ORDER BY tamt.ACDNT_DT) AS rnum
         		, tamt.TFC_ACDNT_ID
-                , vit.VIO_NM
-                , tamt.VH_REG_NO
                 , tamt.ACDNT_DT
                 , tamt.ROAD_ADDR
+                , cct.CD_NM
+                , pot.POL_NM
+        		, tamt.TFC_ACDNT_ID
+                , tamt.ACDNT_DT
+                , tamt.ROAD_ADDR
+                , cct.CD_NM
+                ,(
+                	SELECT 
+                		IF(C.TOTAL_CNT > 1, CONCAT(C.NAME, '외 ', C.TOTAL_CNT-1, '명'), C.NAME)
+                	FROM (
+                		SELECT 
+                			FIRST_VALUE(A.NAME) OVER (ORDER BY A.ACDNT_TRGT_ID) AS NAME
+                			, (
+                				SELECT 
+                					SUM(B.TRGT_CNT) + SUM(B.PNR_CNT) AS TOTAL_CNT
+                				FROM(
+                					SELECT 
+	                					COUNT(tati.ACDNT_TRGT_ID) as TRGT_CNT 
+			                			, (
+			                				SELECT
+							        			COUNT(tatpi.ACDNT_TRGT_ID)
+							        		FROM MOZ_TFC_ACDNT_TRGT_PNR_INFO tatpi
+							        		WHERE tati.ACDNT_TRGT_ID = tatpi.ACDNT_TRGT_ID
+							        		GROUP BY tatpi.ACDNT_TRGT_ID
+			                			) AS PNR_CNT
+	                				FROM MOZ_TFC_ACDNT_TRGT_INFO tati
+			                		WHERE tamt.TFC_ACDNT_ID = tati.TFC_ACDNT_ID
+			                		GROUP BY tati.ACDNT_TRGT_ID
+                				)B
+	                		) AS TOTAL_CNT
+					 	FROM ( 
+					 		SELECT
+					 			tati.ACDNT_TRGT_ID
+					 			,FIRST_VALUE(tati.ACDNT_TRGT_NM)  OVER(ORDER BY tati.ACDNT_TRGT_ID)AS NAME
+	                		FROM MOZ_TFC_ACDNT_TRGT_INFO tati
+	                		WHERE tamt.TFC_ACDNT_ID = tati.TFC_ACDNT_ID
+	                		GROUP BY tati.ACDNT_TRGT_ID
+	                		ORDER BY tati.ACDNT_TRGT_CD DESC
+                		)A
+                		LIMIT 1
+                		)C
+                	) AS TRGT_NM	 
         FROM    MOZ_TFC_ACDNT_MASTER tamt
-                LEFT JOIN MOZ_CM_CD cct ON (cct.CD_ID = tamt.LAST_ACDNT_PRC_CD)
-                LEFT JOIN MOZ_TFC_ENF_MASTER temt ON (temt.TFC_ACDNT_ID = tamt.TFC_ACDNT_ID)
-                LEFT JOIN MOZ_VIO_INFO vit ON (temt.VIO_ID = vit.VIO_ID)
+        LEFT JOIN MOZ_CM_CD cct ON (cct.CD_ID = tamt.ACDNT_TY_CD)
+        LEFT JOIN MOZ_POL_INFO pot ON (tamt.POL_ID = pot.POL_ID)
+        LEFT JOIN MOZ_TFC_ACDNT_TRGT_INFO mtatt ON tamt.TFC_ACDNT_ID = mtatt.TFC_ACDNT_ID
         WHERE   1=1
         <include refid="acdntMngList-Where"/>
         ORDER BY rnum DESC
         LIMIT #{length} OFFSET #{start}
     </select>
     
-    <select id="countMozTfcAcdntMaster" parameterType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster" resultType="int">
+    <select id="countMozTfcAcdntMaster" parameterType="MozTfcAcdntMaster" resultType="int">
         SELECT  COUNT(*)    AS "cnt"
         FROM    MOZ_TFC_ACDNT_MASTER tamt
-                LEFT JOIN MOZ_CM_CD cct ON (cct.CD_ID = tamt.LAST_ACDNT_PRC_CD)
-                LEFT JOIN MOZ_TFC_ENF_MASTER temt ON (temt.TFC_ACDNT_ID = tamt.TFC_ACDNT_ID)
-                LEFT JOIN MOZ_VIO_INFO vit ON (temt.VIO_ID = vit.VIO_ID)
+		LEFT JOIN MOZ_CM_CD cct ON (cct.CD_ID = tamt.ACDNT_TY_CD)
+        LEFT JOIN MOZ_POL_INFO pot ON (tamt.POL_ID = pot.POL_ID)
+        LEFT JOIN MOZ_TFC_ACDNT_TRGT_INFO mtatt ON tamt.TFC_ACDNT_ID = mtatt.TFC_ACDNT_ID
        	WHERE   1=1
         <include refid="acdntMngList-Where"/>
     </select>
 	
-    <select id="selectMngDetail" parameterType="String" resultMap="selectMngDetailForTfcAcdntMaster">
-        SELECT  tamt.TFC_ACDNT_ID
-                , tamt.VH_REG_NO
+    <select id="findOneMngDetail" parameterType="String" resultMap="selectMngDetailForTfcAcdntMaster">
+         SELECT  tamt.TFC_ACDNT_ID
                 , tamt.ACDNT_DT
                 , tamt.LAST_ACDNT_PRC_CD
                 , tamt.ROAD_ADDR
                 , tamt.POL_ID
-                , vit.VIO_NM
+                , tamt.ACDNT_TY_DTLS
+                , tamt.LNG
+                , tamt.LAT
+                , tamt.ACDNT_TY_CD
+                , tamt.ACDNT_TY_DTLS
+                , tamt.ACDNT_REPORT
+                , tamt.ACDNT_CHILD_YN
                 , cct.CD_NM
+                , pit.POL_NM
+                , pit.POL_DEPT_NM
         FROM    MOZ_TFC_ACDNT_MASTER tamt
-                LEFT JOIN MOZ_CM_CD cct ON (cct.CD_ID = tamt.LAST_ACDNT_PRC_CD)
-                LEFT JOIN MOZ_TFC_ENF_MASTER temt ON (temt.TFC_ACDNT_ID = tamt.TFC_ACDNT_ID)
-                LEFT JOIN MOZ_VIO_INFO vit ON (temt.VIO_ID = vit.VIO_ID)
+                LEFT JOIN MOZ_CM_CD cct ON (cct.CD_ID = tamt.ACDNT_TY_CD)
+                LEFT JOIN MOZ_POL_INFO pit ON (tamt.POL_ID = pit.POL_ID)
         WHERE   tamt.TFC_ACDNT_ID=#{tfcAcdntId}
     </select>
     
-    <insert id="insertAcdnt" parameterType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster">
+    <select id="findAllChartData" parameterType="ChartSearchDTO" resultType="map">
+    	SELECT 
+			GROUP_CONCAT(A.SEQ_CNT ORDER BY A.GRAPH_TIME) AS COUNT
+			, GROUP_CONCAT(A.GRAPH_TIME ORDER BY A.GRAPH_TIME) AS LABEL
+		FROM(
+			SELECT 
+				TIME_DATA.GRAPH_TIME
+				,COALESCE(GRAPH_DATA.SEQ_CNT,0) as SEQ_CNT
+			FROM(
+				<if test="timeType == 'monthly'">
+					SELECT 
+						DATE_FORMAT(m1, '%Y-%m') AS GRAPH_TIME
+					FROM(
+						SELECT 
+					   		(#{sDate} - INTERVAL DAYOFMONTH(#{sDate})-1 DAY) +INTERVAL m MONTH as m1
+					    FROM(
+					    	SELECT @rownum:=@rownum+1 as m FROM
+					    	(SELECT 1 union SELECT 2 union SELECT 3 union SELECT 4) t1,
+					        (SELECT 1 union SELECT 2 union SELECT 3 union SELECT 4) t2,
+					       	(SELECT 1 union SELECT 2 union SELECT 3 union SELECT 4) t3,
+					        (SELECT 1 union SELECT 2 union SELECT 3 union SELECT 4) t4,
+					        (SELECT @rownum:=-1) t0
+					    ) d1
+					) d2 
+					WHERE m1 <![CDATA[<=]]> #{eDate}
+					ORDER BY m1
+				</if>
+				<if test="timeType == 'daily'">
+					SELECT 
+						DATE_ADD(#{sDate}, INTERVAL seq.seq DAY) AS GRAPH_TIME
+					FROM (
+						SELECT 
+							(t3*100 + t2*10 + t1) AS seq
+						FROM
+							(SELECT 0 t1 UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t1,
+							(SELECT 0 t2 UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t2,
+							(SELECT 0 t3 UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) t3
+					) AS seq
+					WHERE DATE_ADD(#{sDate}, INTERVAL seq.seq DAY) BETWEEN #{sDate} AND #{eDate}				
+				</if>
+				<if test="timeType == 'hourly'">
+					WITH RECURSIVE CTE AS (
+						SELECT 00 AS RNUM
+						UNION ALL
+						SELECT RNUM + 01 FROM CTE
+						WHERE RNUM <![CDATA[<]]> 23
+					)
+					SELECT IF(RNUM <![CDATA[<]]> 10, CONCAT('0',RNUM) , RNUM) AS GRAPH_TIME FROM CTE
+				</if>
+			)TIME_DATA
+			LEFT JOIN (
+				SELECT 
+					COUNT(MTAM.TFC_ACDNT_ID) AS SEQ_CNT
+					<if test="timeType == 'monthly'">
+						, DATE_FORMAT(MTAM.ACDNT_DT, '%Y-%m') as TIME_DATA
+					</if>
+					<if test="timeType == 'daily'">
+						, DATE_FORMAT(MTAM.ACDNT_DT, '%Y-%m-%d') as TIME_DATA
+					</if>
+					<if test="timeType == 'hourly'">
+						, DATE_FORMAT(MTAM.ACDNT_DT, '%H') as TIME_DATA	
+					</if>
+				FROM MOZ_TFC_ACDNT_MASTER MTAM
+				WHERE 1=1
+				<if test="timeType == 'monthly'">
+					AND DATE_FORMAT(MTAM.ACDNT_DT, '%Y-%m') BETWEEN #{sDate} AND #{eDate}
+				</if>
+				<if test="timeType == 'daily'">
+					AND DATE_FORMAT(MTAM.ACDNT_DT, '%Y-%m-%d') BETWEEN #{sDate} AND #{eDate}
+				</if>
+				<if test="timeType == 'hourly'">
+					AND DATE_FORMAT(MTAM.ACDNT_DT, '%Y-%m-%d') = #{sDate}
+				</if>
+				AND ACDNT_TY_CD = #{cate}
+				GROUP BY TIME_DATA
+			) GRAPH_DATA on TIME_DATA.GRAPH_TIME = GRAPH_DATA.TIME_DATA
+			ORDER BY TIME_DATA.GRAPH_TIME ASC
+		)A
+    </select>
+    
+    <insert id="insertAcdnt" parameterType="MozTfcAcdntMaster">
         INSERT INTO MOZ_TFC_ACDNT_MASTER	(
 											TFC_ACDNT_ID,
 											ACDNT_VH_GRP_ID,
@@ -171,37 +324,39 @@
 										)
     </insert>
     
-    <insert id="saveMozTfcAcdntMaster" parameterType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster">
-        INSERT INTO MOZ_TFC_ACDNT_MASTER	(
-											TFC_ACDNT_ID,
-											ACDNT_VH_GRP_ID,
-											VH_REG_NO,
-											VH_TY,
-											ACDNT_DT,
-											LAST_ACDNT_PRC_CD,
-											LAT,
-											LNG,
-											ROAD_ADDR,
-											CR_DT,
-											CRTR,
-											POL_ID
-										)VALUES(
-											#{tfcAcdntId},
-											#{acdntVhGrpId},
-											#{vhRegNo},
-											#{vhTy},
-											NOW(),
-											#{lastAcdntPrcCd},
-											#{lat},
-											#{lng},
-											#{roadAddr},
-											NOW(),
-											#{crtr},
-											#{polId}
-										)
+    <insert id="saveMozTfcAcdntMaster" parameterType="MozTfcAcdntMaster">
+		INSERT INTO MOZ_TFC_ACDNT_MASTER (
+			TFC_ACDNT_ID,
+			ACDNT_DT,
+			LAST_ACDNT_PRC_CD,
+			LAT,
+			LNG,
+			ROAD_ADDR,
+			CR_DT,
+			CRTR,
+			POL_ID,
+			ACDNT_TY_CD,
+			ACDNT_CHILD_YN,
+			ACDNT_TY_DTLS,
+			ACDNT_REPORT
+		) VALUES (
+			#{tfcAcdntId},
+			#{acdntDt},
+			#{lastAcdntPrcCd},
+			#{lat},
+			#{lng},
+			#{roadAddr},
+			now(),
+			#{crtr},
+			#{polId},
+			#{acdntTyCd},
+			#{acdntChildYn},
+			#{acdntTyDtls},
+			#{acdntReport}
+		)
     </insert>
     
-    <update id="upateAcdnt" parameterType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster">
+    <update id="upateAcdnt" parameterType="MozTfcAcdntMaster">
         UPDATE  MOZ_TFC_ACDNT_MASTER
         SET     VH_REG_NO = #{vhRegNo}
                 , ACDNT_DT = #{acdntDt}
@@ -211,14 +366,187 @@
 
     </update>
     
-    <update id="updateMozTfcAcdntMaster" parameterType="com.moz.ates.traffic.common.entity.accident.MozTfcAcdntMaster">
+    <update id="updateMozTfcAcdntMaster" parameterType="MozTfcAcdntMaster">
         UPDATE  MOZ_TFC_ACDNT_MASTER
-        SET     VH_REG_NO = #{vhRegNo}
-                , ACDNT_DT = #{acdntDt}
-                , LAST_ACDNT_PRC_CD = #{lastAcdntPrcCd}
+        SET     ACDNT_DT = #{acdntDt}
+                , ACDNT_TY_CD = #{acdntTyCd}
+                , ACDNT_TY_DTLS = #{acdntTyDtls}
                 , ROAD_ADDR = #{roadAddr}
+                , POL_ID = #{polId}
+                , ACDNT_CHILD_YN = #{acdntChildYn}
+                , ACDNT_REPORT = #{acdntReport}
         WHERE   TFC_ACDNT_ID = #{tfcAcdntId}
 
     </update>
     
+    <select id="countAllByAcdntDt" parameterType="MozTfcAcdntMaster" resultType="int">
+        SELECT  COUNT(*)    AS "cnt"
+        FROM    MOZ_TFC_ACDNT_MASTER tamt
+        WHERE
+       		<![CDATA[
+             DATE_FORMAT(tamt.ACDNT_DT, '%Y-%m-%d') >= #{sDate}
+             AND DATE_FORMAT(tamt.ACDNT_DT, '%Y-%m-%d') <= #{eDate}
+          	]]>
+    </select>
+    
+    <select id="countAllTfcEnfHistoryList" parameterType="MozTfcAcdntMaster" resultType="int">
+        SELECT  COUNT(*)    AS "cnt"
+        FROM    MOZ_TFC_ACDNT_MASTER MTAM
+		INNER JOIN MOZ_CM_CD MCC ON  MTAM.ACDNT_TY_CD = MCC.CD_ID 
+     	INNER JOIN (
+     	    SELECT 
+				COUNT(*) AS trgtCount, MTAM.TFC_ACDNT_ID 
+ 		 	FROM MOZ_TFC_ACDNT_MASTER MTAM 
+  			INNER JOIN MOZ_TFC_ACDNT_TRGT_INFO MTATI ON MTAM.TFC_ACDNT_ID = MTATI.TFC_ACDNT_ID 
+      		GROUP BY MTAM.TFC_ACDNT_ID 
+     	) A ON MTAM.TFC_ACDNT_ID = A.TFC_ACDNT_ID
+        <where>
+	         <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
+	             <![CDATA[
+	                 AND MTAM.ACDNT_DT  >= #{sDate}
+	                 AND MTAM.ACDNT_DT <= #{eDate}
+	             ]]>
+	         </if>
+	         <if test="searchTxt != null and searchTxt !=''">
+	         	AND MTAM.TFC_ACDNT_ID = #{searchTxt}
+	         </if>
+        </where>
+    </select>
+    
+    <select id="findAllTfcEnfHistoryList" parameterType="MozTfcAcdntMaster" resultMap="selectMngDetailForTfcAcdntMaster">
+	     SELECT  
+		     	ROW_NUMBER() OVER(ORDER BY MTAM.ACDNT_DT) AS rnum
+		     	, MTAM.TFC_ACDNT_ID 
+		     	, MTAM.ACDNT_DT 
+		     	, MCC.CD_NM 
+		     	, A.trgtCount AS TRGT_COUNT
+	     FROM MOZ_TFC_ACDNT_MASTER MTAM 
+		     	INNER JOIN MOZ_CM_CD MCC ON  MTAM.ACDNT_TY_CD = MCC.CD_ID 
+		     	INNER JOIN (
+		     	    SELECT 
+						COUNT(*) AS trgtCount, MTAM.TFC_ACDNT_ID 
+		 		 	FROM MOZ_TFC_ACDNT_MASTER MTAM 
+		  			INNER JOIN MOZ_TFC_ACDNT_TRGT_INFO MTATI ON MTAM.TFC_ACDNT_ID = MTATI.TFC_ACDNT_ID 
+		      		GROUP BY MTAM.TFC_ACDNT_ID 
+		     	) A ON MTAM.TFC_ACDNT_ID = A.TFC_ACDNT_ID
+        <where>
+	         <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
+	             <![CDATA[
+	                 AND MTAM.ACDNT_DT  >= #{sDate}
+	                 AND MTAM.ACDNT_DT <= #{eDate}
+	             ]]>
+	         </if>
+	         <if test="searchTxt != null and searchTxt !=''">
+	         	AND MTAM.TFC_ACDNT_ID = #{searchTxt}
+	         </if>
+        </where>
+	     ORDER BY rnum DESC
+	     LIMIT #{length} OFFSET #{start}
+    </select>
+    
+    <select id="findOneTfcAcdntHistory" parameterType="String" resultMap="selectMngDetailForTfcAcdntMaster">
+      SELECT 
+      		MTAM.TFC_ACDNT_ID 
+      		, MTAM.ACDNT_DT 
+      		, MTAM.LAT 
+      		, MTAM.LNG 
+      		, MTAM.ROAD_ADDR 
+      		, MTAM.ACDNT_CHILD_YN 
+      		, MTAM.ACDNT_TY_DTLS 
+      		, MTAM.ACDNT_REPORT 
+      		, MCC.CD_NM 
+      		, MPI.POL_DEPT_NM 
+      		, MPI.POL_NM
+      FROM 
+      	MOZ_TFC_ACDNT_MASTER MTAM 
+      		INNER JOIN MOZ_CM_CD MCC ON MTAM.ACDNT_TY_CD = MCC.CD_ID
+	      	INNER JOIN MOZ_POL_INFO MPI ON MTAM.POL_ID = MPI.POL_ID 
+      WHERE 
+      	MTAM.TFC_ACDNT_ID = #{tfcAcdntId}
+    </select>
+    
+    <select id="countPolSeqByTfcAcdntId" parameterType="String" resultType="Long">
+  		SELECT COUNT(1)
+		FROM MOZ_TFC_ACDNT_MASTER MTAM
+		WHERE MTAM.TFC_ACDNT_ID LIKE CONCAT(#{tfcAcdntId}, '%')
+    </select>
+    
+    <select id="findMozTfcAcdntMatserByToday" resultType="MozTfcAcdntMaster">
+		SELECT 
+			MTAM.TFC_ACDNT_ID,
+			MCC.CD_NM AS ACDNT_TY_CD,
+			MTAM.ACDNT_DT,
+			MTAM.LAT,
+			MTAM.LNG,
+			MTAM.ROAD_ADDR
+		FROM MOZ_TFC_ACDNT_MASTER MTAM
+		LEFT OUTER JOIN MOZ_CM_CD MCC ON MTAM.ACDNT_TY_CD = MCC.CD_ID AND MCC.CD_GROUP_ID = 'ACCIDENT_TYPE'
+		<![CDATA[
+			WHERE CURRENT_DATE() < MTAM.ACDNT_DT
+			AND MTAM.DEL_YN = 'N'
+		]]>
+		ORDER BY MTAM.ACDNT_DT DESC
+    </select>
+    
+    <select id="countMozTfcAcdntMatserByToday" resultType="int">
+		SELECT 
+			COUNT(MTAM.TFC_ACDNT_ID)
+		FROM MOZ_TFC_ACDNT_MASTER MTAM
+		<![CDATA[
+			WHERE CURRENT_DATE() < MTAM.ACDNT_DT
+			AND MTAM.DEL_YN = 'N'
+		]]>
+		ORDER BY MTAM.ACDNT_DT DESC
+    </select>
+    
+    <select id="findOneAccidentStatisticsCircularGraph" resultType="com.moz.ates.traffic.common.entity.common.ChartDTO$AccidentCircularGraph">
+	    SELECT
+			SUM(CASE WHEN MTAM.ACDNT_TY_CD = 'ACT000' THEN 1 ELSE 0 END) AS "crsng",
+			SUM(CASE WHEN MTAM.ACDNT_TY_CD = 'ACT001' THEN 1 ELSE 0 END) AS "crsngRoadway",
+			SUM(CASE WHEN MTAM.ACDNT_TY_CD = 'ACT002' THEN 1 ELSE 0 END) AS "crsngRoadEdgeZone",
+			SUM(CASE WHEN MTAM.ACDNT_TY_CD = 'ACT003' THEN 1 ELSE 0 END) AS "crsngSidewalk",
+			SUM(CASE WHEN MTAM.ACDNT_TY_CD = 'ACT004' THEN 1 ELSE 0 END) AS "frtCollision",
+			SUM(CASE WHEN MTAM.ACDNT_TY_CD = 'ACT005' THEN 1 ELSE 0 END) AS "sideCollision",
+			SUM(CASE WHEN MTAM.ACDNT_TY_CD = 'ACT006' THEN 1 ELSE 0 END) AS "revCollision",
+			SUM(CASE WHEN MTAM.ACDNT_TY_CD = 'ACT007' THEN 1 ELSE 0 END) AS "collision"
+		FROM
+			MOZ_TFC_ACDNT_MASTER MTAM
+		WHERE MTAM.DEL_YN = 'N'
+    </select>
+    
+    <select id="findOneAccidentStatisticsChartGraph" resultType="com.moz.ates.traffic.common.entity.common.ChartDTO$AccidentChartGraph">
+	    SELECT 
+				JSON_ARRAYAGG(RESULT.MONTH_DATE) 		AS "acdntDtList",
+				JSON_ARRAYAGG(RESULT.ACT000) 			AS "crsngList",
+				JSON_ARRAYAGG(RESULT.ACT001) 			AS "crsngRoadwayList",
+				JSON_ARRAYAGG(RESULT.ACT002) 			AS "crsngRoadEdgeZoneList",
+				JSON_ARRAYAGG(RESULT.ACT003) 			AS "crsngSidewalkList",
+				JSON_ARRAYAGG(RESULT.ACT004) 			AS "frtCollisionList",
+				JSON_ARRAYAGG(RESULT.ACT005) 			AS "sideCollisionList",
+				JSON_ARRAYAGG(RESULT.ACT006) 			AS "revCollisionList",
+				JSON_ARRAYAGG(RESULT.ACT007) 			AS "collisionList"
+		FROM (
+			WITH RECURSIVE RESULT_MONTH AS (
+			    SELECT DATE_FORMAT(CURRENT_DATE(), '%Y-%m-%d')  AS MONTH_DATE
+			    UNION ALL
+			    SELECT DATE_ADD(MONTH_DATE, INTERVAL -1 MONTH)
+			    FROM RESULT_MONTH
+			    WHERE MONTH_DATE > DATE_ADD(CURRENT_DATE(), INTERVAL -11 MONTH) 
+			)
+			SELECT 
+				DATE_FORMAT(RM.MONTH_DATE, '%Y-%m') AS MONTH_DATE,
+			 	SUM(CASE WHEN MTAM.ACDNT_TY_CD = 'ACT000' AND MTAM.DEL_YN = 'N' THEN 1 ELSE 0 END) AS ACT000,
+			 	SUM(CASE WHEN MTAM.ACDNT_TY_CD = 'ACT001' AND MTAM.DEL_YN = 'N' THEN 1 ELSE 0 END) AS ACT001,
+			 	SUM(CASE WHEN MTAM.ACDNT_TY_CD = 'ACT002' AND MTAM.DEL_YN = 'N' THEN 1 ELSE 0 END) AS ACT002,
+			 	SUM(CASE WHEN MTAM.ACDNT_TY_CD = 'ACT003' AND MTAM.DEL_YN = 'N' THEN 1 ELSE 0 END) AS ACT003,
+			 	SUM(CASE WHEN MTAM.ACDNT_TY_CD = 'ACT004' AND MTAM.DEL_YN = 'N' THEN 1 ELSE 0 END) AS ACT004,
+			 	SUM(CASE WHEN MTAM.ACDNT_TY_CD = 'ACT005' AND MTAM.DEL_YN = 'N' THEN 1 ELSE 0 END) AS ACT005,
+			 	SUM(CASE WHEN MTAM.ACDNT_TY_CD = 'ACT006' AND MTAM.DEL_YN = 'N' THEN 1 ELSE 0 END) AS ACT006,
+			 	SUM(CASE WHEN MTAM.ACDNT_TY_CD = 'ACT007' AND MTAM.DEL_YN = 'N' THEN 1 ELSE 0 END) AS ACT007
+			FROM RESULT_MONTH RM
+			LEFT JOIN MOZ_TFC_ACDNT_MASTER MTAM ON DATE_FORMAT(RM.MONTH_DATE, '%Y-%m') = DATE_FORMAT(MTAM.ACDNT_DT , '%Y-%m')
+			GROUP BY RM.MONTH_DATE
+			ORDER BY RM.MONTH_DATE
+		)RESULT
+    </select>
 </mapper>

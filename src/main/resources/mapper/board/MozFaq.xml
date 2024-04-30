@@ -3,90 +3,125 @@
 <mapper namespace="com.moz.ates.traffic.common.repository.board.MozFaqRepository">
 	
 	<sql id="faqList-where">
+		<if test="searchType == 'all' and searchTxt != '' and searchTxt != null">
+            AND (ft.POST_TITLE LIKE CONCAT('%', #{searchTxt}, '%')
+            		OR ft.FAQ_KYWRD LIKE CONCAT('%', #{searchTxt}, '%'))
+        </if>
+        <if test="searchType == 'postTitle' and searchTxt != '' and searchTxt != null">
+            AND ft.POST_TITLE LIKE CONCAT('%', #{searchTxt}, '%')
+        </if>
+        <if test="searchType == 'keyword' and searchTxt != '' and searchTxt != null">
+            AND ft.FAQ_KYWRD LIKE CONCAT('%', #{searchTxt}, '%')
+        </if>
         <if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
             <![CDATA[
-                AND TO_CHAR(REG_DT, 'YYYY-MM-DD') >= #{sDate}
+                AND DATE_FORMAT(ft.REG_DT, '%Y-%m-%d') >= #{sDate}
             ]]>
         </if>
         <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
             <![CDATA[
-                AND TO_CHAR(REG_DT, 'YYYY-MM-DD') <= #{eDate}
+                AND DATE_FORMAT(ft.REG_DT, '%Y-%m-%d') <= #{eDate}
             ]]>
         </if>
         <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
             <![CDATA[
-             	AND TO_CHAR(REG_DT, 'YYYY-MM-DD') >= #{sDate}
-                AND TO_CHAR(REG_DT, 'YYYY-MM-DD') <= #{eDate}
+             	AND DATE_FORMAT(ft.REG_DT, '%Y-%m-%d') >= #{sDate}
+                AND DATE_FORMAT(ft.REG_DT, '%Y-%m-%d') <= #{eDate}
             ]]>
-        </if>
-        <if test="searchType == 'all' and searchTxt != '' and searchTxt != null">
-            AND (POST_TITLE LIKE '%' ||  #{searchTxt} || '%')
-        </if>
-        <if test="searchType == 'postTitle' and searchTxt != '' and searchTxt != null">
-            AND POST_TITLE LIKE '%' ||  #{searchTxt} || '%'
         </if>
     </sql>
 	
-	<resultMap type="com.moz.ates.traffic.common.entity.common.MozCmCd" id="cmCdForSelectFaqList">
+	<resultMap type="MozCmCd" id="cmCdForSelectFaqList">
 		<result column="CD_NM" property="cdNm"/>
 	</resultMap>
 	
-	<resultMap type="com.moz.ates.traffic.common.entity.board.MozFaq" id="faqForSelectFaqList">
+	<resultMap type="mozWebOprtr" id="webOprtrForSelectFaqList">
+		<result column="OPRTR_ACCOUNT_ID" property="oprtrAccountId"/>
+	</resultMap>
+	
+	<resultMap type="MozFaq" id="faqForSelectFaqList">
 		<result column="rnum" property="rnum"/>
 		<result column="FAQ_IDX" property="faqIdx"/>
 		<result column="POST_TITLE" property="postTitle"/>
 		<result column="REG_DT" property="regDt"/>
+		<result column="WRTR_ID" property="wrtrId"/>
+		<result column="VIEW_CNT" property="viewCnt"/>
+		<result column="FAQ_SEQ" property="faqSeq"/>
+		<result column="FAQ_KYWRD" property="faqKywrd"/>
 		<collection property="cmCd" resultMap="cmCdForSelectFaqList"/>
+		<collection property="webOprtr" resultMap="webOprtrForSelectFaqList"/>
 	</resultMap>
 	
-	<resultMap type="com.moz.ates.traffic.common.entity.common.MozCmCd" id="cmCdForSelectFaqDetail">
+	<resultMap type="MozCmCd" id="cmCdForSelectFaqDetail">
 		<result column="CD_NM" property="cdNm"/>
 	</resultMap>
 	
-	<resultMap type="com.moz.ates.traffic.common.entity.board.MozFaq" id="faqForSelectFaqDetail">
+	<resultMap type="mozWebOprtr" id="webOprtrForSelectFaqDetail">
+		<result column="OPRTR_NM" property="oprtrNm"/>
+		<result column="OPRTR_DEPT_NM" property="oprtrDeptNm"/>
+	</resultMap>
+	
+	<resultMap type="MozFaq" id="faqForSelectFaqDetail">
 		<result column="FAQ_IDX" property="faqIdx"/>
 		<result column="POST_TITLE" property="postTitle"/>
 		<result column="REG_DT" property="regDt"/>
 		<result column="CATE_TY" property="cateTy"/>
 		<result column="WRTR_ID" property="wrtrId"/>
 		<result column="FAQ_SEQ" property="faqSeq"/>
+		<result column="VIEW_CNT" property="viewCnt"/>
 		<result column="POST_CONTENT" property="postContent"/>
+		<result column="FAQ_KYWRD" property="faqKywrd"/>
 		<collection property="cmCd" resultMap="cmCdForSelectFaqDetail"/>
+		<collection property="webOprtr" resultMap="webOprtrForSelectFaqDetail"/>
 	</resultMap>
 	
-	<select id="findAllMozFaq" parameterType="com.moz.ates.traffic.common.entity.board.MozFaq" resultMap="faqForSelectFaqList">
-        SELECT  ROW_NUMBER() OVER(ORDER BY ft.FAQ_SEQ) AS rnum
-        		, FAQ_IDX
-                , POST_TITLE
-                , REG_DT
+	<select id="findAllMozFaq" parameterType="MozFaq" resultMap="faqForSelectFaqList">
+        SELECT  ROW_NUMBER() OVER(ORDER BY ft.REG_DT) AS rnum
+        		, ft.FAQ_IDX
+                , ft.POST_TITLE
+                , ft.REG_DT
+                , ft.WRTR_ID
+                , ft.VIEW_CNT
+                , ft.FAQ_SEQ
+                , ft.FAQ_KYWRD
                 , cct.CD_NM
+                , wot.OPRTR_ACCOUNT_ID
         FROM    MOZ_FAQ ft
-                , MOZ_CM_CD cct
-        WHERE   ft.CATE_TY = cct.CD_ID
+        LEFT JOIN MOZ_CM_CD cct 
+        	ON ft.CATE_TY = cct.CD_ID
+        LEFT JOIN MOZ_WEB_OPRTR wot
+        	ON ft.WRTR_ID = wot.OPRTR_ID
+        <where>
                 AND ft.DEL_YN = 'N'
                 <include refid="faqList-where"/>
+        </where>
         ORDER BY rnum DESC
         LIMIT #{length} OFFSET #{start}
     </select>
     
-    <select id="countMozFaq" parameterType="com.moz.ates.traffic.common.entity.board.MozFaq" resultType="int">
+    <select id="countMozFaq" parameterType="MozFaq" resultType="int">
         SELECT  COUNT(*)    AS "cnt"
         FROM    MOZ_FAQ ft
-                , MOZ_CM_CD cct
-        WHERE   ft.CATE_TY = cct.CD_ID
-                AND ft.DEL_YN = 'N'
-                <include refid="faqList-where"/>
+        LEFT JOIN MOZ_CM_CD cct 
+        	ON ft.CATE_TY = cct.CD_ID
+        LEFT JOIN MOZ_WEB_OPRTR wot
+        	ON ft.WRTR_ID = wot.OPRTR_ID
+        <where>
+        	AND ft.DEL_YN = 'N'
+            <include refid="faqList-where"/>
+        </where>
     </select>
     
     <select id="findOneMozFaq" parameterType="String" resultMap="faqForSelectFaqDetail">
         SELECT  ft.FAQ_IDX
                 , ft.POST_TITLE
                 , ft.REG_DT
-                , cct.CD_NM
                 , ft.CATE_TY
                 , ft.WRTR_ID
                 , ft.FAQ_SEQ
                 , ft.POST_CONTENT
+                , ft.FAQ_KYWRD
+                , cct.CD_NM
         FROM    MOZ_FAQ ft
                 , MOZ_CM_CD cct
         WHERE   ft.CATE_TY = cct.CD_ID
@@ -94,21 +129,7 @@
                 AND ft.FAQ_IDX = #{faqIdx}
     </select>
     
-    <!-- portal FAQ 목록 조회 -->
-	<select id="selectFaqListForPortal" parameterType="com.moz.ates.traffic.common.entity.board.MozFaq" resultType="com.moz.ates.traffic.common.entity.board.MozFaq">
-		SELECT 	FAQ_IDX,
-				CATE_TY,
-				WRTR_ID,
-				POST_TITLE,
-				POST_CONTENT
-		FROM 	MOZ_FAQ
-		WHERE 	DEL_YN = 'N'
-		<if test="cateTy != null and cateTy != '' ">
-		AND		CATE_TY = #{cateTy}
-		</if>
-	</select>
-    
-    <insert id="saveMozFaq" parameterType="com.moz.ates.traffic.common.entity.board.MozFaq">
+    <insert id="saveMozFaq" parameterType="MozFaq">
         INSERT INTO MOZ_FAQ
             (
                 FAQ_IDX
@@ -120,10 +141,11 @@
                 , REG_DT
                 , DEL_YN
                 , VIEW_CNT
+                , FAQ_KYWRD
             )
         VALUES
             (
-                FAQ_SEQ.NEXTVAL
+                #{faqIdx}
                , #{faqSeq}
                , #{cateTy}
                , #{wrtrId}
@@ -132,15 +154,17 @@
                , NOW()
                , 'N'
                , '0'
+               , #{faqKywrd}
             )
     </insert>
     
-    <update id="updateMozFaq" parameterType="com.moz.ates.traffic.common.entity.board.MozFaq">
+    <update id="updateMozFaq" parameterType="MozFaq">
         UPDATE  MOZ_FAQ
         SET     FAQ_SEQ = #{faqSeq}
                 , CATE_TY = #{cateTy}
                 , POST_TITLE = #{postTitle}
                 , POST_CONTENT = #{postContent}
+                , FAQ_KYWRD = #{faqKywrd}
                 , MDF_DT = NOW()
         WHERE   FAQ_IDX = #{faqIdx}
     </update>
@@ -150,5 +174,56 @@
         WHERE       FAQ_IDX = #{faqIdx}
 
     </delete>
+    
+<!-- ************************* for PORTAL start -->
+		<select id="findAllByDelYn" resultType="MozFaq">
+       SELECT  ROW_NUMBER() OVER(ORDER BY MF.REG_DT) AS rnum
+        				, MF.FAQ_IDX
+                , MF.POST_TITLE
+                , MF.REG_DT
+                , MF.VIEW_CNT
+        FROM    MOZ_FAQ MF
+        WHERE 	MF.DEL_YN = 'N'
+				<if test="searchTxt != '' and searchTxt != null">
+        AND (POST_TITLE LIKE CONCAT('%', #{searchTxt}, '%')
+        		OR FAQ_KYWRD LIKE CONCAT('%', #{searchTxt}, '%'))
+        </if>
+        ORDER BY rnum DESC
+        LIMIT #{length} OFFSET #{start}
+		</select>
+		
+		<select id="countAllBtDelYn" resultType="int">
+        SELECT  COUNT(*)    AS "cnt"
+        FROM    MOZ_FAQ
+        WHERE   DEL_YN = 'N'
+ 				<if test="searchTxt != '' and searchTxt != null">
+        AND (POST_TITLE LIKE CONCAT('%', #{searchTxt}, '%')
+        		OR FAQ_KYWRD LIKE CONCAT('%', #{searchTxt}, '%'))
+        </if>
+		</select>
+		
+		<select id="findOneByDelYnAndFaqIdx" resultMap="faqForSelectFaqDetail">
+        SELECT  MF.FAQ_IDX
+                , MF.POST_TITLE
+                , MF.POST_CONTENT
+                , MF.REG_DT
+                , MF.VIEW_CNT 
+                , CCM.CD_NM
+                , MWO.OPRTR_NM 
+                , MWO.OPRTR_DEPT_NM 
+        FROM    MOZ_FAQ MF
+                INNER JOIN MOZ_CM_CD CCM ON MF.CATE_TY = CCM.CD_ID
+                INNER JOIN MOZ_WEB_OPRTR MWO ON MF.WRTR_ID = MWO.OPRTR_ID 
+        WHERE   MF.CATE_TY = CCM.CD_ID
+                AND MF.DEL_YN = 'N'
+                AND MF.FAQ_IDX = #{faqIdx}
+		</select>
+		
+		<update id="updateViewCnt">
+			UPDATE MOZ_FAQ
+			SET VIEW_CNT = VIEW_CNT + 1
+			WHERE FAQ_IDX = #{faqIdx}
+		</update>
+<!-- ************************* for PORTAL end -->
     
 </mapper>

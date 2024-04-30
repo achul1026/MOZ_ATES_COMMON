@@ -8,11 +8,18 @@ import com.moz.ates.traffic.common.entity.accident.MozTfcAcdntChgHst;
 
 @Mapper
 public interface MozTfcAcdntChgHstRepository {
-	public List<MozTfcAcdntChgHst> selectLogList(MozTfcAcdntChgHst tfcAcdntChgHst);
+//	public List<MozTfcAcdntChgHst> selectLogList(MozTfcAcdntChgHst tfcAcdntChgHst);
 	
-	public int selectLogListCnt(MozTfcAcdntChgHst tfcAcdntChgHst);
+//	public int selectLogListCnt(MozTfcAcdntChgHst tfcAcdntChgHst);
 	
-	public void insertTfcAcdntHstInfo(MozTfcAcdntChgHst tfcAcdntChgHst);
+	/**
+	 * @brief : 교통사고 로그 등록
+	 * @details : 교통사고 로그 등록
+	 * @author : KY.LEE
+	 * @date : 2024.03.17
+	 * @param : MozTfcAcdntChgHst
+	 */
+	public void saveMozTfcAcdntChgHst(MozTfcAcdntChgHst tfcAcdntChgHst);
 
     /**
      * @brief : 교통사고 로그 리스트 조회
@@ -33,4 +40,16 @@ public interface MozTfcAcdntChgHstRepository {
      * @return : 
      */
 	public int countMozTfcAcdntChgHst(MozTfcAcdntChgHst tfcAcdntChgHst);
+
+	/**
+	 * @brief : 교통사고 로그 상세 화면
+	 * @details : 교통사고 로그 상세 화면
+	 * @author : KC.KIM
+	 * @date : 2024.01.31
+	 * @param : hstId
+	 * @return :
+	 */
+	public MozTfcAcdntChgHst findOneTfcAcdntChgHst(String hstId);
+	
+
 }

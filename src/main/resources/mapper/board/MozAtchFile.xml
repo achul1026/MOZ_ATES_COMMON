@@ -1,5 +1,77 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.moz.ates.traffic.common.repository.board.MozAtchFileRepository">
-
+	
+	<select id="findOneMozAtchFileByAtchFileIdx" parameterType="String" resultType="MozAtchFile">
+		SELECT
+			FILE_IDX
+			, FILE_PATH
+		FROM MOZ_ATCH_FILE
+		<where>
+			ATCH_IDX = #{atchIdx}
+		</where> 
+	</select>
+	
+	<select id="findOneMozAtchFileByFileIdx" parameterType="String" resultType="MozAtchFile">
+		SELECT
+			FILE_IDX
+			, FILE_PATH
+			, FILE_SAVE_NM
+			, FILE_ORG_NM
+		FROM MOZ_ATCH_FILE
+		<where>
+			FILE_IDX = #{fileIdx}
+		</where> 
+	</select>
+	
+	<select id="findAllMozAtchFileByAtchIdx" parameterType="String" resultType="MozAtchFile">
+		SELECT
+			FILE_IDX
+			, FILE_ORG_NM
+		FROM MOZ_ATCH_FILE
+		WHERE
+			ATCH_IDX = #{atchIdx}
+			and FILE_TYPE = '2'
+	</select>
+	
+	<insert id="insertMozAtchFile" parameterType="MozAtchFile">
+		 INSERT MOZ_ATCH_FILE(
+                FILE_IDX
+                , ATCH_IDX
+                , OPRTR_ID
+                , FILE_ORG_NM
+                , FILE_SAVE_NM
+                , FILE_PATH
+                , FILE_SIZE
+                , FILE_EXTS
+                , CR_DT
+                , FILE_TYPE
+            )VALUES(
+            	#{fileIdx}
+                , #{atchIdx}
+                , #{oprtrId}
+                , #{fileOrgNm}
+                , #{fileSaveNm}
+                , #{filePath}
+                , #{fileSize}
+                , #{fileExts}
+                , NOW()
+                , #{fileType}
+            )
+	</insert>
+	
+	<update id="updateMozAtchFile" parameterType="MozAtchFile">
+		UPDATE  MOZ_ATCH_FILE
+        SET     FILE_ORG_NM = #{fileOrgNm}
+                , FILE_SAVE_NM = #{fileSaveNm}
+                , FILE_PATH = #{filePath}
+                , FILE_SIZE = #{fileSize}
+                , FILE_EXTS = #{fileExts}
+        WHERE   FILE_IDX = #{fileIdx}
+	</update>
+	
+	<delete id="deleteMozAtchFileByFileIdx" parameterType="String">
+		DELETE FROM MOZ_ATCH_FILE
+		WHERE FILE_IDX = #{fileIdx}
+	</delete>
 </mapper>

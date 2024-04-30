@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.board.MozInqryRepository">
+	<sql id="inqry-Where">
+		<if test="searchType == 'all' and searchTxt != '' and searchTxt != null">
+            AND (mit.POST_TTL LIKE CONCAT('%', #{searchTxt}, '%')
+            		OR wot.OPRTR_ACCOUNT_ID LIKE CONCAT('%', #{searchTxt}, '%')
+            		OR mit.WRTR_EMAIL LIKE CONCAT('%', #{searchTxt}, '%'))
+        </if>
+        <if test="searchType == 'title' and searchTxt != '' and searchTxt != null">
+            AND mit.POST_TTL LIKE CONCAT('%', #{searchTxt}, '%')
+        </if>
+        <if test="searchType == 'wrtrEmail' and searchTxt != '' and searchTxt != null">
+            AND mit.WRTR_EMAIL LIKE CONCAT('%', #{searchTxt}, '%')
+        </if>
+        <if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
+            <![CDATA[
+                AND DATE_FORMAT(mit.CR_DT, '%Y-%m-%d') >= #{sDate}
+            ]]>
+        </if>
+        <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
+            <![CDATA[
+                AND DATE_FORMAT(mit.CR_DT, '%Y-%m-%d') <= #{eDate}
+            ]]>
+        </if>
+        <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
+            <![CDATA[
+             	AND DATE_FORMAT(mit.CR_DT, '%Y-%m-%d') >= #{sDate}
+                AND DATE_FORMAT(mit.CR_DT, '%Y-%m-%d') <= #{eDate}
+            ]]>
+        </if>
+	</sql>	
+	
+	<sql id="portal-inqry-Where">
+		<if test="searchType == 'all'">
+          	AND mit.POST_TTL LIKE CONCAT('%', #{searchTxt}, '%')
+        </if>
+		<if test="searchType != 'all' and searchType != '' and searchType != null">
+            AND mit.POST_TTL LIKE CONCAT('%', #{searchTxt}, '%') 
+            AND mit.CATE_CD = #{searchType}
+        </if>
+        <if test="sDate != null and sDate != '' and (eDate == null or eDate == '')">
+            <![CDATA[
+                AND DATE_FORMAT(mit.CR_DT, '%Y-%m-%d') >= #{sDate}
+            ]]>
+        </if>
+        <if test="eDate != null and eDate != '' and (sDate == null or sDate == '')">
+            <![CDATA[
+                AND DATE_FORMAT(mit.CR_DT, '%Y-%m-%d') <= #{eDate}
+            ]]>
+        </if>
+        <if test="eDate != null and eDate != '' and sDate != null and sDate != ''" >
+            <![CDATA[
+             	AND DATE_FORMAT(mit.CR_DT, '%Y-%m-%d') >= #{sDate}
+                AND DATE_FORMAT(mit.CR_DT, '%Y-%m-%d') <= #{eDate}
+            ]]>
+        </if>	
+	</sql>	
+	
+	<resultMap type="MozCmCd" id="cmCdForSelectList">
+		<result column="CD_NM" property="cdNm"/>
+	</resultMap>
+	
+	<resultMap type="MozWebOprtr" id="oprtrForSelectList">
+		<result column="OPRTR_ACCOUNT_ID" property="oprtrAccountId"/>
+		<result column="OPRTR_DEPT_NM" property="oprtrDeptNm"/>
+	</resultMap>
+	
+	<resultMap type="MozInqry" id="inquryForSelectList">
+		<result column="rnum" property="rnum"/>
+		<result column="INQRY_ID" property="inqryId"/>
+		<result column="CATE_CD" property="cateCd"/>
+		<result column="POST_TTL" property="postTtl"/>
+		<result column="CR_DT" property="crDt"/>
+		<result column="ANS_YN" property="ansYn"/>
+		<result column="ANS_CR_DT" property="ansCrDt"/>
+		<result column="WRTR_EMAIL" property="wrtrEmail"/>
+		<collection property="cmCd" resultMap="cmCdForSelectList"/>
+		<collection property="webOprtr" resultMap="oprtrForSelectList"/>
+	</resultMap>
+	
+	<resultMap type="MozCmCd" id="cmCdForSelectDetail">
+		<result column="CD_NM" property="cdNm"/>
+	</resultMap>
+
+	<resultMap type="MozAtchFile" id="atchFileForSelectDetail">
+		<result column="FILE_ORG_NM" property="fileOrgNm"/>
+		<result column="FILE_IDX" property="fileIdx"/>
+		<result column="FILE_PATH" property="filePath"/>
+		<result column="ATCH_IDX" property="atchIdx"/>
+	</resultMap>
+	
+	<resultMap type="MozInqry" id="inquryForSelectDetail">
+		<result column="INQRY_ID" property="inqryId"/>
+		<result column="CATE_CD" property="cateCd"/>
+		<result column="POST_TTL" property="postTtl"/>
+		<result column="POST_CN" property="postCn"/>
+		<result column="POST_PW" property="postPw"/>
+		<result column="CR_DT" property="crDt"/>
+		<result column="ANS_YN" property="ansYn"/>
+		<result column="ANS_CN" property="ansCn"/>
+		<result column="ANS_CR_DT" property="ansCrDt"/>
+		<result column="WRTR_EMAIL" property="wrtrEmail"/>
+		<collection property="cmCd" resultMap="cmCdForSelectDetail"/>
+		<collection property="atchFile" resultMap="atchFileForSelectDetail"/>
+		<collection property="webOprtr" resultMap="oprtrForSelectList"/>
+	</resultMap>
+	
+	<select id="countMozInqry" parameterType="MozInqry" resultType="int">
+		SELECT COUNT(*) AS 'cnt'
+		FROM MOZ_INQRY mit
+		LEFT JOIN MOZ_CM_CD cct
+			ON mit.CATE_CD = cct.CD_ID
+		<where>
+			<include refid="inqry-Where"/>
+		</where>
+	</select>
+	
+	<select id="countMozInqryPortal" parameterType="MozInqry" resultType="int">
+		SELECT COUNT(*) AS 'cnt'
+		FROM MOZ_INQRY mit
+		LEFT JOIN MOZ_CM_CD cct
+			ON mit.CATE_CD = cct.CD_ID
+		<where>
+			<include refid="portal-inqry-Where"/>
+		</where>
+	</select>
+	
+	<select id= "findAllMozInqryList" parameterType="MozInqry" resultMap="inquryForSelectList">
+		SELECT  ROW_NUMBER() OVER(ORDER BY mit.CR_DT) AS rnum
+        		, mit.INQRY_ID
+                , mit.CATE_CD
+                , mit.POST_TTL
+                , mit.CR_DT
+                , mit.ANS_YN
+                , mit.OPRTR_ID
+                , mit.ANS_CR_DT
+                , mit.WRTR_EMAIL
+                , cct.CD_NM
+                , wot.OPRTR_ACCOUNT_ID
+        FROM    MOZ_INQRY mit
+        LEFT JOIN MOZ_CM_CD cct
+			ON mit.CATE_CD = cct.CD_ID
+		LEFT JOIN MOZ_WEB_OPRTR wot
+			ON mit.OPRTR_ID = wot.OPRTR_ID
+		<where>
+	        <include refid="inqry-Where"/>		
+		</where>
+        ORDER BY rnum DESC
+        LIMIT #{length} OFFSET #{start}
+	</select>
+	
+	<select id= "findAllMozInqryListPortal" parameterType="MozInqry" resultMap="inquryForSelectList">
+		SELECT  ROW_NUMBER() OVER(ORDER BY mit.CR_DT) AS rnum
+        		, mit.INQRY_ID
+                , mit.CATE_CD
+                , mit.POST_TTL
+                , mit.CR_DT
+                , mit.ANS_YN
+                , mit.OPRTR_ID
+                , mit.ANS_CR_DT
+                , cct.CD_NM
+        FROM    MOZ_INQRY mit
+        LEFT JOIN MOZ_CM_CD cct
+			ON mit.CATE_CD = cct.CD_ID
+		<where>
+	        <include refid="portal-inqry-Where"/>
+		</where>
+        ORDER BY rnum DESC
+        LIMIT #{length} OFFSET #{start}
+	</select>
+	
+	<select id="findOneMozInqry" parameterType="String" resultMap="inquryForSelectDetail">
+		SELECT
+			mit.INQRY_ID
+			, mit.CATE_CD
+			, mit.POST_TTL
+			, mit.POST_CN
+			, mit.CR_DT
+            , mit.ANS_YN
+            , mit.ANS_CN
+            , mit.WRTR_EMAIL
+            , cct.CD_NM
+            , aft.FILE_ORG_NM
+		FROM    MOZ_INQRY mit
+        INNER JOIN MOZ_CM_CD cct
+			ON mit.CATE_CD = cct.CD_ID
+		LEFT JOIN MOZ_ATCH_FILE aft
+			ON mit.INQRY_ID = aft.ATCH_IDX
+		<where>
+			mit.INQRY_ID = #{inqryId}
+			AND aft.FILE_TYPE = '1'
+		</where>
+	</select>
+	
+	<select id="findOneMozInqryPortal" parameterType="String" resultMap="inquryForSelectDetail">
+		SELECT
+			mit.INQRY_ID
+			, mit.CATE_CD
+			, mit.POST_TTL
+			, mit.POST_CN
+			, mit.CR_DT
+            , mit.ANS_YN
+            , mit.ANS_CN
+            , mit.ANS_CR_DT
+            , mit.POST_PW
+            , mwo.OPRTR_DEPT_NM
+            , cct.CD_NM
+            , COALESCE(aft.FILE_ORG_NM, '-') AS FILE_ORG_NM
+            , aft.FILE_IDX
+            , aft.FILE_PATH
+            , aft.ATCH_IDX
+		FROM    MOZ_INQRY mit
+        INNER JOIN MOZ_CM_CD cct
+			ON mit.CATE_CD = cct.CD_ID
+		LEFT JOIN MOZ_ATCH_FILE aft
+			ON mit.INQRY_ID = aft.ATCH_IDX
+        LEFT JOIN MOZ_WEB_OPRTR mwo
+        	ON mit.OPRTR_ID = mwo.OPRTR_ID
+		<where>
+			mit.INQRY_ID = #{inqryId}
+		</where>
+	</select>
+	
+	<update id="updateMozInqry" parameterType="MozInqry">
+		UPDATE MOZ_INQRY
+        SET ANS_YN = 'Y'
+      	  	, ANS_CN = #{ansCn}
+			, ANS_CR_DT = NOW() 
+			, OPRTR_ID = #{oprtrId}
+        WHERE INQRY_ID = #{inqryId}
+	</update>
+	
+	<insert id="saveMozInqry" parameterType="MozInqry">
+		INSERT INTO MOZ_INQRY (
+				INQRY_ID,
+				CATE_CD,
+				POST_TTL,
+				POST_CN,
+				ANS_YN,
+				CR_DT,
+				POST_PW
+			)VALUES(
+				#{inqryId},
+				#{cateCd},
+				#{postTtl},
+				#{postCn},
+				#{ansYn},
+				NOW(),
+				#{postPw}
+			)
+	</insert>
+	
+	<delete id="deleteMozInqryByInqryId" parameterType="String">
+		DELETE FROM MOZ_INQRY
+        WHERE INQRY_ID=#{inqryId}
+	</delete>
+</mapper>

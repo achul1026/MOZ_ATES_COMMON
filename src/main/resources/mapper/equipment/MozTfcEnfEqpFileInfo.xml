@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.equipment.MozTfcEnfEqpFileInfoRepository">
+	<select id="findOneMozMozTfcEnfEqpFileInfoByEqpFileNo" parameterType="String" resultType="MozTfcEnfEqpFileInfo">
+		SELECT
+			EQP_FILE_NO
+			,TFC_ENF_EQP_ID
+			,FILE_PATH
+		FROM MOZ_TFC_ENF_EQP_FILE_INFO
+		WHERE EQP_FILE_NO = #{eqpFileNo}
+	</select>
+	
+	<insert id="insertMozTfcEnfEqpFileInfo" parameterType="MozTfcEnfEqpFileInfo">
+		INSERT INTO MOZ_TFC_ENF_EQP_FILE_INFO (
+				EQP_FILE_NO,
+				TFC_ENF_EQP_ID,
+				FILE_PATH,
+				FILE_ORG_NM,
+				FILE_NM,
+				FILE_SIZE,
+				FILE_EXT,
+				CR_DT,
+				CRTR
+			)VALUES(
+				#{eqpFileNo},
+				#{tfcEnfEqpId},
+				#{filePath},
+				#{fileOrgNm},
+				#{fileNm},
+				#{fileSize},
+				#{fileExt},
+				now(),
+				#{crtr}
+			)
+	</insert>
+	
+	<delete id="deleteMozTfcEnfEqpFileInfooByEqpFileNo" parameterType="String">
+		DELETE FROM MOZ_TFC_ENF_EQP_FILE_INFO
+		WHERE EQP_FILE_NO = #{eqpFileNo}
+	</delete>
+	
+	<delete id="deleteMozTfcEnfEqpFileInfooByTfcEnfEqpId" parameterType="String">
+		DELETE FROM MOZ_TFC_ENF_EQP_FILE_INFO
+		WHERE TFC_ENF_EQP_ID = #{tfcEnfEqpId}
+	</delete>
+</mapper>

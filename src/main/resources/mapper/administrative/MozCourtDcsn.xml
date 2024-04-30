@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.administrative.MozCourtDcsnRepository">
+	
+	<select id="findOneByAdministDipId" parameterType="String" resultType="MozCourtDcsn">
+		SELECT 
+				COURT_DCSN_ID,
+				ADMINIST_DIP_ID,
+				COURT_MNGR,
+				COURT_NM,
+				DCSN_STTS,
+				FINE_PRICE,
+				LAWSUIT_TYPE,
+				LAW_VIOLATED_NM,
+				DSCN_CONTENT
+		FROM	MOZ_COURT_DCSN
+		WHERE 	ADMINIST_DIP_ID = #{administDipId}
+	</select>
+	
+	<select id="findOneByCourtDcsnId" parameterType="String" resultType="MozCourtDcsn">
+		SELECT 
+				COURT_DCSN_ID,
+				ADMINIST_DIP_ID,
+				COURT_MNGR,
+				COURT_NM,
+				DCSN_STTS,
+				FINE_PRICE,
+				LAWSUIT_TYPE,
+				LAW_VIOLATED_NM,
+				DSCN_CONTENT
+		FROM	MOZ_COURT_DCSN
+		WHERE 	COURT_DCSN_ID = #{courtDcsnId}
+	</select>
+	
+	<insert id="save" parameterType="MozAdministDip">
+		INSERT INTO MOZ_COURT_DCSN(
+									COURT_DCSN_ID, 
+									ADMINIST_DIP_ID, 
+									COURT_MNGR, 
+									COURT_NM, 
+									DCSN_STTS,
+									FINE_PRICE, 
+									LAWSUIT_TYPE, 
+									LAW_VIOLATED_NM, 
+									DSCN_CONTENT, 
+									CRTR, 
+									CR_DT
+									)VALUES(
+									#{courtDcsnId}, 
+									#{administDipId}, 
+									#{courtMngr}, 
+									#{courtNm},
+									#{dcsnStts},
+									#{finePrice},
+									#{lawsuitType},
+									#{lawViolatedNm},
+									#{dscnContent},
+									#{crtr}, 
+									NOW()
+									)
+	</insert>
+	
+	<update id="update" parameterType="MozAdministDip">
+		UPDATE MOZ_COURT_DCSN	
+		SET 	COURT_MNGR=#{courtMngr}, 
+				COURT_NM=#{courtNm}, 
+				DCSN_STTS=#{dcsnStts}, 
+				FINE_PRICE=#{finePrice}, 
+				LAWSUIT_TYPE=#{lawsuitType}, 
+				LAW_VIOLATED_NM=#{lawViolatedNm}, 
+				DSCN_CONTENT=#{dscnContent}
+		WHERE COURT_DCSN_ID=#{courtDcsnId}
+	</update>
+	
+</mapper>
