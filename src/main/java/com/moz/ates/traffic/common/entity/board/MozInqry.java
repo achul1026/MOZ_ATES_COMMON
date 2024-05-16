@@ -33,6 +33,7 @@ public class MozInqry extends SearchOption{
 	private MozCmCd cmCd;
 	private MozWebOprtr webOprtr;
 	private MozAtchFile atchFile;
+	private List<MozAtchFile> qstAtchFileList;
 	private List<MozAtchFile> ansAtchFileList;
 	
 }

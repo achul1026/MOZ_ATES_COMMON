@@ -1,6 +1,7 @@
 package com.moz.ates.traffic.common.repository.equipment;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ibatis.annotations.Mapper;
 
@@ -78,5 +79,13 @@ public interface MozTfcFacilityMasterRepository {
      * @return : 
      */
 	public void deleteFacilityImage(MozTfcFacilityMaster tfcFacilityMaster);
-
+	
+	/**
+     * @brief : 장비 개수 정보
+     * @details : 장비 개수 정보
+     * @author : KC.KIM
+     * @date : 2024.03.29
+     * @return : Map<String,Object> 
+     */
+	Map<String,Object> countMozTfcFacilityMaster();
 }

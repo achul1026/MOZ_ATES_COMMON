@@ -206,15 +206,9 @@
             , mit.POST_PW
             , mwo.OPRTR_DEPT_NM
             , cct.CD_NM
-            , COALESCE(aft.FILE_ORG_NM, '-') AS FILE_ORG_NM
-            , aft.FILE_IDX
-            , aft.FILE_PATH
-            , aft.ATCH_IDX
 		FROM    MOZ_INQRY mit
         INNER JOIN MOZ_CM_CD cct
 			ON mit.CATE_CD = cct.CD_ID
-		LEFT JOIN MOZ_ATCH_FILE aft
-			ON mit.INQRY_ID = aft.ATCH_IDX
         LEFT JOIN MOZ_WEB_OPRTR mwo
         	ON mit.OPRTR_ID = mwo.OPRTR_ID
 		<where>

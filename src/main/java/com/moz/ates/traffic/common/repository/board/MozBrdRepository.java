@@ -79,7 +79,7 @@ public interface MozBrdRepository {
 	  * @param boardIdx
 	  * @return
 	  */
-	public MozBrd findOneByBoardIdxAnduseYnAndCateCd(MozBrd mozBrd);
+	public MozBrd findOneByBoardIdxAndUseYnAndCateCd(MozBrd mozBrd);
 	
 	/**
 	  * @Method Name : updateViewCnt
@@ -88,7 +88,7 @@ public interface MozBrdRepository {
 	  * @Method Brief : 공지사항 조회수 증가
 	  * @param boardIdx
 	  */
-	public void updateViewCnt(String boardIdx);
+	public void updateViewCnt(MozBrd mozBrd);
 	
 //************************* for Portal end
 	

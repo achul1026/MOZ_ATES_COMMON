@@ -239,6 +239,7 @@
 				POST_TTL,
 				POST_CN,
 				POST_PW,
+				ANS_STTS,
 				CR_DT
 			)VALUES(
 				#{objIdx},
@@ -249,6 +250,7 @@
 				#{postTtl},
 				#{postCn},
 				#{postPw},
+				"N",
 				NOW()
 			)
 	</insert>

@@ -1,7 +1,10 @@
 package com.moz.ates.traffic.common.util;
 
 import java.text.DecimalFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -252,5 +255,65 @@ public class MozatesCommonUtils {
     		}
     	}
     	return "";
+    }
+    
+    
+    /**
+     * @brief 날짜 포맷 LocaldateTime
+     * @author KY.LEE
+     * @date 2024. 5. 2.
+     * @method formatDateTime
+     */
+    public static String formatDateTime(String dateTimeString, String inputPattern, String outputPattern) {
+        LocalDateTime dateTime = LocalDateTime.parse(dateTimeString, DateTimeFormatter.ofPattern(inputPattern));
+        return dateTime.format(DateTimeFormatter.ofPattern(outputPattern));
+    }
+
+    /**
+     * @brief 날짜 포맷
+     * @author KY.LEE
+     * @date 2024. 5. 2.
+     * @method formatDateTime
+     */
+    public static String changeDateFormat(String dateStr, String inputPattern, String outputPattern) {
+        SimpleDateFormat inputFormat = new SimpleDateFormat(inputPattern);
+        SimpleDateFormat outputFormat = new SimpleDateFormat(outputPattern);
+
+        try {
+            Date date = inputFormat.parse(dateStr);
+            return outputFormat.format(date);
+        } catch (ParseException e) {
+            return "-";
+        }
+    }
+    
+    /**
+     * @brief 모잠비크 주소 가공
+     * @author KY.LEE
+     * @date 2024. 5. 2.
+     * @method formatAddress
+     * @param 거주지,구역,주
+     */
+    public static String formatAddress(String domicilio, String provincia, String distrito) {
+        // StringBuilder를 사용하여 주소를 조합
+        StringBuilder addressBuilder = new StringBuilder();
+        // 거주지
+        if (domicilio != null && !domicilio.isEmpty()) {
+            addressBuilder.append(domicilio).append(", ");
+        }
+
+        // 구역
+        if (distrito != null && !distrito.isEmpty()) {
+            addressBuilder.append(distrito).append(", ");
+        }
+
+        // 주
+        if (provincia != null && !provincia.isEmpty()) {
+            addressBuilder.append(provincia).append(", ");
+        }
+
+        addressBuilder.append("Moçambique");
+        // 모잠비크 주소 형식
+        return addressBuilder.toString();
     }
 }

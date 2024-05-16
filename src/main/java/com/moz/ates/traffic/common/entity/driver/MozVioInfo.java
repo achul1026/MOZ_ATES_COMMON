@@ -28,10 +28,11 @@ public class MozVioInfo {
 	
 	private String tfcEnfId;					//단속번호
 	private String tfcLawId;					//법률번호
-	private Date	tfcEnfDt;						//단속날짜시간
-	private String roadAddr;
-	private String docType;							//문서타입
-	private String docNid;							//문서번호
+	private Date	tfcEnfDt;					//단속날짜시간
+	private String roadAddr;					//주소
+	private String docType;						//문서타입
+	private String docNid;						//문서번호
+	private String vioSignYn;					//서명 여부
 
 	public MozVioInfo(TrafficEnforcementIntegrationDto trafficEnforcementIntegrationDto){
 		BeanUtils.copyProperties(trafficEnforcementIntegrationDto, this);

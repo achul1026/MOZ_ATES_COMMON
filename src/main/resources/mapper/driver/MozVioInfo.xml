@@ -31,7 +31,10 @@
 				CRTR,
 				VIO_SIGN_FILE_PATH,
 				VIO_SIGN_FILE_ORG_NM,
-				VIO_SIGN_FILE_SIZE
+				VIO_SIGN_FILE_SIZE,
+				DOC_TYPE,
+				DOC_NID,
+				VIO_SIGN_YN
 			)VALUES(
 				#{vioId},
 				#{dvrLcenId},
@@ -45,7 +48,10 @@
 				#{crtr},
 				#{vioSignFilePath},
 				#{vioSignFileOrgNm},
-				#{vioSignFileSize}
+				#{vioSignFileSize},
+				#{docType},
+				#{docNid},
+				#{vioSignYn}
 		)
 	</insert>
 	
@@ -140,6 +146,22 @@
 		INNER JOIN MOZ_TFC_ENF_MASTER MTEM
 		ON MTEM.VIO_ID = MVI.VIO_ID
 		WHERE MVI.DVR_LCEN_ID = #{dvrLcenId}
+		AND MTEM.DEL_YN = 'N'
+		ORDER BY MTEM.TFC_ENF_DT DESC
+	</select>
+
+	<select id="findAllViolationInfoListByDocNid" parameterType="String" resultType="MozVioInfo">
+		SELECT 
+		    MVI.VIO_ID,
+		    MVI.VIO_NM,
+		    MVI.DVR_LCEN_ID,
+		    MTEM.TFC_ENF_ID,
+		    MTEM.TFC_ENF_DT,
+		    MTEM.ROAD_ADDR
+		FROM MOZ_VIO_INFO MVI
+		INNER JOIN MOZ_TFC_ENF_MASTER MTEM
+		ON MTEM.VIO_ID = MVI.VIO_ID
+		WHERE MVI.DOC_NID = #{docNid} OR MVI.DVR_LCEN_ID = #{docNid}
 		AND MTEM.DEL_YN = 'N'
 		ORDER BY MTEM.TFC_ENF_DT DESC
 	</select>

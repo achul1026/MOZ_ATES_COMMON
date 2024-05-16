@@ -64,4 +64,13 @@ public interface MozVioInfoRepository {
 	 * @param : driverLicenseId
 	 */
 	public List<MozVioInfo> findAllViolationInfoByDvrLcenId(String dvrLcenId);
+
+	/**
+	 * @brief : 위반자 정보 조회
+	 * @details : 위반자 정보 조회
+	 * @author : KY.LEE
+	 * @date : 2024.05.02
+	 * @param : docNid
+	 */
+	public List<MozVioInfo> findAllViolationInfoListByDocNid(String docNid);
 }

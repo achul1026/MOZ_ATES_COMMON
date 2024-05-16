@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.moz.ates.traffic.common.repository.equipment.MozTfcFacilityMntnHstRepository">
+
+	<resultMap type="mozWebOprtr" id="webOprtrForSelectFacilityHstList">
+		<result column="OPRTR_NM" property="oprtrNm"/>
+		<result column="OPRTR_DEPT_NM" property="oprtrDeptNm"/>
+	</resultMap>
+
+	<resultMap type="MozTfcFacilityMntnHst" id="tfcFacilityMntnHstList">
+		<result column="TFC_FACILITY_LOG_ID" property="tfcFacilityLogId"/>
+		<result column="TFC_FACILITY_ID" property="tfcFacilityId"/>
+		<result column="CR_DT" property="crDt"/>
+		<result column="CRTR" property="crtr"/>
+		<result column="MNTN_TYPE" property="mntnType"/>
+		<result column="MNTN_DETAIL" property="mntnDetail"/>
+		<result column="MNTN_STTS" property="mntnStts"/>
+		<result column="OPRTR_ID" property="oprtrId"/>
+		<collection property="mozWebOprtr" resultMap="webOprtrForSelectFacilityHstList"/>
+	</resultMap>
+
+	<select id="findAllByTfcFacilityId" parameterType="String" resultMap="tfcFacilityMntnHstList">
+		SELECT 
+			MTFMH.TFC_FACILITY_LOG_ID,
+			MTFMH.TFC_FACILITY_ID,
+			MTFMH.CR_DT,
+			MTFMH.CRTR,
+			MCC0.CD_NM AS MNTN_TYPE,
+			MTFMH.MNTN_DETAIL,
+			MCC1.CD_NM AS MNTN_STTS,
+			MTFMH.OPRTR_ID,
+			MWO.OPRTR_NM,
+			MWO.OPRTR_DEPT_NM
+		FROM MOZ_TFC_FACILITY_MNTN_HST MTFMH
+		LEFT JOIN MOZ_WEB_OPRTR MWO
+		ON MWO.OPRTR_ID = MTFMH.OPRTR_ID
+		LEFT OUTER JOIN MOZ_CM_CD MCC0
+		ON MTFMH.MNTN_TYPE = MCC0.CD_ID AND MCC0.CD_GROUP_ID = 'MNTN_TYPE_CD'
+		LEFT OUTER JOIN MOZ_CM_CD MCC1
+		ON MTFMH.MNTN_STTS = MCC1.CD_ID AND MCC1.CD_GROUP_ID = 'MNTN_STTS_CD'
+		WHERE TFC_FACILITY_ID = #{tfcFacilityId}
+		ORDER BY CR_DT DESC	
+	</select>
+	
+	<insert id="saveMozTfcFacilityMntnHst" parameterType="MozTfcFacilityMntnHst">
+		INSERT INTO MOZ_TFC_FACILITY_MNTN_HST (
+			TFC_FACILITY_LOG_ID,
+			TFC_FACILITY_ID,
+			MNTN_DETAIL,
+			MNTN_TYPE,
+			MNTN_STTS,
+			CR_DT,
+			CRTR,
+			OPRTR_ID
+		) VALUES (
+			#{tfcFacilityLogId},
+			#{tfcFacilityId},
+			#{mntnDetail},
+			#{mntnType},
+			#{mntnStts},
+			NOW(),
+			#{crtr},
+			#{oprtrId}
+		)
+	</insert>
+	
+	<delete id="deleteMozTfcFacilityMntnHstByTfcFacilityLogId" parameterType="String">
+		DELETE FROM MOZ_TFC_FACILITY_MNTN_HST
+		WHERE
+			TFC_FACILITY_LOG_ID = #{tfcFacilityLogId}
+	</delete>
+
+	<delete id="deleteMozTfcFacilityMntnHstByTfcFacilityId" parameterType="String">
+		DELETE FROM MOZ_TFC_FACILITY_MNTN_HST
+		WHERE
+			TFC_FACILITY_ID = #{tfcFacilityId}
+	</delete>
+</mapper>

@@ -24,6 +24,7 @@
 		</where> 
 	</select>
 	
+	<!-- TODO:: 수정 필요 -->
 	<select id="findAllMozAtchFileByAtchIdx" parameterType="String" resultType="MozAtchFile">
 		SELECT
 			FILE_IDX
@@ -45,7 +46,8 @@
                 , FILE_SIZE
                 , FILE_EXTS
                 , CR_DT
-                , FILE_TYPE
+                , RGS_TY
+                , BRD_TY
             )VALUES(
             	#{fileIdx}
                 , #{atchIdx}
@@ -56,7 +58,8 @@
                 , #{fileSize}
                 , #{fileExts}
                 , NOW()
-                , #{fileType}
+                , #{rgsTy}
+                , #{brdTy}
             )
 	</insert>
 	
@@ -74,4 +77,13 @@
 		DELETE FROM MOZ_ATCH_FILE
 		WHERE FILE_IDX = #{fileIdx}
 	</delete>
+	
+	<select id="findAllMozAtchFileByAtchIdxAndRgsTy" parameterType="String" resultType="MozAtchFile">
+		SELECT 
+			maf.FILE_IDX 
+			, maf.FILE_ORG_NM 
+		FROM MOZ_ATCH_FILE maf 
+		WHERE maf.ATCH_IDX = #{atchIdx}
+		AND maf.RGS_TY = #{rgsTy}
+	</select>
 </mapper>

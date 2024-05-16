@@ -27,6 +27,7 @@
 	
 	<resultMap type="mozWebOprtr" id="webOprtrForSelectFacilityDetail">
 		<result column="OPRTR_NM" property="oprtrNm"/>
+		<result column="OPRTR_DEPT_NM" property="oprtrDeptNm"/>
 	</resultMap>
 	
 	<resultMap type="MozCmCd" id="cmCdForSelectFacilityDeatil">
@@ -40,23 +41,21 @@
 	
 	<resultMap type="MozTfcFacilityMaster" id="tfcFacilityMasterForSelectDetail">
 		<result column="rnum" property="rnum"/>
-		<result column="FACILITY_TY" property="facilityTy"/>
 		<result column="TFC_FACILITY_ID" property="tfcFacilityId"/>
+		<result column="FACILITY_TY" property="facilityTy"/>
 		<result column="FACILITY_STTS" property="facilityStts"/>
-		<result column="FACILITY_NM" property="facilityNm"/>
-		<result column="ROAD_ADDR" property="roadAddr"/>
-		<result column="CR_DT" property="crDt"/>
-		<result column="CRTR" property="crtr"/>
-		<result column="MODEL_NM" property="modelNm"/>
-		<result column="MNFCTR" property="mnfctr"/>
-		<result column="INSTL_YN" property="instlYn"/>
-		<result column="INSTL_DATE" property="instlDate"/>
-		<result column="CR_OPRTR_DEPT" property="crOprtrDept"/>
 		<result column="FACILITY_DESC" property="facilityDesc"/>
-		<result column="INSTLER" property="instler"/>
 		<result column="LAT" property="lat"/>
 		<result column="LNG" property="lng"/>
-		<result column="CR_OPRTR_ID" property="crOprtrId"/>
+		<result column="CR_DT" property="crDt"/>
+		<result column="CRTR" property="crtr"/>
+		<result column="FACILITY_NM" property="facilityNm"/>
+		<result column="ROAD_ADDR" property="roadAddr"/>
+		<result column="FACILITY_CATE" property="facilityCate"/>
+		<result column="FACILITY_DIV" property="facilityDiv"/>
+		<result column="AREA_CD" property="areaCd"/>
+		<result column="USE_YN" property="useYn"/>
+		<result column="OPRTR_ID" property="oprtrId"/>
 		<collection property="webOprtr" resultMap="webOprtrForSelectFacilityDetail"/>
 		<collection property="cmCd" resultMap="cmCdForSelectFacilityDeatil"/>
 		<collection property="tfcFacilityFileInfoList" resultMap="tfcFacilityFileInfoForSelectFacilityDeatil"/>
@@ -66,7 +65,7 @@
 		SELECT  COUNT(*)    AS "cnt"
         FROM    MOZ_TFC_FACILITY_MASTER tfm
         LEFT JOIN MOZ_WEB_OPRTR wot
-        	ON tfm.CR_OPRTR_ID = wot.OPRTR_ID
+        	ON tfm.CRTR = wot.OPRTR_ID
        	LEFT JOIN MOZ_CM_CD cct
         	ON tfm.FACILITY_TY = cct.CD_ID
         <where>
@@ -92,7 +91,7 @@
         	, cct.CD_NM
 		FROM MOZ_TFC_FACILITY_MASTER tfm
 		LEFT JOIN MOZ_WEB_OPRTR wot
-        	ON tfm.CR_OPRTR_ID = wot.OPRTR_ID
+        	ON tfm.CRTR = wot.OPRTR_ID
        	LEFT JOIN MOZ_CM_CD cct
         	ON tfm.FACILITY_TY = cct.CD_ID
         <where>
@@ -106,108 +105,112 @@
 	</select>
 	
 	<select id="findOneMozTfcFacilityBytfcFacilityId" parameterType="String" resultMap="tfcFacilityMasterForSelectDetail">
-		 SELECT tfm.FACILITY_TY
-        	, tfm.TFC_FACILITY_ID
-        	, tfm.FACILITY_STTS
-        	, tfm.CR_DT
-        	, tfm.CRTR
-        	, tfm.FACILITY_NM
-        	, tfm.ROAD_ADDR
-        	, tfm.MODEL_NM
-        	, tfm.MNFCTR
-        	, tfm.INSTL_YN
-        	, tfm.INSTL_DATE
-        	, tfm.CR_OPRTR_DEPT
-        	, tfm.INSTLER
-        	, tfm.FACILITY_DESC
-        	, tfm.LAT
-        	, tfm.LNG
-        	, tfm.CR_OPRTR_ID
-        	, wot.OPRTR_NM
-        	, cct.CD_NM
-        	, tffi.FILE_ORG_NM
-        	, tffi.TFC_FACILITY_FILE_NO
-		FROM MOZ_TFC_FACILITY_MASTER tfm
-		LEFT JOIN MOZ_WEB_OPRTR wot
-        	ON tfm.CR_OPRTR_ID = wot.OPRTR_ID
-       	LEFT JOIN MOZ_CM_CD cct
-        	ON tfm.FACILITY_TY = cct.CD_ID
-        LEFT JOIN MOZ_TFC_FACILITY_FILE_INFO tffi
-        	ON tfm.TFC_FACILITY_ID = tffi.TFC_FACILITY_ID
-        WHERE tfm.TFC_FACILITY_ID = #{tfcFacilityId}
+		 SELECT 
+        	TFM.TFC_FACILITY_ID
+		 	, MCC0.CD_NM AS FACILITY_TY
+        	, TFM.FACILITY_STTS
+        	, TFM.FACILITY_DESC
+        	, TFM.LAT
+        	, TFM.LNG
+        	, TFM.CR_DT
+        	, TFM.CRTR
+        	, TFM.FACILITY_NM
+        	, TFM.ROAD_ADDR
+        	, TFM.OPRTR_ID
+        	, MCC1.CD_NM AS FACILITY_DIV
+        	, MCC2.CD_NM AS FACILITY_CATE
+        	, MCC3.CD_NM AS AREA_CD
+        	, TFM.USE_YN
+        	, WOT.OPRTR_NM
+        	, WOT.OPRTR_DEPT_NM
+        	, TFFI.FILE_ORG_NM
+        	, TFFI.TFC_FACILITY_FILE_NO
+		FROM MOZ_TFC_FACILITY_MASTER TFM
+		LEFT JOIN MOZ_WEB_OPRTR WOT
+        	ON TFM.OPRTR_ID = WOT.OPRTR_ID
+		LEFT OUTER JOIN MOZ_CM_CD MCC0
+			ON TFM.FACILITY_TY = MCC0.CD_ID AND MCC0.CD_GROUP_ID = 'TRAFFIC_FACILITY_TYPE'
+		LEFT OUTER JOIN MOZ_CM_CD MCC1
+			ON TFM.FACILITY_DIV = MCC1.CD_ID AND MCC1.CD_GROUP_ID = 'FACILITY_DIV_CD'
+		LEFT OUTER JOIN MOZ_CM_CD MCC2
+			ON TFM.FACILITY_CATE = MCC2.CD_ID AND MCC2.CD_GROUP_ID = 'FACILITY_CATE_CD'
+		LEFT OUTER JOIN MOZ_CM_CD MCC3
+			ON TFM.AREA_CD = MCC3.CD_ID AND MCC3.CD_GROUP_ID = 'AREA_CD'
+        LEFT JOIN MOZ_TFC_FACILITY_FILE_INFO TFFI
+        	ON TFM.TFC_FACILITY_ID = TFFI.TFC_FACILITY_ID
+        WHERE TFM.TFC_FACILITY_ID = #{tfcFacilityId}
 	</select>
 	
 	<insert id="insertTfcFacilityMaster" parameterType="MozTfcFacilityMaster">
-		INSERT INTO MOZ_TFC_FACILITY_MASTER
-            (
-                TFC_FACILITY_ID
-                , FACILITY_TY
-                , FACILITY_STTS
-                , FACILITY_DESC
-                , LAT
-                , LNG
-                , CR_DT
-                , CRTR
-                , FACILITY_NM
-                , ROAD_ADDR
-                , MODEL_NM
-                , MNFCTR
-                , INSTL_YN
-                , INSTL_DATE
-                , INSTLER
-                , CR_OPRTR_ID
-                , CR_OPRTR_DEPT
-            )
-        VALUES
-            (
-                #{tfcFacilityId}
-                , #{facilityTy}
-                , 'Y'
-                , #{facilityDesc}
-                , #{lat}
-                , #{lng}
-                , NOW()
-                , #{crtr}
-                , #{facilityNm}
-                , #{roadAddr}
-                , #{modelNm}
-                , #{mnfctr}
-                , #{instlYn}
-                , #{instlDateString}
-                , #{instler}
-                , #{crOprtrId}
-                , #{crOprtrDept}
-            )
+		INSERT INTO MOZ_TFC_FACILITY_MASTER (
+			TFC_FACILITY_ID,
+			FACILITY_TY,
+			FACILITY_STTS,
+			FACILITY_DESC,
+			LAT,
+			LNG,
+			CR_DT,
+			CRTR,
+			FACILITY_NM,
+			ROAD_ADDR,
+			FACILITY_CATE,
+			FACILITY_DIV,
+			AREA_CD,
+			USE_YN,
+			OPRTR_ID
+		) VALUES ( 
+			#{tfcFacilityId},
+			#{facilityTy},
+			#{facilityStts},
+			#{facilityDesc},
+			#{lat},
+			#{lng},
+			NOW(),
+			#{crtr},
+			#{facilityNm},
+			#{roadAddr},
+			#{facilityCate},
+			#{facilityDiv},
+			#{areaCd},
+			#{useYn},
+			#{oprtrId}
+		)
 	</insert>
 	
 	<update id="updateMozTfcFacilityMaster" parameterType="MozTfcFacilityMaster">
 		 UPDATE  MOZ_TFC_FACILITY_MASTER
         SET     ROAD_ADDR = #{roadAddr}
                 , FACILITY_TY = #{facilityTy}
-                , CR_OPRTR_ID = #{crOprtrId}
-                , MNFCTR = #{mnfctr}
+                , OPRTR_ID = #{oprtrId}
                 , LAT = #{lat}
                 , LNG = #{lng}
-                , CR_OPRTR_DEPT = #{crOprtrDept}
-                , FACILITY_NM = #{facilityDesc}
+                , FACILITY_DIV = #{facilityDiv}
+                , FACILITY_CATE = #{facilityCate}
+                , FACILITY_STTS = #{facilityStts}
                 , FACILITY_NM = #{facilityNm}
-                , MODEL_NM = #{modelNm}
-                , INSTL_DATE = #{instlDateString}
-                , INSTLER = #{instler}
-                , INSTL_YN = #{instlYn}
                 , FACILITY_DESC = #{facilityDesc}
+                , USE_YN = #{useYn}
         WHERE   TFC_FACILITY_ID = #{tfcFacilityId}
-	</update>
-	
-	<update id="deleteFacilityImage" parameterType="MozTfcFacilityMaster">
-		UPDATE MOZ_TFC_FACILITY_MASTER
-	    SET    TFC_FACILITY_IMAGEPATH = #{tfcFacilityImagepath},
-	    	   TFC_FACILITY_IMAGENAME = #{tfcFacilityImagename}
-	    WHERE  TFC_FACILITY_ID = #{tfcFacilityId}
 	</update>
 	
 	<delete id="deleteTfcFacilityMasterByTfcFacilityId" parameterType="String">
 		DELETE FROM MOZ_TFC_FACILITY_MASTER
         WHERE  TFC_FACILITY_ID = #{tfcFacilityId}
 	</delete>
+	
+	<select id="countMozTfcFacilityMaster" resultType="map">
+		select
+			sum(case when FACILITY_TY = 'TFT001' then 1 else 0 end ) AS "pedestrianBridgeTotalCnt",
+			sum(case when FACILITY_TY = 'TFT001' and FACILITY_STTS = 'Y' then 1 else 0 end ) AS "pedestrianBridgeCnt",
+			sum(case when FACILITY_TY = 'TFT002' then 1 else 0 end ) AS "corsswalkTotalCnt",
+			sum(case when FACILITY_TY = 'TFT002' and FACILITY_STTS = 'Y' then 1 else 0 end ) AS "corsswalkCnt",
+			sum(case when FACILITY_TY = 'TFT003' then 1 else 0 end ) AS "lightTotalCnt",
+			sum(case when FACILITY_TY = 'TFT003' and FACILITY_STTS = 'Y' then 1 else 0 end ) AS "lightCnt",
+			sum(case when FACILITY_TY = 'TFT004' then 1 else 0 end ) AS "dumpTotalCnt",
+			sum(case when FACILITY_TY = 'TFT004' and FACILITY_STTS = 'Y' then 1 else 0 end ) AS "dumpCnt",
+			sum(case when FACILITY_TY = 'TFT005' then 1 else 0 end ) AS "signTotalCnt",
+			sum(case when FACILITY_TY = 'TFT005' and FACILITY_STTS = 'Y' then 1 else 0 end ) AS "signCnt"
+		from
+			MOZ_TFC_FACILITY_MASTER MTFM
+	</select>
 </mapper>

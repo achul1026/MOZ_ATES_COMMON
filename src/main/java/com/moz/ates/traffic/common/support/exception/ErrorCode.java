@@ -36,6 +36,10 @@ public enum ErrorCode {
 	DATA_PARSE_FAIL(8013, "Data Parse failed."),		//데이터 파싱 실패
 	DATA_DUPLICATE(8014,"Duplicate data exists."),		//중복된 데이터가 존재합니다.
 	
+	//API 9000~9100
+	NOT_FOUND_API_TOKEN(9000,"Not Found Api Token"),			//API TOKEN이 없습니다.
+	
+	
 	DEFAULT(9999,"Unknown error")		//Default
 	;
 	

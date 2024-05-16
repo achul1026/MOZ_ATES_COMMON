@@ -7,6 +7,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import com.moz.ates.traffic.common.entity.SearchOption;
 import com.moz.ates.traffic.common.entity.common.MozCmCd;
+import com.moz.ates.traffic.common.entity.operator.MozWebOprtr;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -35,11 +36,9 @@ public class MozBrd extends SearchOption{
 	// 조인 테이블
 	private MozCmCd cmCd;
 	private List<MozAtchFile> atchFileList;
+	private MozWebOprtr webOprtr;
 	
 	private String dateSearchType;		// 날짜 검색 타입
-	
-	private String oprtrNm;						//담당자 명
-	private String oprtrDeptNm;					//담당자 소속명
 	
 	private String postStrDtString;	
 	private String postEndDtString;		

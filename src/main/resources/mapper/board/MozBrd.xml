@@ -98,6 +98,26 @@
 		<collection property="atchFileList" resultMap="atchFileForSelectNoticeDetail"/>
 	</resultMap>
 	
+	<resultMap type="MozWebOprtr" id="webOprtrForNoticeDetailPortal">
+		<result column="OPRTR_NM" property="oprtrNm"/>
+		<result column="OPRTR_DEPT_NM" property="oprtrDeptNm"/>
+	</resultMap>
+	
+	<resultMap type="MozAtchFile" id="atchFileForNoticeDetailPortal">
+		<result column="FILE_ORG_NM" property="fileOrgNm"/>
+		<result column="FILE_IDX" property="fileIdx"/>
+	</resultMap>
+	
+	<resultMap type="MozBrd" id="noticeDetailPortal">
+		<result column="BOARD_TITLE" property="boardTitle"/>
+		<result column="BOARD_CONTENTS" property="boardContents"/>
+		<result column="VIEW_CNT" property="viewCnt"/>
+		<result column="CR_DT" property="crDt"/>
+		<collection property="webOprtr" resultMap="webOprtrForNoticeDetailPortal"/>
+		<collection property="atchFileList" resultMap="atchFileForNoticeDetailPortal"/>
+	</resultMap>
+	
+	
     <select id="findAllNoticeList" parameterType="MozBrd" resultMap="faqForSelectNoticeList">
         SELECT  bt.BOARD_IDX
                 , bt.BOARD_CD_ID
@@ -264,7 +284,7 @@
     </delete>
     
 <!-- ************************* for PORTAL start -->
-		<select id="findAllByUseYn" resultType="MozBrd" parameterType="MozBrd">
+	<select id="findAllByUseYn" resultType="MozBrd" parameterType="MozBrd">
         SELECT  ROW_NUMBER() OVER(ORDER BY MB.CR_DT) AS rnum
    				, MB.BOARD_IDX
                 , MB.BOARD_TITLE
@@ -290,9 +310,9 @@
         ORDER BY 
         		rnum DESC
        	LIMIT #{length} OFFSET #{start}
-		</select>
+	</select>
 		
-		<select id="countByUseYn" resultType="int">
+	<select id="countByUseYn" resultType="int">
         SELECT  COUNT(*)
         FROM    MOZ_BRD MB
         WHERE  	1 = 1
@@ -309,34 +329,43 @@
         AND 	(MB.POST_STR_DT <= CURDATE() OR MB.POST_STR_DT IS NULL)
         AND   (MB.POST_END_DT >= CURDATE() OR MB.POST_END_DT IS NULL)
         ]]>
-		</select>
+	</select>
 		
-		<select id="findOneByBoardIdxAnduseYnAndCateCd" resultType="MozBrd" parameterType="MozBrd">
+	<select id="findOneByBoardIdxAndUseYnAndCateCd" resultMap="noticeDetailPortal" parameterType="MozBrd">
 	   	SELECT  
-             MB.BOARD_TITLE
-             , MB.BOARD_CONTENTS
-             , MB.VIEW_CNT
-             , MB.CR_DT
-             , MWO.OPRTR_NM 
-             , MWO.OPRTR_DEPT_NM 
+	            MB.BOARD_TITLE
+	            , MB.BOARD_CONTENTS
+	            , MB.VIEW_CNT
+	            , MB.CR_DT
+	            , MWO.OPRTR_NM 
+	            , MWO.OPRTR_DEPT_NM 
+	            , MAF.FILE_IDX 
+	            , MAF.FILE_ORG_NM 
 			FROM MOZ_BRD MB
 			INNER JOIN MOZ_WEB_OPRTR MWO ON MB.OPRTR_ID = MWO.OPRTR_ID
-      WHERE 
-      			MB.USE_YN = #{useYn}
-     	AND		MB.CATE_CD = #{cateCd}
-      <![CDATA[
-      AND 	(MB.POST_STR_DT <= CURDATE() OR MB.POST_STR_DT IS NULL)
-      AND   (MB.POST_END_DT >= CURDATE() OR MB.POST_END_DT IS NULL)
-      ]]>
-      AND		MB.BOARD_IDX = #{boardIdx}
-		</select>
+			LEFT JOIN MOZ_ATCH_FILE MAF on MAF.ATCH_IDX = MB.BOARD_IDX 
+		WHERE 
+				MB.USE_YN = #{useYn}
+		AND		MB.CATE_CD = #{cateCd}
+		<![CDATA[
+		AND 	(MB.POST_STR_DT <= CURDATE() OR MB.POST_STR_DT IS NULL)
+		AND   (MB.POST_END_DT >= CURDATE() OR MB.POST_END_DT IS NULL)
+		]]>
+		AND		MB.BOARD_IDX = #{boardIdx}
+	</select>
 		
-		<!-- TODO :: useYn & 게시기간 & 카테고리 코드 조건 필요 -->
-		<update id="updateViewCnt">
-			UPDATE MOZ_BRD 
+	<update id="updateViewCnt" parameterType="MozBrd">
+		UPDATE MOZ_BRD 
 			SET VIEW_CNT = VIEW_CNT + 1
-			WHERE BOARD_IDX = #{boardIdx}
-		</update>
+		WHERE 
+				USE_YN = #{useYn}
+		AND		CATE_CD = #{cateCd}
+		<![CDATA[
+		AND 	(POST_STR_DT <= CURDATE() OR POST_STR_DT IS NULL)
+		AND   (POST_END_DT >= CURDATE() OR POST_END_DT IS NULL)
+		]]>
+		AND		BOARD_IDX = #{boardIdx}
+	</update>
 <!-- ************************* for PORTAL end -->
 
 </mapper>

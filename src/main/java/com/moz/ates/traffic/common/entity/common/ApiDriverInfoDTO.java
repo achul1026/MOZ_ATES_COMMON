@@ -24,4 +24,7 @@ public class ApiDriverInfoDTO {
 	private Date expirationDate;
 	private String vehicleNo;
 	private String vehicleType;
+	
+	
+	
 }

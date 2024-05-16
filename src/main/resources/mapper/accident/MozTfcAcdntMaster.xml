@@ -132,10 +132,6 @@
                 , tamt.ROAD_ADDR
                 , cct.CD_NM
                 , pot.POL_NM
-        		, tamt.TFC_ACDNT_ID
-                , tamt.ACDNT_DT
-                , tamt.ROAD_ADDR
-                , cct.CD_NM
                 ,(
                 	SELECT 
                 		IF(C.TOTAL_CNT > 1, CONCAT(C.NAME, '외 ', C.TOTAL_CNT-1, '명'), C.NAME)
@@ -175,7 +171,6 @@
         FROM    MOZ_TFC_ACDNT_MASTER tamt
         LEFT JOIN MOZ_CM_CD cct ON (cct.CD_ID = tamt.ACDNT_TY_CD)
         LEFT JOIN MOZ_POL_INFO pot ON (tamt.POL_ID = pot.POL_ID)
-        LEFT JOIN MOZ_TFC_ACDNT_TRGT_INFO mtatt ON tamt.TFC_ACDNT_ID = mtatt.TFC_ACDNT_ID
         WHERE   1=1
         <include refid="acdntMngList-Where"/>
         ORDER BY rnum DESC
@@ -187,7 +182,6 @@
         FROM    MOZ_TFC_ACDNT_MASTER tamt
 		LEFT JOIN MOZ_CM_CD cct ON (cct.CD_ID = tamt.ACDNT_TY_CD)
         LEFT JOIN MOZ_POL_INFO pot ON (tamt.POL_ID = pot.POL_ID)
-        LEFT JOIN MOZ_TFC_ACDNT_TRGT_INFO mtatt ON tamt.TFC_ACDNT_ID = mtatt.TFC_ACDNT_ID
        	WHERE   1=1
         <include refid="acdntMngList-Where"/>
     </select>

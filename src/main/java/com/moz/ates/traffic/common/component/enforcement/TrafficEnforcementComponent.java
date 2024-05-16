@@ -113,10 +113,9 @@ public class TrafficEnforcementComponent {
         
         MultipartFile file = null;
         BufferedOutputStream bos = null;
-		String uploadPath = "";
+		List<String> uploadPathList = new ArrayList<String>();
 		
 		MozTfcEnfMaster tfcEnfMaster = null;
-		
 		try {
 			List<MozTfcEnfFineInfo> mozTfcEnfFineInfoList = new ArrayList<MozTfcEnfFineInfo>();
 	        
@@ -133,6 +132,7 @@ public class TrafficEnforcementComponent {
 	        trafficEnforcementIntegrationDto.setTfcEnfId(tfcEnfId);
 	        trafficEnforcementIntegrationDto.setPolId(polId);
 	        MozVioInfo vioInfo = new MozVioInfo(trafficEnforcementIntegrationDto);
+	        //위반자 서명
 	        if(trafficEnforcementIntegrationDto.getVioSignature() != null) {
 				file = trafficEnforcementIntegrationDto.getVioSignature();
 				String name = MozatesCommonUtils.getUuid();
@@ -140,8 +140,9 @@ public class TrafficEnforcementComponent {
 				String filename = name + "." + ext;
 				String uploadFilePath = filePath + File.separator + date + File.separator + tfcEnfId;
 				
-				uploadPath = uploadFilePath + File.separator + filename;
-
+				String uploadPath = uploadFilePath + File.separator + filename;
+				
+				uploadPathList.add(uploadPath);
 				try {
 					byte[] bytes = file.getBytes();
 					File dir = new File(uploadFilePath);
@@ -161,12 +162,46 @@ public class TrafficEnforcementComponent {
 					} catch (IOException ignored) {
 					}
 				}
+				vioInfo.setVioSignYn("Y");
+			} else {
+				vioInfo.setVioSignYn("N");
 			}
 	        vioInfo.setCrDt(crDt);
 	        vioInfo.setCrtr(polId);
 	        vioInfoRepository.insertVioInfo(vioInfo);
 
 	        tfcEnfMaster = new MozTfcEnfMaster(trafficEnforcementIntegrationDto);
+	        //위반자 서명
+	        if(trafficEnforcementIntegrationDto.getPoliceSignature() != null) {
+				file = trafficEnforcementIntegrationDto.getPoliceSignature();
+				String name = MozatesCommonUtils.getUuid();
+				String ext = FilenameUtils.getExtension(file.getOriginalFilename());
+				String filename = name + "." + ext;
+				String uploadFilePath = filePath + File.separator + date + File.separator + tfcEnfId;
+				String uploadPath = uploadFilePath + File.separator + filename;
+				
+				uploadPathList.add(uploadPath);
+				try {
+					byte[] bytes = file.getBytes();
+					File dir = new File(uploadFilePath);
+					if (!dir.exists()) dir.mkdirs();
+					File serverFile = new File(uploadPath);
+					bos = new BufferedOutputStream(new FileOutputStream(serverFile));
+					bos.write(bytes);
+					
+					tfcEnfMaster.setPolSignFilePath(uploadPath);
+					tfcEnfMaster.setPolSignFileOrgNm(file.getOriginalFilename());
+					tfcEnfMaster.setPolSignFileSize(file.getSize());
+				} catch (IOException ignored) {
+					log.info("File upload failed");
+				} finally {
+					try {
+						if (bos != null) bos.close();
+					} catch (IOException ignored) {
+					}
+				}
+				vioInfo.setVioSignYn("Y");
+			}
 	        tfcEnfMaster.setCrtr(polId);
 	        tfcEnfMaster.setLastTfcEnfProcCd(code);
 	        tfcEnfMasterRepository.insertTfcEnfInfo(tfcEnfMaster);
@@ -225,17 +260,16 @@ public class TrafficEnforcementComponent {
 	        tfcEnfHst.setCrtr(polId);
 	        tfcEnfHstRepository.insertTfcEnfHstInfo(tfcEnfHst);
 		} catch (CommonException e) {
-			//Error 발생시 사인 파일 제거
-			File uploadFile = new File(uploadPath);
-			
-			if(uploadFile.exists()) {
-				uploadFile.delete();
-			} else {
-				throw new CommonException(ErrorCode.FILE_NOT_FOUND);
+			if(!uploadPathList.isEmpty()) {
+				for(String uploadPath : uploadPathList) {
+					//Error 발생시 사인 파일 제거
+					File uploadFile = new File(uploadPath);
+					if(uploadFile.exists()) {
+						uploadFile.delete();
+					}
+				}
 			}
-			throw new CommonException(ErrorCode.DATA_INSERT_FAIL);
 		}
-        
         return tfcEnfMaster;
     }
 

@@ -55,7 +55,10 @@ public class MozTfcEnfMaster extends SearchOption{
 	private String	tfcEnfImgorgname;				//이미지 원본 이름
 	private String  tfcEnfTtl;						//교통단속 제목
 	private String 	delYn;							//삭제 여부
-	
+	private String 	polSignFilePath;				//경찰 서명 파일 경로
+	private String 	polSignFileOrgNm;				//경찰 서명 파일 원본 이름
+	private Long 	polSignFileSize;				//경찰 서명 파일 크기
+
 	private String mozTfcEnfFineInfoJSONString;
 	
 	//조인테이블

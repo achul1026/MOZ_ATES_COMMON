@@ -356,8 +356,8 @@
     
     <select id="findOneEqpUseCnt" resultType="map">
 	    SELECT
-			COUNT(MTEEM.TFC_ENF_EQP_ID) AS 'TOTALCNT',
-			SUM(CASE WHEN MTEEM.USE_YN = 'Y' THEN 1 ELSE 0 END ) AS 'ONCNT'
+			COUNT(MTEEM.TFC_ENF_EQP_ID) AS 'cameraTotalCnt',
+			SUM(CASE WHEN MTEEM.USE_YN = 'Y' THEN 1 ELSE 0 END ) AS 'cameraCnt'
 		FROM
 			MOZ_TFC_ENF_EQP_MASTER MTEEM
     </select>

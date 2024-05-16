@@ -3,6 +3,7 @@ package com.moz.ates.traffic.common.repository.board;
 import java.util.List;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import com.moz.ates.traffic.common.entity.board.MozAtchFile;
 
@@ -69,4 +70,15 @@ public interface MozAtchFileRepository {
      * @return : 
      */
 	public List<MozAtchFile> findAllMozAtchFileByAtchIdx(String inqryId);
+	
+	/**
+	  * @Method Name : findAllMozAtchFileByAtchIdxAndRgsTy
+	  * @Date : 2024. 5. 14.
+	  * @Author : IK.MOON
+	  * @Method Brief : 파일조회
+	  * @param atchIdx
+	  * @param rgsTy
+	  * @return
+	  */
+	public List<MozAtchFile> findAllMozAtchFileByAtchIdxAndRgsTy(@Param("atchIdx") String atchIdx, @Param("rgsTy")String rgsTy);
 }

@@ -65,5 +65,14 @@ public interface MozTfcAcdntTrgtInfoRepository {
 	 * @date 2024. 4. 11.
 	 * @method findAllTfcAcdntTrgtByDvrLcenId
 	 */
-	public List<MozTfcAcdntTrgtInfo> findAllTfcAcdntTrgtByDvrLcenId(String dvrLcenId);	
+	public List<MozTfcAcdntTrgtInfo> findAllTfcAcdntTrgtByDvrLcenId(String dvrLcenId);
+
+	/**
+	 * @brief 사고타겟 이력 조회
+	 * @details : 사고타겟 이력 조회
+	 * @author KY.LEE
+	 * @date 2024. 4. 11.
+	 * @method findAllTfcAcdntTrgtByDocNid
+	 */
+	public List<MozTfcAcdntTrgtInfo> findAllTfcAcdntTrgtByDocNid(String docNid);	
 }

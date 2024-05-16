@@ -468,7 +468,10 @@
 				CR_DT,
 				CRTR,
 				TFC_ENF_TTL,
-				TFC_ENF_DETAIL
+				TFC_ENF_DETAIL,
+				POL_SIGN_FILE_PATH,
+				POL_SIGN_FILE_ORG_NM,
+				POL_SIGN_FILE_SIZE
 		 	)VALUES(
 			    #{tfcEnfId},
 			    #{vioId},
@@ -494,7 +497,10 @@
 			    NOW(),
 			    #{crtr},
 			    #{tfcEnfTtl},
-			    #{tfcEnfDetail}
+			    #{tfcEnfDetail},
+			    #{polSignFilePath},
+			    #{polSignFileOrgNm},
+			    #{polSignFileSize}
 			   )
 	</insert>
 	

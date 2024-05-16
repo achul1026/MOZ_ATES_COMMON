@@ -143,10 +143,9 @@
                 , VIEW_CNT
                 , FAQ_KYWRD
             )
-        VALUES
-            (
+        SELECT
                 #{faqIdx}
-               , #{faqSeq}
+               , MAX(FAQ_SEQ) + 1
                , #{cateTy}
                , #{wrtrId}
                , #{postTitle}
@@ -155,7 +154,7 @@
                , 'N'
                , '0'
                , #{faqKywrd}
-            )
+         FROM MOZ_FAQ
     </insert>
     
     <update id="updateMozFaq" parameterType="MozFaq">

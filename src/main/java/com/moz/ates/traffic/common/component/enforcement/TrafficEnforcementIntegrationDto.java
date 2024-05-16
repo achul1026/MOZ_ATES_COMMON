@@ -10,6 +10,7 @@ import lombok.Data;
 @Data
 public class TrafficEnforcementIntegrationDto {
 	private MultipartFile vioSignature;			//위반자 서명
+	private MultipartFile policeSignature;			//위반자 서명
 	
 	@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
 	private LocalDateTime tfcEnfDt; 			//단속 날짜
@@ -21,6 +22,8 @@ public class TrafficEnforcementIntegrationDto {
     private String vioPno;						//위반자 연락처
     private String vioEmail;					//위반자 이메일
     private String dvrLcenTy;					//운전면허 타입
+    private String docType;						//문서 타입
+    private String docNid;						//문서 번호
 
     private String	tfcEnfId;						//단속정보 고유 번호
     private String	tfcLawId;						//법률아이디
@@ -28,6 +31,7 @@ public class TrafficEnforcementIntegrationDto {
     private String	polId;							//경찰 고유번호
     private String	tfcAcdntId;						//교통사고 정보 고유 번호
     private String	vioFileNo;						//위반정보 파일 번호
+    private String  vioSignYn;						//서명 Y/N
 
     private String	roadAddr;						//단속지역(도로)
     private String	roadLn;							//위반차로

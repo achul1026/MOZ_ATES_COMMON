@@ -5,6 +5,7 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 
 import com.moz.ates.traffic.common.entity.equipment.MozTfcEqpMntnHst;
+import com.moz.ates.traffic.common.entity.equipment.MozTfcFacilityMntnHst;
 
 @Mapper
 public interface MozTfcEqpMntnHstRepository {
@@ -43,5 +44,5 @@ public interface MozTfcEqpMntnHstRepository {
      * @date : 2024.04.29
      * @param : saveTfcEqpMntnHst
      */
-	void saveTfcEqpMntnHst(MozTfcEqpMntnHst item);
+	void saveTfcEqpMntnHst(MozTfcEqpMntnHst mozTfcEqpMntnHst);
 }

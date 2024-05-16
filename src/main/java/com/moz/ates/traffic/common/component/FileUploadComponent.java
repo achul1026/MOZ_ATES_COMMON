@@ -1,12 +1,10 @@
 package com.moz.ates.traffic.common.component;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.file.Files;
@@ -20,17 +18,14 @@ import java.util.List;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.moz.ates.traffic.common.entity.accident.MozTfcAcdntFileInfo;
 import com.moz.ates.traffic.common.entity.common.UploadFileInfo;
-import com.moz.ates.traffic.common.entity.driver.MozVioInfo;
-import com.moz.ates.traffic.common.entity.equipment.MozTfcEnfFileInfo;
 import com.moz.ates.traffic.common.enums.FileUploadType;
 import com.moz.ates.traffic.common.repository.accident.MozTfcAcdntFileInfoRepository;
 import com.moz.ates.traffic.common.repository.driver.MozVioInfoRepository;
@@ -411,150 +406,80 @@ public class FileUploadComponent {
 	
 	/**
 	  * @Method Name : fileDownload
-	  * @작성일 : 2024. 2. 5.
-	  * @작성자 : SM.KIM
-	  * @Method 설명 : 파일 다운로드
+	  * @Date : 2024. 5. 13.
+	  * @Author : IK.MOON
+	  * @Method Brief : 파일 다운로드
 	  * @param response
 	  * @param fileName
 	  * @param fileOriginName
-	  * @param fileSampleDownloadPath
+	  * @param filePath
+	  * @throws IOException
 	  */
-	public static void fileDownload(HttpServletResponse response, String fileName, String fileOriginName, String filePath) {
-		try {
-	    	ClassPathResource resource = new ClassPathResource(filePath);
-	    	File file = new File(resource.getPath());
-	        // 파일 길이를 가져온다.
-	        int fSize = (int) file.length();
-	        // 파일이 존재
-	        if (fSize > 0) {
-	        	String encodedFilename = "attachment; filename*=UTF-8''" + URLEncoder.encode(fileOriginName, "UTF-8").replace("+", "%20");
-	            response.setContentType("text/csv; charset=UTF-8");
-	            response.setHeader("Content-Disposition", encodedFilename);
-	            response.setContentLengthLong(fSize);
-	            BufferedInputStream in = null;
-	            BufferedOutputStream out = null;
-	            in = new BufferedInputStream(new FileInputStream(file));
-	            out = new BufferedOutputStream(response.getOutputStream());
-	            try {
-	                byte[] buffer = new byte[4096];
-	                int bytesRead = 0;
-	                while ((bytesRead = in.read(buffer)) != -1) {
-	                    out.write(buffer, 0, bytesRead);
-	                }
-	                out.flush();
-	            } finally {
-	                in.close();
-	                out.close();
-	            }
-	        } else {
-	            throw new FileNotFoundException("파일이 없습니다.");
-	        }
-		
-		} catch (Exception e) {
-		    e.printStackTrace();
+	public void fileDownload(HttpServletResponse response, String fileName, String fileOriginName,
+			String filePath) throws IOException {
+
+		// filePath에 fileName이 포함되지 않은 경우
+		if (MozatesCommonUtils.isNull(fileName)) {
+			filePath = filePath + File.separator + fileName;
 		}
-	}
-	
-	/**
-	  * @Method Name : signImgView
-	  * @Date : 2024. 3. 19.
-	  * @Author : IK.MOON
-	  * @Method Brief : 위반자 서명 이미지 요청
-	  * @param response
-	  * @param vioId
-	  */
-	public void signImgView(HttpServletResponse response, String vioId) {
+
+		File file = new File(filePath);
 		
-		MozVioInfo mozVioInfo = mozVioInfoRepository.findOneFileInfo(vioId);
-		
-		String filePath = mozVioInfo.getVioSignFilePath();
-		
-		ServletOutputStream out = null;
-        FileInputStream f = null;
-        int length;
-        try {
-        	try {
-        		out = response.getOutputStream();
-        		f = new FileInputStream(filePath);
-        		byte[] buffer = new byte[10];
-        		while((length=f.read(buffer)) != -1){
-        			out.write(buffer,0,length);
-        		}
-        	}finally {
-        		f.close();
-        		out.close();
-        	}
-        }catch (IOException e) {
-        	e.printStackTrace();
+		if (!file.exists()) {
+			throw new CommonException(ErrorCode.FILE_NOT_FOUND);
 		}
-	}
-	
-	/**
-	  * @Method Name : tfcEnfImgView
-	  * @Date : 2024. 3. 19.
-	  * @Author : IK.MOON
-	  * @Method Brief : 단속 첨부 이미지 요청
-	  * @param response
-	  * @param vioFileNo
-	  */
-	public void tfcEnfImgView(HttpServletResponse response, String vioFileNo) {
 		
-		MozTfcEnfFileInfo tfcEnfFileInfo = mozTfcEnfFileInfoRepository.findOneByMozTfcEnfFileInfoByVioFileId(vioFileNo);
-		String filePath = tfcEnfFileInfo.getFilePath();
+		String encodedFileName;
+		if (!MozatesCommonUtils.isNull(fileOriginName)) {
+			encodedFileName = URLEncoder.encode(fileOriginName, "UTF-8");
+		} else {
+			encodedFileName = URLEncoder.encode(fileName, "UTF-8");
+		}
 		
-		ServletOutputStream out = null;
-		FileInputStream f = null;
-		int length;
-		try {
-			try {
-				out = response.getOutputStream();
-				f = new FileInputStream(filePath);
-				byte[] buffer = new byte[10];
-				while((length=f.read(buffer)) != -1){
-					out.write(buffer,0,length);
-				}
-			}finally {
-				f.close();
-				out.close();
+		byte[] fileByte;
+		fileByte = FileUtils.readFileToByteArray(file);
+
+		response.setContentType("application/octet-stream");
+		response.setHeader("Content-Disposition", "attachment; fileName=\"" + encodedFileName + "\"");
+		response.setContentLength(fileByte.length);
+
+		try (FileInputStream in = new FileInputStream(file); OutputStream out = response.getOutputStream()) {
+			int bytesRead = 0;
+			byte[] buffer = new byte[4096];
+			while ((bytesRead = in.read(buffer)) != -1) {
+				out.write(buffer, 0, bytesRead);
 			}
-		}catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-	
-	/**
-	  * @Method Name : tfcAcdntImgView
-	  * @Date : 2024. 3. 22.
-	  * @Author : IK.MOON
-	  * @Method Brief : 사고 첨부파일 이미지 요청
-	  * @param response
-	  * @param acdntFileNo
-	  */
-	public void tfcAcdntImgView(HttpServletResponse response, String acdntFileNo) {
-		
-		MozTfcAcdntFileInfo tfcAcdntFileInfo = mozTfcAcdntFileInfoRepository.findOneMozTfcAcdntFileInfoByAcdntFileNo(acdntFileNo);
-		String filePath = tfcAcdntFileInfo.getFilePath();
-		
-		ServletOutputStream out = null;
-		FileInputStream f = null;
-		int length;
-		try {
-			try {
-				out = response.getOutputStream();
-				f = new FileInputStream(filePath);
-				byte[] buffer = new byte[10];
-				while((length=f.read(buffer)) != -1){
-					out.write(buffer,0,length);
-				}
-			}finally {
-				f.close();
-				out.close();
-			}
-		}catch (IOException e) {
-			e.printStackTrace();
+			out.flush();
 		}
 	}
 
+	/**
+	  * @Method Name : imgView
+	  * @Date : 2024. 5. 13.
+	  * @Author : IK.MOON
+	  * @Method Brief : 이미지 요청
+	  * @param response
+	  * @param filePath
+	  * @throws IOException
+	  */
+	public void imgView(HttpServletResponse response, String filePath) throws IOException {
+		
+		File file = new File(filePath);
+		
+		if (!file.exists()) {
+			throw new CommonException(ErrorCode.FILE_NOT_FOUND);
+		}
+		
+		int length;
+		
+		try(FileInputStream f = new FileInputStream(file); ServletOutputStream out = response.getOutputStream()) {
+			byte[] buffer = new byte[10];
+			while((length=f.read(buffer)) != -1){
+				out.write(buffer,0,length);
+			}
+		}
+	}
+	
 	/**
 	  * @param fileUploadType 
 	 * @Method Name : uploadFileToCopyFilePath
